@@ -2,45 +2,84 @@
 
 These are designed scaling suites, not labs with an experiments-vs-final split. They give clean
 reference curves on a public dataset (the Pile) against which the lab chapters can be read.
+Working notes with sources are in `data/notes/reference.md`.
 
 ```{python}
 #| echo: false
 from src.chapter import *  # noqa
+import numpy as np
 ```
 
-## Pythia (EleutherAI)
+## Cerebras-GPT: a published law and its out-of-sample point
 
-70M to 12B, same 300B tokens in the same order, 154 checkpoints per model.
-
-```{python}
-df_p = load.runs("eleutherai", "pythia")
-fit_p = fits.fit_power_law(df_p["flops"], df_p["loss"], irreducible=True) if len(df_p.dropna(subset=["flops","loss"])) >= 3 else None
-fig, ax = plt.subplots(figsize=(8, 5)); plots.scaling_curve(df_p, fit=fit_p, ax=ax, title="Pythia: loss vs compute"); plt.show()
-if fit_p: display(Markdown(f"Fitted: `{fit_p.label()}`. Elasticity at the 12B run: {fit_p.elasticity(df_p['flops'].max()):.3f}"))
-```
-
-## Cerebras-GPT
-
-Seven sizes, 111M to 13B, trained compute-optimally; the lab publishes its own fitted law.
+Seven sizes from 111M to 13B, each trained on about 20 tokens per parameter. Cerebras fitted a
+loss-versus-compute law on the six smaller models and reports that the 13B landed within 0.5
+percent of it. We treat the 13B as the out-of-sample "final run" and draw both Cerebras's own
+law (grey, from the paper) and our refit on the same six points.
 
 ```{python}
 df_c = load.runs("cerebras", "cerebras-gpt")
-fit_c = fits.fit_power_law(df_c["flops"], df_c["loss"], irreducible=True) if len(df_c.dropna(subset=["flops","loss"])) >= 3 else None
-fig, ax = plt.subplots(figsize=(8, 5)); plots.scaling_curve(df_c, fit=fit_c, ax=ax, title="Cerebras-GPT: loss vs compute"); plt.show()
-if fit_c: display(Markdown(f"Fitted: `{fit_c.label()}`."))
+df_c = df_c[~df_c["run_id"].str.contains("mup")].drop_duplicates("run_id").copy()
+df_c.loc[df_c["run_id"] == "cerebras-gpt-13b", "run_type"] = "final"
+df_c["is_final"] = df_c["run_type"] == "final"
+fit_c = fits.fit_experiments(df_c, irreducible=True)
+# Cerebras's own law, paper Sec. 3.1: L(f) = (f / 5.984e22)^(-0.0737) + 0.5066
+stated = fits.stated_fit(E=0.5066, A=5.984e22 ** 0.0737, alpha=0.0737)
+fig, ax = plt.subplots(figsize=(8, 5))
+plots.scaling_curve(df_c, fit=fit_c, ax=ax, title="Cerebras-GPT: Pile test loss vs training FLOPs", ylabel="Pile test loss (nats/token)")
+xs = np.geomspace(df_c["flops"].min(), df_c["flops"].max() * 3, 100)
+ax.plot(xs, stated.predict(xs), color=plots.MUTED, lw=2, ls=(0, (1, 2)), label="Cerebras's published law", zorder=1)
+ax.legend(loc="upper right"); plt.show()
+res_c = fits.final_residuals(df_c, fit_c)
+display(Markdown(f"Our refit on 111M to 6.7B: `{fit_c.label()}`. Cerebras's law: `{stated.label()}`."))
+display(res_c.round(4))
 ```
 
-## Both suites on one axis
+Two things to carry into the lab chapters. First, Cerebras counts training FLOPs about 1.7 times
+higher than the 6ND convention, so any cross-suite overlay needs one convention. Second, the
+elasticity of loss with respect to compute at the 13B point is small in absolute terms because
+the fitted irreducible term is large; the table above gives the number.
+
+## Pythia: sixteen models, one token stream
+
+70M to 12B, standard and deduplicated Pile, the same 300B tokens in the same order, 154
+checkpoints per model. EleutherAI did not publish numerical loss values (the curves live in a
+W&B project), so the compute axis is 6ND (total parameters, including untied embeddings) and the
+y-axis is a zero-shot benchmark from the released evaluation files.
+
+```{python}
+df_p = load.runs("eleutherai", "pythia")
+bench = "lambada_openai_acc_0shot" if (df_p["benchmark_name"] == "lambada_openai_acc_0shot").any() else df_p["benchmark_name"].dropna().iloc[0]
+dp = df_p[df_p["benchmark_name"] == bench].copy()
+dp["dedup"] = dp["run_id"].str.contains("deduped")
+fig, ax = plt.subplots(figsize=(8, 5))
+for dd, name, c in [(False, "Pile", plots.PROJECT_SLOTS[0]), (True, "Pile deduplicated", plots.PROJECT_SLOTS[1])]:
+    s = dp[dp["dedup"] == dd].sort_values("flops")
+    ax.plot(s["flops"], s["benchmark_value"], color=c, lw=2, marker="o", markersize=7, markeredgecolor=plots.SURFACE, markeredgewidth=1.5, label=name)
+ax.set_xscale("log"); ax.set_xlabel("Training compute (FLOPs, 6ND)"); ax.set_ylabel(bench.replace("_", " "))
+ax.set_title("Pythia: zero-shot accuracy vs compute, two data variants"); ax.legend(loc="lower right"); plt.show()
+```
+
+```{python}
+gh = df_p.drop_duplicates("run_id")["gpu_hours"].sum()
+display(Markdown(f"Reported A100-hours for the sixteen released models: **{gh:,.0f}**. The paper's total including the "
+                 "discarded first version of the suite is 544,280, so about three quarters of the suite's compute went into "
+                 "the released models. That discarded suite is a rare published example of experiment compute that would "
+                 "otherwise be invisible."))
+```
+
+## Both suites on one compute axis
 
 ```{python}
 fig, ax = plt.subplots(figsize=(8, 5))
-plots.overlay_projects({"Pythia": df_p, "Cerebras-GPT": df_c}, {"Pythia": fit_p, "Cerebras-GPT": fit_c}, ax=ax, title="Reference suites (Pile loss)")
+plots.overlay_projects({"Cerebras-GPT (reported FLOPs)": df_c}, {"Cerebras-GPT (reported FLOPs)": fit_c}, ax=ax,
+                       title="Reference suites: Pile loss vs compute (Pythia loss pending a pull from W&B)")
 plt.show()
 ```
 
 ## Published fits and key numbers
 
 ```{python}
-experiments_table("eleutherai"); experiments_table("cerebras");
-df = pd.concat([df_p, df_c]); display(key_numbers(df)) if not df.empty else None
+experiments_table("cerebras"); experiments_table("eleutherai");
+df = pd.concat([df_p, df_c]); display(key_numbers(df))
 ```

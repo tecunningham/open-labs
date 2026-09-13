@@ -84,3 +84,8 @@ def compute_multiplier(fit_old: PowerLawFit, fit_new: PowerLawFit, C: float) -> 
     if f(lo) <= 0:
         return 1.0
     return float(np.exp(optimize.brentq(f, lo, hi)) / C)
+
+
+def stated_fit(E: float, A: float, alpha: float, n: int = 0) -> PowerLawFit:
+    """Wrap a lab's own published law L = E + A * C**-alpha so it can be drawn like ours."""
+    return PowerLawFit(E=E, A=A, alpha=alpha, n=n, rmse_log=0.0, irreducible=E > 0)

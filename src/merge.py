@@ -15,7 +15,7 @@ import pandas as pd
 from .load import CONFIDENCE, DATA, RUN_TYPES, STAGES
 
 KEYS = {
-    "runs.csv": ["lab", "project", "run_id"],
+    "runs.csv": ["lab", "project", "run_id", "benchmark_name"],
     "experiments.csv": ["lab", "project", "intervention", "source_url"],
     "labs.csv": ["lab", "project"],
     "claims.csv": ["lab", "project", "claim", "source_url"],
@@ -47,14 +47,23 @@ def validate(name: str, df: pd.DataFrame, schema_cols: list[str]) -> tuple[pd.Da
             v = pd.to_numeric(df[c].replace("", None), errors="coerce")
             bad = (df[c] != "") & v.isna(); errs += [f"runs: non-numeric {c}={r!r} in {i}" for i, r in df.loc[bad, c].items()]; keep &= ~bad
     if "source_url" in df.columns:
-        bad = (df["source_url"] != "") & ~df["source_url"].str.match(URL)
+        # Allow "url; url; ..." lists: validate the first URL only.
+        first = df["source_url"].str.split(";").str[0].str.strip()
+        bad = (df["source_url"] != "") & ~first.str.match(URL)
         errs += [f"{name}: bad source_url {r!r}" for r in df.loc[bad, "source_url"]]; keep &= ~bad
         nourl = df["source_url"] == ""
         if nourl.any():
             errs.append(f"{name}: {int(nourl.sum())} rows without source_url (kept, flagged)")
     if "raw_data_available" in df.columns:
-        bad = ~df["raw_data_available"].isin(["logs", "figure_only", "numbers_in_text", ""])
-        errs += [f"experiments: bad raw_data_available {r!r}" for r in df.loc[bad, "raw_data_available"]]; keep &= ~bad
+        enum = ["logs", "figure_only", "numbers_in_text", ""]
+        bad = ~df["raw_data_available"].isin(enum)
+        for i in df.index[bad]:
+            txt = df.at[i, "raw_data_available"]; low = txt.lower()
+            cls = "logs" if any(k in low for k in ("wandb", "json", "csv", "checkpoint", "yes")) else (
+                  "numbers_in_text" if "partial" in low or "table" in low else "figure_only")
+            df.at[i, "notes"] = (df.at[i, "notes"] + " | " if df.at[i, "notes"] else "") + f"raw data: {txt}"
+            df.at[i, "raw_data_available"] = cls
+            errs.append(f"experiments: raw_data_available free text -> {cls!r} (kept text in notes)")
     return df[keep], errs
 
 
