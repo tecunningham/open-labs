@@ -24,6 +24,23 @@ NUMERIC_RUN_COLS = ["params_total", "params_active", "tokens", "flops", "gpu_hou
 URL = re.compile(r"^https?://\S+$")
 
 
+def _coerce_number(raw: str) -> str | None:
+    """'~6.1e23' -> '6.1e23'; '67.6; 66.6' or '66.6 / 67.6' -> first value; ranges and prose -> None."""
+    t = raw.strip().lstrip("~≈").strip()
+    try:
+        float(t); return t
+    except ValueError:
+        pass
+    for sep in (";", "/"):
+        if sep in t:
+            first = t.split(sep)[0].strip().lstrip("~≈")
+            try:
+                float(first); return first
+            except ValueError:
+                return None
+    return None
+
+
 def _read(path: Path) -> pd.DataFrame:
     return pd.read_csv(path, dtype=str, keep_default_na=False, quoting=csv.QUOTE_MINIMAL)
 
@@ -44,8 +61,20 @@ def validate(name: str, df: pd.DataFrame, schema_cols: list[str]) -> tuple[pd.Da
         bad = ~df["stage"].isin(STAGES); errs += [f"runs: bad stage {r!r} in {i}" for i, r in df.loc[bad, "stage"].items()]; keep &= ~bad
         bad = ~df["confidence"].isin(CONFIDENCE); errs += [f"runs: bad confidence {r!r} in {i}" for i, r in df.loc[bad, "confidence"].items()]; keep &= ~bad
         for c in NUMERIC_RUN_COLS:
-            v = pd.to_numeric(df[c].replace("", None), errors="coerce")
-            bad = (df[c] != "") & v.isna(); errs += [f"runs: non-numeric {c}={r!r} in {i}" for i, r in df.loc[bad, c].items()]; keep &= ~bad
+            for i in df.index:
+                raw = df.at[i, c]
+                if raw == "":
+                    continue
+                val = _coerce_number(raw)
+                if val is None:
+                    df.at[i, "notes"] = (df.at[i, "notes"] + " | " if df.at[i, "notes"] else "") + f"{c}: {raw}"
+                    df.at[i, c] = ""
+                    errs.append(f"runs: {c}={raw!r} moved to notes (row {i})")
+                elif val != raw:
+                    if any(sep in raw for sep in (";", "/")) and c == "benchmark_value":
+                        df.at[i, "notes"] = (df.at[i, "notes"] + " | " if df.at[i, "notes"] else "") + f"{df.at[i, 'benchmark_name']}: {raw}"
+                        df.at[i, "benchmark_name"] = df.at[i, "benchmark_name"].split(";")[0].split("/")[0].strip()
+                    df.at[i, c] = val
     if "source_url" in df.columns:
         # Allow "url; url; ..." lists: validate the first URL only.
         first = df["source_url"].str.split(";").str[0].str.strip()
