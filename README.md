@@ -212,15 +212,13 @@ open-labs/
 
 Effort figures are guesses and assume one person part-time.
 
-## 10. Decisions needed
+## 10. Decisions (Tom, 2026-09-13)
 
-1. **y-axis:** loss first with benchmarks second (recommended), or benchmarks only?
-2. **Scope of "experiments":** build Part I (pretraining) fully before starting Part II
-   (post-training / RL), or run the Prime Intellect chapter in the pilot so the template is
-   tested on RL data early? Recommend the latter.
-3. **How deep into Tier B** before stopping? Recommend: stop after DeepSeek and Llama 3 unless a
-   report turns out to be unusually detailed.
-4. **Closed-lab reference figures** (GPT-4, Chinchilla): include as an appendix, or leave out?
-5. **Audience:** internal METR reference, appendix to the elasticity paper, or public write-up?
-   This changes how much hedging and how many caveats go in the chapters.
-6. **Tooling:** Quarto book (recommended) vs. a notebook per lab.
+1. **y-axis:** both. Loss for within-lab curves, benchmarks alongside; cross-lab uses benchmarks.
+2. **Scope of "experiments":** Prime Intellect's RL chapter runs in the pilot so the template is
+   tested on post-training data early.
+3. **Tier B depth:** stop after DeepSeek and Llama 3 unless a report is unusually detailed.
+4. **Closed-lab reference figures** (GPT-4, Chinchilla): include as an appendix.
+5. **Audience:** internal METR reference. Chapters can carry working notes and rough estimates,
+   with confidence flags rather than polished hedging.
+6. **Tooling:** Quarto book.

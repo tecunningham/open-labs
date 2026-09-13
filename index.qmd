@@ -1,0 +1,17 @@
+# Preface {.unnumbered}
+
+This is an internal METR reference on how open AI labs turn experiments into final training
+runs. Each lab chapter uses the same figures, built from `data/*.csv`, so the cross-lab chapter
+can overlay them. The scope, lab tiers, and decisions are in the repository README.
+
+**Reading the figures.** Every chapter opens with a scaling curve: training compute on a log
+x-axis, loss or a benchmark on the y-axis, experimental runs as dots, the released model(s) as
+stars, and a power law fitted to the experiments only, extrapolated out to where the final run
+landed. The gap between star and line is how well the lab's experiments predicted its big run.
+The compute-split bar under it is the cheap number: what share of logged compute went to
+experiments rather than the final run. It is always a lower bound, because failed and unlogged
+runs are missing.
+
+**Confidence flags.** Every number in the data carries `reported` (stated by the lab),
+`derived` (computed from reported numbers, method in the row), or `guess` (read off a figure).
+Chapters state the flag wherever a number changes a conclusion.

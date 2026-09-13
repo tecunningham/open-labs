@@ -1,0 +1,26 @@
+# Methods and caveats {.appendix}
+
+- **FLOPs.** `reported` when the lab states them; otherwise 6 × active parameters × tokens,
+  flagged `6ND`. GPU-hours are stored alongside and plotted when the chapter says so. The two can
+  differ by 2x once MFU, MoE routing, and restarts are counted.
+- **Fits.** A power law `L = E + A·C^-α` fitted by least squares in log space to non-final runs
+  only, so each final run is out of sample. `E = 0` (pure power law) when fewer than three
+  experiments have a loss. The extrapolation band is ± one RMSE in log units, not a
+  confidence interval.
+- **Elasticity at the final run.** `d log L / d log C` of the fitted curve evaluated at the final
+  run's compute. With `E > 0` it shrinks toward zero as loss approaches the irreducible term.
+- **Experiment share.** Sum of FLOPs over non-final runs divided by all logged FLOPs. Public
+  records under-report failed and aborted runs, so treat it as a lower bound and compare to
+  the lab's own statement in `claims.csv`.
+- **Which run is final.** Every released model size is a final run. Ladder runs that were not
+  released are experiments. Mid-training and annealing restarts are `midtrain`.
+- **Loss comparability.** Loss is only compared within a lab (same tokenizer, data, eval set).
+  Cross-lab comparisons use benchmarks or the reference suites, which share the Pile.
+- **Post-training / RL.** The x-axis is RL compute (or steps/rollouts when compute is not
+  stated), the y-axis is reward or a benchmark, and the released post-trained model is the
+  final run.
+
+## Closed-lab reference figures (appendix, to be added)
+
+GPT-4 technical report (final loss predicted from runs at 1/1,000 to 1/10,000 of compute) and
+Chinchilla (400+ runs). Included as reference points only, not as chapters.

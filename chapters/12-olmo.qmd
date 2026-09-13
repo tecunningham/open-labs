@@ -1,0 +1,37 @@
+# Ai2 OLMo
+
+Ai2 publishes data, code, recipes, W&B logs, and intermediate checkpoints for OLMo 2 and OLMo 3, plus a model-ladder paper on predicting task performance from small runs. Morrison et al. (2026) estimate the experimental vs. final compute ratio for OLMo 3.
+
+```{python}
+#| echo: false
+from src.chapter import *  # noqa
+```
+
+## Scaling curve, compute split, run sizes, timeline
+
+```{python}
+df, fit, res = standard_figures("ai2-olmo")
+```
+
+## Published scaling experiments
+
+```{python}
+experiments_table("ai2-olmo");
+```
+
+## What the lab says about itself
+
+```{python}
+claims_table("ai2-olmo");
+```
+
+## Key numbers
+
+```{python}
+display(key_numbers(df)) if not df.empty else display(Markdown("_No runs recorded yet._"))
+```
+
+## Narrative
+
+_To be written once the data is in: what the experiments were for, what the lab said it learned,
+and what cannot be reconstructed._

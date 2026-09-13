@@ -1,0 +1,41 @@
+project:
+  type: book
+  execute-dir: project
+  output-dir: _book
+
+book:
+  title: "Open Labs"
+  subtitle: "Scaling curves, experiments, and final runs at open AI labs"
+  author: "METR (internal reference)"
+  date: today
+  chapters:
+    - index.qmd
+    - part: "Part I: Pretraining scaling"
+      chapters:
+        - chapters/10-reference-suites.qmd
+        - chapters/11-marin.qmd
+        - chapters/12-olmo.qmd
+    - part: "Part II: Post-training and RL scaling"
+      chapters:
+        - chapters/20-prime-intellect.qmd
+    - part: "Synthesis"
+      chapters:
+        - chapters/90-cross-lab.qmd
+  appendices:
+    - chapters/99-methods.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    number-sections: true
+    code-fold: true
+    fig-width: 8
+    fig-height: 5
+
+execute:
+  echo: false
+  warning: false
+  freeze: auto
+
+jupyter: python3

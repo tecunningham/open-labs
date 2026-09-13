@@ -1,0 +1,8 @@
+_book/
+.quarto/
+_freeze/
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
+/.quarto/

@@ -1,0 +1,46 @@
+# Reference scaling suites: Pythia and Cerebras-GPT
+
+These are designed scaling suites, not labs with an experiments-vs-final split. They give clean
+reference curves on a public dataset (the Pile) against which the lab chapters can be read.
+
+```{python}
+#| echo: false
+from src.chapter import *  # noqa
+```
+
+## Pythia (EleutherAI)
+
+70M to 12B, same 300B tokens in the same order, 154 checkpoints per model.
+
+```{python}
+df_p = load.runs("eleutherai", "pythia")
+fit_p = fits.fit_power_law(df_p["flops"], df_p["loss"], irreducible=True) if len(df_p.dropna(subset=["flops","loss"])) >= 3 else None
+fig, ax = plt.subplots(figsize=(8, 5)); plots.scaling_curve(df_p, fit=fit_p, ax=ax, title="Pythia: loss vs compute"); plt.show()
+if fit_p: display(Markdown(f"Fitted: `{fit_p.label()}`. Elasticity at the 12B run: {fit_p.elasticity(df_p['flops'].max()):.3f}"))
+```
+
+## Cerebras-GPT
+
+Seven sizes, 111M to 13B, trained compute-optimally; the lab publishes its own fitted law.
+
+```{python}
+df_c = load.runs("cerebras", "cerebras-gpt")
+fit_c = fits.fit_power_law(df_c["flops"], df_c["loss"], irreducible=True) if len(df_c.dropna(subset=["flops","loss"])) >= 3 else None
+fig, ax = plt.subplots(figsize=(8, 5)); plots.scaling_curve(df_c, fit=fit_c, ax=ax, title="Cerebras-GPT: loss vs compute"); plt.show()
+if fit_c: display(Markdown(f"Fitted: `{fit_c.label()}`."))
+```
+
+## Both suites on one axis
+
+```{python}
+fig, ax = plt.subplots(figsize=(8, 5))
+plots.overlay_projects({"Pythia": df_p, "Cerebras-GPT": df_c}, {"Pythia": fit_p, "Cerebras-GPT": fit_c}, ax=ax, title="Reference suites (Pile loss)")
+plt.show()
+```
+
+## Published fits and key numbers
+
+```{python}
+experiments_table("eleutherai"); experiments_table("cerebras");
+df = pd.concat([df_p, df_c]); display(key_numbers(df)) if not df.empty else None
+```

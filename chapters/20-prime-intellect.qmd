@@ -1,0 +1,37 @@
+# Prime Intellect (RL pilot)
+
+The pilot chapter for post-training and RL. INTELLECT-2's report publishes reward trajectories and ablations, including things that did not work. Here the x-axis is RL compute and "final run" is the released post-trained model.
+
+```{python}
+#| echo: false
+from src.chapter import *  # noqa
+```
+
+## Scaling curve, compute split, run sizes, timeline
+
+```{python}
+df, fit, res = standard_figures("prime-intellect")
+```
+
+## Published scaling experiments
+
+```{python}
+experiments_table("prime-intellect");
+```
+
+## What the lab says about itself
+
+```{python}
+claims_table("prime-intellect");
+```
+
+## Key numbers
+
+```{python}
+display(key_numbers(df)) if not df.empty else display(Markdown("_No runs recorded yet._"))
+```
+
+## Narrative
+
+_To be written once the data is in: what the experiments were for, what the lab said it learned,
+and what cannot be reconstructed._

@@ -1,0 +1,40 @@
+# Cross-lab synthesis
+
+```{python}
+#| echo: false
+from src.chapter import *  # noqa
+import numpy as np
+```
+
+## All final runs and ladders
+
+```{python}
+all_runs = load.runs()
+groups = {f"{r.lab}/{r.project}": load.runs(r.lab, r.project) for r in all_runs[["lab","project"]].drop_duplicates().itertuples()}
+fit_map = {k: fits.fit_experiments(v) for k, v in groups.items()}
+fig, ax = plt.subplots(figsize=(9, 6)); plots.overlay_projects(groups, fit_map, ax=ax, title="All projects: loss vs compute"); plt.show()
+```
+
+## Experiment share, terminal slope, prediction residual by project
+
+```{python}
+rows = []
+for k, v in groups.items():
+    f = fit_map[k]; res = fits.final_residuals(v, f)
+    rows.append({"project": k, "runs": len(v), "finals": int(v["is_final"].sum()),
+                 "experiment_share_flops": load.experiment_share(v),
+                 "fit_alpha": f.alpha if f else np.nan,
+                 "median_log_residual_final": res["log_residual"].median() if not res.empty else np.nan,
+                 "elasticity_at_final": res["elasticity_at_final"].median() if not res.empty else np.nan})
+tab = pd.DataFrame(rows)
+display(tab.round(3)) if not tab.empty else display(Markdown("_No data yet._"))
+```
+
+## Mapping back to the elasticity paper
+
+| Paper primitive | Column above | Notes |
+|---|---|---|
+| Experimental compute share S_E | `experiment_share_flops` | lower bound; compare with each lab's stated share in `claims.csv` |
+| Algorithmic efficiency growth g_A | compute multiplier between successive projects of one lab (see lab chapters) | check scale-bias by evaluating at two or three fixed compute levels |
+| Marginal return to compute at the frontier | `elasticity_at_final` | d log L / d log C at the final run |
+| Informativeness of experiments | `median_log_residual_final` | 0 means experiments predicted the final run exactly |
