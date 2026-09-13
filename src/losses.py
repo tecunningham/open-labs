@@ -153,3 +153,115 @@ def marin_8b() -> list[Segment]:
 
 def marin_32b() -> list[Segment]:
     return segments("marin", MARIN_32B_SPEC, MARIN_32B, MARIN_KEY, released=MARIN_32B_RELEASED)
+
+
+# --------------------------------------------------------------------------- whole runs on one axis
+
+@dataclass
+class Curve:
+    """One pretraining run (possibly several phases stitched together) as a single loss curve,
+    with the parameter count needed to put it on a compute axis (6 * params * tokens)."""
+    name: str
+    kind: str          # 'ladder', 'final', 'aborted'
+    params: float
+    tokens: np.ndarray
+    loss: np.ndarray
+
+    @property
+    def flops(self) -> np.ndarray:
+        return 6.0 * self.params * self.tokens
+
+
+def stitch(lab: str, run_ids: list[str], schedule: Schedule, key: str | list[str]) -> tuple[np.ndarray, np.ndarray]:
+    """Concatenate several runs.csv rows (phases of one run) into one token-sorted curve. `key` may
+    be a list of alternative column names (a metric renamed between segments); the first non-null
+    value per row is used."""
+    keys = [key] if isinstance(key, str) else key
+    xs, ys = [], []
+    for rid in run_ids:
+        c = curve(lab, rid)
+        present = [k for k in keys if k in c.columns]
+        if not present:
+            continue
+        v = c[present].bfill(axis=1).iloc[:, 0]
+        c = c.assign(_v=v).dropna(subset=["_v"]).sort_values("_step")
+        xs.append(cumulative_tokens(c["_step"], schedule)); ys.append(c["_v"].to_numpy())
+    x = np.concatenate(xs); y = np.concatenate(ys)
+    o = np.argsort(x, kind="stable")
+    return x[o], y[o]
+
+
+# The abandoned Tootsie trials ramped their batch size and the exact switch steps are not
+# public, so their step -> token conversion uses the average tokens per step implied by the W&B
+# `throughput/total_tokens` counter at the last logged step (data/notes/marin.md, item 9).
+_AVG_TPS = {"13B": 2.271e12 / 367_148, "24B": 2.431e12 / 326_496, "70B": 1.542e12 / 277_173}
+
+MARIN_PRETRAINING = [
+    # (name, kind, params, run_ids in trunk order, schedule)
+    *[(f"ladder d{w}", "ladder", p, [f"tootsie-scaling-{w} (Dec 2024 ladder, 16L, 210B tokens)"], [(0, 4_194_304)])
+      for w, p in [(512, 2.49e8), (768, 4.61e8), (1024, 7.32e8), (1536, 1.45e9), (2048, 2.34e9)]],
+    ("Marin 8B (Tootsie)", "final", 8.03e9,
+     [s[0] for s in MARIN_8B_SPEC if s[2] in ("final", "midtrain")], MARIN_8B),
+    ("13B trial", "aborted", 1.3e10, ["exp860 Tootsie 13B"], [(0, _AVG_TPS["13B"])]),
+    ("24B trial", "aborted", 2.4e10, ["exp861 Tootsie 24B"], [(0, _AVG_TPS["24B"])]),
+    ("70B trial", "aborted", 7.0e10, ["exp750 Tootsie 70B"], [(0, _AVG_TPS["70B"])]),
+    ("Marin 32B (Mantis)", "final", 3.2e10,
+     ["exp1295_32b phase1 (Llama-3-style 32B, spiky)", "exp1395_qwen3_32b phase3 (QK-Norm switch, warm-start from 80k)",
+      "marin-32b-base Mantis (aggregate final artifact)"], MARIN_32B),
+    # 2026: Delphi's held-out dense targets (compute-optimal, AdamH recipe) and the MoE runs. MoE
+    # compute uses active parameters (about 2B of 67B for Snowball; 23B of 535B for the hero run).
+    ("Delphi 1e21 (3.4B)", "delphi", 3.383e9, ["Delphi optimal 1e21 (3 seeds: 0, 42, 62746)"], [(0, 2_097_152)]),
+    ("Delphi 1e22 (9.7B)", "delphi", 9.715e9, ["delphi-1e22-9.7Bparams-160Btokens (3 seeds)"], [(0, 4_194_304)]),
+    ("Delphi 1e23 (25B)", "delphi", 2.496e10, ["Delphi optimal 1e23 (25B params, 600B tokens)"], [(0, 8_388_608)]),
+    ("Snowball 67B-A2B", "moe", 2.0e9, ["Snowball 67B-A2B pretrain+midtrain on 10T tokens (#6044)"],
+     [(0, 4096 * 8192), (15_288, 8192 * 8192)]),
+    ("535B-A23B hero (running)", "moe", 2.3e10, ["[Hero Run] 535B-A23B on 18.75T tokens (#8435)"], [(0, 46_137_344)]),
+]
+# The hero run's later segments re-log the evaluation from step 0 under `eval_dropless/...`
+# (routing without capacity-factor token dropping), which spans the whole run; the first segment's
+# `eval/...` values are a different evaluation mode and are not mixed in.
+MARIN_CURVE_KEYS = {"535B-A23B hero (running)": ["eval_dropless/paloma/c4_en-llama3/loss"]}
+
+
+# Start dates of the runs above (W&B run creation), for efficiency-over-time views.
+MARIN_START = {"ladder d512": "2024-12-16", "ladder d768": "2024-12-16", "ladder d1024": "2024-12-16", "ladder d1536": "2024-12-16",
+               "ladder d2048": "2024-12-16", "Marin 8B (Tootsie)": "2024-11-28", "13B trial": "2025-02-14", "24B trial": "2025-02-14",
+               "70B trial": "2025-01-31", "Marin 32B (Mantis)": "2025-04-24", "Delphi 1e21 (3.4B)": "2026-03-04",
+               "Delphi 1e22 (9.7B)": "2026-03-04", "Delphi 1e23 (25B)": "2026-03-04", "Snowball 67B-A2B": "2026-06-27",
+               "535B-A23B hero (running)": "2026-08-20"}
+
+
+def compute_to_reach(c: Curve, target: float, min_tokens: float = 2e10) -> float:
+    """Cumulative 6ND compute at which a run's loss first falls to `target`, interpolated; NaN if
+    it never does. Points before `min_tokens` are ignored so warm-up noise does not count."""
+    k = c.tokens >= min_tokens
+    x, y = c.flops[k], c.loss[k]
+    below = np.where(y <= target)[0]
+    if len(below) == 0:
+        return float("nan")
+    i = below[0]
+    if i == 0:
+        return float(x[0])
+    f = (y[i - 1] - target) / (y[i - 1] - y[i])
+    return float(np.exp(np.log(x[i - 1]) + f * (np.log(x[i]) - np.log(x[i - 1]))))
+
+
+def marin_pretraining_curves(include_2026: bool = True) -> list[Curve]:
+    """Every Marin pretraining run with a public c4_en curve, as one curve each. The 32B trunk
+    stops at the cooldown branch point (phase 3 ran 10k steps past it); the 13B curve starts at
+    step 280k because only its longest restart segment was fetched. Runs whose curve has not been
+    fetched are skipped."""
+    out = []
+    for name, kind, params, run_ids, schedule in MARIN_PRETRAINING:
+        if not include_2026 and kind in ("delphi", "moe"):
+            continue
+        try:
+            x, y = stitch("marin", run_ids, schedule, MARIN_CURVE_KEYS.get(name, MARIN_KEY))
+        except FileNotFoundError:
+            continue
+        if name.startswith("Marin 32B"):
+            cut = cumulative_tokens(160_000, schedule)   # drop phase-3 points past the cooldown fork
+            keep = (x <= cut) | (x >= cumulative_tokens(160_002, schedule) - 1)
+            x, y = x[keep], y[keep]
+        out.append(Curve(name, kind, params, x, y))
+    return out

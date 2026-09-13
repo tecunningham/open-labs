@@ -12,6 +12,331 @@ from src.chapter import *  # noqa
 import numpy as np
 ```
 
+## Marin at a glance
+
+Two figures before the detail. First, the released and evaluated checkpoints over time, scored
+on Marin's own 19-task base-model average and on MMLU, with circle area proportional to the
+cumulative pretraining compute behind each checkpoint. Post-training compute would be drawn as
+a ring around the disk, but the 8B instruct model's SFT used 2.6e20 FLOPs, four ten-thousandths
+of the base's 6.1e23, so the ring would be indistinguishable from the disk and is omitted; the
+32B has no post-trained release. The 2026 runs are missing from this figure because none has a
+published benchmark table yet: Delphi's held-out models (March 2026), Snowball 67B-A2B
+(pretraining finished August 2026) and the 535B-A23B hero run (in progress) have public loss
+curves, which the next figure uses, but no evaluations.
+
+```{python}
+#| column: page
+#| fig-width: 10
+#| fig-height: 4.5
+N8 = 6 * 8.03e9   # FLOPs per token for the 8B
+pts = pd.DataFrame([
+    # date, label, metric, value, cumulative pretraining FLOPs, post-training FLOPs, kind
+    ("2025-03-01", "Jellyfish (8B at 4.78T)", "MMLU", 65.3, N8 * 4.78e12, np.nan, "midtrain"),
+    ("2025-05-15", "Marin 8B", "MMLU", 67.6, 6.1e23, 2.6e20, "final"),
+    ("2025-10-29", "Marin 32B", "MMLU", 74.7, 1.24e24, np.nan, "final"),
+    ("2025-05-15", "Marin 8B", "19-task", 66.6, 6.1e23, 2.6e20, "final"),
+    ("2025-10-01", "Bison cooldown (discarded)", "19-task", 63.0, 1.24e24, np.nan, "aborted"),
+    ("2025-10-29", "Marin 32B", "19-task", 65.2, 1.24e24, np.nan, "final"),
+], columns=["date", "label", "metric", "value", "flops", "post_flops", "kind"])
+pts["date"] = pd.to_datetime(pts["date"])
+fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
+plots.capability_timeline(pts[pts["metric"] == "19-task"], ax=axes[0], ylabel="19-task base average",
+                          title="Marin's own 19-task average", ref_lines={"Llama 3.1 8B (same harness): 65.3": 65.3},
+                          fmax=1.24e24, notes="Snowball 67B-A2B (Aug 2026): no evals published")
+plots.capability_timeline(pts[pts["metric"] == "MMLU"], ax=axes[1], ylabel="MMLU 5-shot", title="MMLU 5-shot",
+                          fmax=1.24e24)
+for a in axes:
+    a.set_xlim(pd.Timestamp("2025-01-01"), pd.Timestamp("2026-01-01"))
+fig.tight_layout(); plt.show()
+```
+
+Two released dense models in five months is a short series, and the 32B's 19-task average is
+*below* the 8B's despite twice the compute: the 19-task suite saturates on easy tasks and the
+32B's gains were on MMLU (+7), MMLU-Pro (+9) and BBH. The discarded Bison cooldown sits two
+points under Mantis on the same tokens.
+
+Second, every Marin pretraining run with a public loss curve on one axis, three generations of
+recipe: the five-width December 2024 ladder and the 2025 dense runs (the 8B with all its phases
+stitched together, the three abandoned Tootsie trials, the 32B) in the hand-tuned Llama-style
+recipe; Delphi's three held-out compute-optimal models from March 2026 in the AdamH recipe; and
+the 2026 mixture-of-experts runs, Snowball 67B-A2B and the 535B-A23B hero run as far as it has
+got. The second chart puts them on cumulative compute (6ND, active parameters for the MoEs),
+which is what makes sizes and recipes comparable. The first 20B tokens of each run are cut. The
+MoE curves are the Paloma c4_en loss under dropless routing (no capacity-factor token dropping);
+the hero run's first segment logged a capacity-dropped evaluation instead, which sits about 0.13
+nats higher at the same step and is not drawn.
+
+```{python}
+#| column: page
+#| fig-width: 11
+#| fig-height: 6
+cur = losses.marin_pretraining_curves()
+fig, ax = plt.subplots(figsize=(11, 6))
+plots.loss_curves(cur, x="tokens", ax=ax, ylabel="Paloma c4_en eval loss (nats/token)", min_tokens=2e10,
+                  title="Every Marin pretraining run, by cumulative tokens")
+ax.set_ylim(2.08, 3.45)   # the 32B's first eval points are above 4 and would set the scale
+plt.show()
+```
+
+```{python}
+#| column: page
+#| fig-width: 11
+#| fig-height: 6
+fig, ax = plt.subplots(figsize=(11, 6))
+plots.loss_curves(cur, x="flops", ax=ax, ylabel="Paloma c4_en eval loss (nats/token)", min_tokens=2e10,
+                  title="Every Marin pretraining run, by cumulative compute (6ND; active parameters for MoEs)")
+ax.set_ylim(2.08, 3.45)
+plt.show()
+```
+
+Three readings from the compute axis.
+
+**Size, within one recipe.** Where the 13B trial stopped (1.8e23 FLOPs) it was at 2.50 against
+the 8B's 2.60 at the same compute; the 24B at 3.5e23 was 2.45 against 2.51. The 70B stopped at
+6.5e23, just past the finished 8B's 6.1e23, at 2.42 against the 8B's final 2.35: on matched
+compute the smaller model won, because it had a cooldown and the 70B never did. That is the same
+lesson as the trajectory figure below, from the other side: without a cooldown a trial's loss
+understates the model. The ladder's small models, trained to 90 to 900 tokens per parameter, sit
+well above everything else at equal compute, which is what over-training past the
+compute-optimal point costs.
+
+**Recipe, at equal compute.** Delphi's 1e23 model reached 2.34 on 9.4e22 FLOPs. The 32B, on the
+2025 recipe, was at 2.42 when it had spent the same compute, and the 8B at 2.55; the finished
+32B needed 1.2e24, thirteen times as much, to get to 2.20. Delphi's 1e22 model likewise beats
+the 8B at matched compute by 0.12. Some of that is compute-optimal allocation rather than
+recipe, since the 2025 runs were far past optimal tokens per parameter at any given point, but
+it is the cleanest cross-generation comparison Marin's record allows.
+
+**Architecture.** Snowball, at 1.2e23 FLOPs of active-parameter compute, ended at 2.27, below
+Delphi's 25B dense model at similar compute and below where the 32B was at that compute by
+0.12. The hero run at 4.6T tokens (6.3e23 FLOPs so far) is at 2.29, level with where the 32B
+was at the same compute, and still at full learning rate with three quarters of its tokens to
+go. The 6ND-on-active-parameters convention flatters MoEs, since it ignores the memory and
+communication cost of the inactive experts, and the two MoE curves should be read against each
+other and against the Marin MoE law rather than as a like-for-like efficiency gain.
+
+Bookkeeping: the 13B trial's curve starts at 1.7T tokens because only its longest restart
+segment was fetched; the trials' token axes use the average tokens per step from W&B, since
+their batch ramps are not public; Snowball's active parameter count (about 2B) is from the model
+name, not a stated figure.
+
+## Returns to post-training compute
+
+Marin has published no RL curve, and its only released post-trained model is the SFT-only 8B
+instruct. But one 2026 experiment (issue 3956, April to May 2026) is exactly a returns-to-SFT
+sweep: the Marin 8B base fine-tuned on OpenThoughts-4 math subsets of 256, 512, 1,024, 2k, 5k,
+10k and 50k examples, each with reasoning traces written by one of eight teacher models, three
+training repeats per cell; the 32B base on 10k and 50k with four teachers. Every fine-tune was
+scored with evalchemy on AIME 24 and 25, AMC23, HMMT and MATH500, averaged over 3 to 10 sampling
+seeds, and the results are public W&B runs. `data/posttraining/marin_sft_scaling.csv` holds the
+1,014 averaged evaluations; `src/fetch_evalchemy.py` rebuilds it. SFT compute is not logged, so
+the x-axis is 6ND at an assumed 10,000 tokens per example (OpenThoughts traces run to the 32k
+cap); the assumption shifts every point by the same factor.
+
+```{python}
+#| column: page
+#| fig-width: 12
+#| fig-height: 5.5
+sft = pd.read_csv(load.DATA / "posttraining" / "marin_sft_scaling.csv")
+fig, axes = plt.subplots(1, 2, figsize=(12, 5.5))
+plots.sft_scaling(sft, "AIME24", ax=axes[0])
+plots.sft_scaling(sft, "MATH500", ax=axes[1])
+fig.tight_layout(); plt.show()
+```
+
+Four readings.
+
+**The shape depends on the benchmark.** MATH500 rises close to log-linearly in SFT compute, from
+13 to 28 percent at 256 examples to 66 to 83 percent at 50k on the 8B, roughly seven points per
+doubling of data. AIME24 is flat within noise, under 4 percent, through 10k examples and then
+jumps to 18 to 36 percent at 50k. A competition benchmark reads as a threshold; a broad one reads
+as a smooth return.
+
+**The base model carries through.** At the same data and teacher, the 32B lands 10 to 20 AIME24
+points above the 8B (47 against 36 percent with Qwen3-30B-A3B traces at 50k). Pretraining
+compute and post-training compute are not substitutes here; the larger base gets more from
+every example.
+
+**The teacher matters as much as the data.** At 50k examples on the 8B, traces from
+Qwen3-30B-A3B-Thinking give 36 percent on AIME24 and traces from Qwen3-4B give 18, at identical
+SFT compute. What is being bought is distilled capability from a stronger model, so this is a
+return to distillation, not to post-training compute alone, and it cannot be read across to RL.
+
+**The compute is tiny.** The 50k-example run is about 2.4e19 FLOPs for the 8B under the stated
+assumption, four hundred-thousandths of the 6.1e23 pretraining run; the whole sweep, some 130
+fine-tunes, is under 1e21. Whatever the right functional form, the marginal return per FLOP in
+this regime is orders of magnitude above the pretraining curve's, which is the standard argument
+for why labs moved spend into post-training. Marin's own move is the Snowball post-training
+pipeline, which had no published numbers as of September 2026.
+
+## Compute and cost
+
+Marin has never published a dollar figure, a GPU-hour total or a budget. What exists: the compute
+was donated (Google's TPU Research Cloud for the 2024 and 2025 runs and for Delphi; the Jen-Hsun
+and Lori Huang Foundation's CoreWeave GB200 allocation for the 535B run, out of a total
+foundation purchase of about $108M of CoreWeave compute for AI research that is not broken down
+by project), development funding came from the Siegel Family Endowment and Schmidt Sciences, and
+the team grew from one to about ten FTE between 2025 and 2026. The table converts the 6ND
+compute of every sized Marin run into the book's common yardstick, H100-hours at 40 percent
+utilisation and $2 per hour; these are what the runs *would* have cost at cloud list price on
+GPUs, not what Marin paid, which was nothing in cash for the accelerators.
+
+```{python}
+dm = load.runs("marin")
+dm = dm[~dm["run_id"].str.contains("aggregate")].copy()
+cost = (dm.dropna(subset=["flops"]).groupby(["project", "run_type"], observed=True)["flops"].sum().reset_index())
+cost["H100-hours (40% MFU)"] = cost["flops"] / plots.FLOPS_PER_GPU_HOUR
+cost["USD at $2/H100-h"] = cost["H100-hours (40% MFU)"] * plots.USD_PER_GPU_HOUR
+tot = cost[["flops", "H100-hours (40% MFU)", "USD at $2/H100-h"]].sum()
+t = cost.copy(); t["flops"] = t["flops"].map(fmt_flops)
+t["H100-hours (40% MFU)"] = t["H100-hours (40% MFU)"].map(lambda v: f"{v:,.0f}"); t["USD at $2/H100-h"] = t["USD at $2/H100-h"].map(lambda v: f"${v / 1e6:,.2f}M")
+display(t.sort_values(["project", "run_type"]))
+display(Markdown(f"All sized Marin runs together: **{tot['flops']:.1e} FLOPs**, about **{tot['H100-hours (40% MFU)'] / 1e6:.1f}M H100-hours** or "
+                 f"**${tot['USD at $2/H100-h'] / 1e6:,.0f}M** at list price; the 535B hero run alone is {2.7e24 / tot['flops']:.0%} of it. "
+                 "Rows typed `final` include the released 8B and 32B and the Snowball and 535B runs; `aborted` is the discarded 32B cooldown, "
+                 "rescues and the 13B/24B/70B trials; `ladder` is Delphi, the MoE sweeps and the 2024 width ladder."))
+```
+
+The share that did not ship (aborted plus ladder plus ablation rows) is the experiment share
+this book is after, and for Marin it is a floor: the 446-issue long tail of small ablations has
+no compute attached, and the 2026 MoE screening cells (about 80 runs at d512 to d1280) are one row.
+People are the other missing half. At ten FTE and a fully loaded US research-engineer cost of
+$300k to $500k a year, Marin's labour bill is a few million dollars a year, the same order as the
+list-price value of a year of its compute; but neither number is Marin's, and the lab has not
+published either.
+
+## Algorithmic efficiency across recipe generations
+
+The cleanest measure of algorithmic progress a lab's own record allows is the compute its
+*finished* runs needed to reach a given loss, generation by generation. Finished matters: under a
+warmup-stable-decay schedule the loss drops at the cooldown wherever it happens to fall, so the
+point along a curve where it first crosses a threshold mostly measures where the cooldown was,
+not how good the recipe is. The figure below therefore uses only endpoints: the five December
+2024 ladder runs, the two 2025 dense releases, Delphi's three 2026 held-out models, and Snowball.
+The 13B, 24B and 70B trials and the running hero are excluded because they never cooled down. A
+power law is drawn through each generation's endpoints; dashed where extrapolated.
+
+```{python}
+#| column: page
+#| fig-width: 11
+#| fig-height: 6
+curd = {c.name: c for c in cur}
+end = lambda n: (float(curd[n].flops[-1]), float(curd[n].loss[-1]))
+gen_rows = []
+for n in [k for k in curd if k.startswith("ladder")]:
+    gen_rows.append(("Dec 2024 width ladder (210B tokens each)", n.replace("ladder ", ""), *end(n), "dense"))
+for n in ["Marin 8B (Tootsie)", "Marin 32B (Mantis)"]:
+    gen_rows.append(("2025 dense recipe (Llama-style, hand-tuned)", n.split(" (")[0], *end(n), "dense"))
+for n in ["Delphi 1e21 (3.4B)", "Delphi 1e22 (9.7B)", "Delphi 1e23 (25B)"]:
+    gen_rows.append(("Mar 2026 Delphi (AdamH, compute-optimal)", n, *end(n), "dense"))
+gen_rows.append(("2026 MoE (Snowball 67B-A2B)", "Snowball", *end("Snowball 67B-A2B"), "moe"))
+gen = pd.DataFrame(gen_rows, columns=["generation", "name", "flops", "loss", "kind"])
+fig, ax = plt.subplots(figsize=(11, 6))
+_, gfits = plots.generation_frontier(gen, ax=ax, guides=[2.35, 2.27], ylabel="Final Paloma c4_en eval loss (nats/token)",
+                                     title="Finished Marin runs by recipe generation: final loss against total compute")
+plt.show()
+f25, fD = gfits["2025 dense recipe (Llama-style, hand-tuned)"], gfits["Mar 2026 Delphi (AdamH, compute-optimal)"]
+inv = lambda f, L: (f.A / L) ** (1 / f.alpha)
+snow = end("Snowball 67B-A2B")
+display(Markdown(f"At c4_en **2.35** (the finished 8B's loss): 2025 recipe {inv(f25, 2.35):.1e} FLOPs, Delphi {inv(fD, 2.35):.1e}, "
+                 f"a **{inv(f25, 2.35) / inv(fD, 2.35):.1f}x** reduction in about ten months. At Snowball's **{snow[1]:.3f}**: the 2025 line needs "
+                 f"{inv(f25, snow[1]):.1e}, Delphi's line (extrapolated {inv(fD, snow[1]) / 9.4e22:.1f}x past its largest run) {inv(fD, snow[1]):.1e}, "
+                 f"Snowball used {snow[0]:.1e}: **{inv(f25, snow[1]) / snow[0]:.1f}x** over 2025 and **{inv(fD, snow[1]) / snow[0]:.1f}x** over Delphi, "
+                 "on active-parameter compute."))
+```
+
+Three cautions on reading this as a rate of algorithmic progress. The generations differ in data
+as well as recipe (DCLM and Nemotron-CC for the 2025 runs, a Nemotron, StarCoder and ProofPile
+mix for Delphi), and c4_en is a web-text loss, so part of the gap is data mix. The 2025 runs
+were trained far past compute-optimal tokens per parameter, so part of the gap is allocation
+rather than optimizer or architecture; Delphi's own contribution was to make the allocation
+principled. And MoE compute on active parameters ignores the memory and communication cost of
+the inactive experts, which is why Marin quotes its MoE gain as 6.7x theoretical but 3.6x
+realised on TPU v4. Marin's own stated multipliers, on its Paloma macro-loss metric, are: the May
+2026 recipe law against the April MoE law, which at equal loss implies about 2.1x less compute
+in seven weeks (the coefficient fell from 95.18 to 88.90 at a shared exponent of 0.0941); the MoE
+recipe against Delphi, 3.6x realised; and the 2025 optimizer benchmark, at most 1.4x over AdamW
+at 130M shrinking to about 1.1x at 1.2B. Taken together with the endpoint frontier, Marin's
+record is consistent with something like a 5 to 10x fall in compute-to-loss between the 2025
+and 2026 recipes, most of it from compute-optimal allocation and the AdamH recipe, with MoE
+adding a further two-fold on the active-parameter accounting.
+
+## All scaling experiments over time
+
+Every Marin experiment with a date, on one time axis. The six families that produced a scaling
+curve are drawn as insets on shared axes (compute 1e17 to 1e25 FLOPs on x, loss 2.0 to 3.8 on y),
+each above its date, so their shapes and ranges can be compared directly; every other dated
+experiment in `experiments.csv` is a tick on the timeline, coloured by stage. The insets do not
+share a metric: the ladder and Tootsie panels are Paloma c4_en, Delphi is its Nemotron-mix eval
+loss, and the two MoE laws are Paloma macro loss, so compare shapes across panels, not levels.
+
+```{python}
+#| column: page
+#| fig-width: 12
+#| fig-height: 7.5
+delphi = pd.read_csv(load.DATA / "experiments_data" / "marin_delphi_ladder.csv")
+
+def draw_ladder(ax):
+    lad = [c for n, c in curd.items() if n.startswith("ladder")]
+    x = np.array([c.flops[-1] for c in lad]); y = np.array([c.loss[-1] for c in lad])
+    f = fits.fit_power_law(x, y); xs = np.geomspace(x.min(), 3e24, 50)
+    ax.plot(xs, f.predict(xs), color=plots.MUTED, lw=1, ls=(0, (2, 2)))
+    ax.scatter(x, y, s=18, c=plots.RUN_COLORS["ladder"], zorder=3)
+
+def draw_tootsie(ax):
+    for c, kind in [(curd["Marin 8B (Tootsie)"], "final"), (curd["Marin 32B (Mantis)"], "final"),
+                    (curd["13B trial"], "aborted"), (curd["24B trial"], "aborted"), (curd["70B trial"], "aborted")]:
+        k = c.tokens >= 2e10; col = plots.RUN_COLORS["final"] if kind == "final" else plots.MUTED
+        ax.plot(c.flops[k], c.loss[k], color=col, lw=1 if kind == "final" else 0.8, ls="-" if kind == "final" else (0, (2, 2)))
+        ax.scatter([c.flops[-1]], [c.loss[-1]], s=40 if kind == "final" else 14, marker="*" if kind == "final" else "x", c=col, zorder=3)
+
+def draw_delphi(ax):
+    iso = delphi[delphi["kind"] == "isoflop"]; opt = delphi[delphi["kind"] == "optimum"]
+    ho = delphi[(delphi["kind"] == "held_out") & (delphi["seed"] == "default")]
+    ax.scatter(iso["total_gflops"] * 1e9, iso["loss"], s=8, c=plots.MUTED, alpha=0.6, zorder=2)
+    ax.plot(opt["C_flops"], opt["loss_star"], color=plots.RUN_COLORS["ladder"], lw=1.2, zorder=3)
+    f = fits.fit_power_law(opt["C_flops"], opt["loss_star"], irreducible=True); xs = np.geomspace(3e20, 3e23, 50)
+    ax.plot(xs, f.predict(xs), color=plots.RUN_COLORS["ladder"], lw=1, ls=(0, (2, 2)))
+    ax.scatter(ho["C_nom"], ho["loss"], s=40, marker="*", c=plots.RUN_COLORS["final"], zorder=4)
+
+def draw_moe_law(ax, A, lo, hi, val=None):
+    law = fits.stated_fit(E=1.6, A=A, alpha=0.0941); xs = np.geomspace(1e17, 1e25, 100); inside = (xs >= lo) & (xs <= hi)
+    ax.plot(xs[inside], law.predict(xs[inside]), color=plots.RUN_COLORS["ablation"], lw=1.4)
+    ax.plot(xs, law.predict(xs), color=plots.RUN_COLORS["ablation"], lw=0.8, ls=(0, (2, 2)))
+    if val:
+        ax.scatter([val[0]], [val[1]], s=40, marker="*", c=plots.RUN_COLORS["final"], zorder=4)
+
+def draw_hero_ladder(ax):
+    for C in [1.8e19, 1.3e20, 9.2e20, 6.7e21]:
+        ax.axvline(C, color=plots.RUN_COLORS["ladder"], lw=1)
+    ax.axvline(2.7e24, color=plots.RUN_COLORS["final"], lw=1.5, ls=(0, (2, 2)))
+    ax.text(0.5, 0.5, "rung sizes only;\nlosses not public", transform=ax.transAxes, ha="center", fontsize=6.5, color=plots.MUTED)
+
+fams = [
+    dict(date="2024-12-16", title="Width ladder (5 runs)", metric="c4_en loss", draw=draw_ladder),
+    dict(date="2025-04-01", title="Tootsie 8B / 32B and trials", metric="c4_en loss", draw=draw_tootsie),
+    dict(date="2026-03-15", title="Delphi IsoFLOP (81) + held-out", metric="Nemotron-mix eval loss", draw=draw_delphi),
+    dict(date="2026-04-06", title="MoE v16 law (fit 1e18 to 1e20)", metric="Paloma macro loss", draw=lambda ax: draw_moe_law(ax, 95.18, 1e18, 1e20, (1e21, 2.599))),
+    dict(date="2026-05-30", title="May recipe law (fit 1e18 to 3e19)", metric="Paloma macro loss", draw=lambda ax: draw_moe_law(ax, 88.90, 1e18, 3e19)),
+    dict(date="2026-08-15", title="535B hero-shape ladder (4 rungs)", metric="(no losses)", draw=draw_hero_ladder),
+]
+ex = load.experiments("marin")
+def first_date(s):
+    s = str(s).strip().split(" to ")[0]
+    return pd.Timestamp(s + ("-07-01" if len(s) == 4 else "-15" if len(s) == 7 else ""))
+ticks = pd.DataFrame({"date": ex["date"].map(first_date), "label": ex["intervention"].str.slice(0, 38), "stage": ex["stage"]})
+fig = plots.experiment_timeline(fams, ticks, xlim=(1e17, 1e25), ylim=(2.0, 3.8),
+                                title="Marin's scaling experiments, Nov 2024 to Sep 2026 (insets on shared axes; metric per panel)")
+plt.show()
+```
+
+The picture is of a lab that ran one width ladder, then trained by hand for a year, then built
+the apparatus: within five months of March 2026 it had an IsoFLOP suite validated at 300x, two
+successive MoE laws on the same functional form, a learning-rate law, and a hero-shape ladder.
+The 2025 panel is the only one whose curves are actual training trajectories rather than fitted
+laws or ladder endpoints; everything before it is five points and everything after it is a
+formula plus a validation star.
+
 ## What is unusual here
 
 Marin's flagship 2025 runs were **not** preceded by a scaling ladder. The 8B was chosen "mostly

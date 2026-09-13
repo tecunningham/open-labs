@@ -37,6 +37,34 @@ level with `main`):
   2.5 Deep Think and 3 Pro are figure-only; GPT-5.6 and GPT-6 Astra report most self-improvement
   evals as curves without printed values; Anthropic's Sonnet 4 and Opus 4.1 launch-time
   Terminal-bench numbers are memory-only.
+- **Release timeline.** The preface also has a lab-by-row timeline of every released model with
+  circle area proportional to training compute (`plots.release_timeline`, data in
+  `data/releases.csv`: one row per release with `flops`, `flops_basis`, `kind` = pretrain /
+  posttrain / planned, and confidence). Post-training-only releases are converted from GPU-hours
+  at 1.44e18 FLOPs per H100-hour (40% MFU); dollars in the key assume $2 per H100-hour. Add a
+  row there when a lab ships something.
+- **Marin post-training, cost, efficiency, experiment timeline.** The chapter now has: a
+  returns-to-SFT figure from Marin issue 3956 (`data/posttraining/marin_sft_scaling.csv`, 1,014
+  averaged evalchemy results; rebuild with `python -m src.fetch_evalchemy`; SFT compute is
+  assumed at 1e4 tokens per example); a compute-and-cost table on the book's H100-hour yardstick
+  (Marin publishes no dollars; the Huang Foundation's ~$108M CoreWeave purchase is the only
+  money figure and is not Marin-specific); a generation-frontier figure (final loss vs total
+  compute of finished runs, `plots.generation_frontier`; use endpoints, not curve crossings,
+  because WSD cooldowns make crossing points meaningless); and an all-experiments timeline with
+  per-family insets (`plots.experiment_timeline`; Delphi plot data in
+  `data/experiments_data/marin_delphi_ladder.csv` from the HF datasets server).
+- **Marin 2026 curves.** Delphi's held-out 1e21/1e22/1e23 runs, Snowball 67B-A2B (four segments)
+  and the 535B hero run (three segments, still running; re-fetch it with
+  `python -m src.fetch_wandb marin` to extend the curve) are now in `data/losses/marin/` and
+  their final c4_en losses in `runs.csv`. The hero run logs `eval/...` in its first segment and
+  `eval_dropless/...` afterwards; only the dropless series is drawn (the other is ~0.1 higher).
+  No 2026 run has a benchmark table yet, so the capability timeline still stops at the 32B.
+- **Marin at a glance.** The Marin chapter opens with two figures: a capability timeline
+  (`plots.capability_timeline`; points are a small table in the chapter, 19-task average and
+  MMLU, circle area = cumulative pretraining compute, optional post-training ring) and every dense
+  pretraining run on one axis by tokens and by 6ND compute (`losses.marin_pretraining_curves`,
+  `plots.loss_curves`). The 13B/24B/70B trials use average tokens per step from W&B; the 13B curve
+  starts at step 280k because only its longest restart segment was fetched (fetch `mk1` to fix).
 - **Rendered.** `quarto render` passes for all chapters (Quarto 1.7.32, pandas 3.0, scipy 1.17).
 
 Environment setup: `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`) installs

@@ -51,5 +51,6 @@ Pinned in `TARGETS` in `src/fetch_wandb.py` with a note per row. Highlights:
 | Ai2 OLMo 2 7B/13B | `ai2-llm/OLMo-2-1124-7B`, `ai2-llm/OLMo-2-1124-13B` | 32B is on comet.ml, not pulled |
 | Ai2 ladder | `ai2-llm/olmo-ladder` | not public; ladder rows still have no loss |
 | EleutherAI Pythia | `eleutherai/pythia` | 10,352 runs; `eleutherai/pythia-extra-seeds` has seed replicates of the small models |
-| Marin | `marin-community/marin` | 113k runs; filter on `name` |
+| Marin | `marin-community/marin` | 113k runs; filter on `name`; also holds the Delphi held-out runs (`adamh-scaling-ladder-nemotron-optimal-*`) |
+| Marin 2026 MoE | `marin-community/marin_moe` | Snowball 67B-A2B (four trunk segments) and the 535B-A23B hero run (three segments, still running). The hero run's eval key is `eval/paloma/c4_en-llama3/loss` in its first segment and `eval_dropless/paloma/c4_en-llama3/loss` afterwards; `src/losses.py` coalesces them |
 | Cerebras-GPT | not on W&B | final Pile losses are already in `runs.csv` from the model card |

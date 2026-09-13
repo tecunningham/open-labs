@@ -1,0 +1,74 @@
+{
+ "run_id": "[Hero Run] 535B-A23B on 18.75T tokens (#8435)",
+ "aliases": [],
+ "project": "marin-community/marin_moe",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en-llama3/loss",
+  "eval_dropless/paloma/c4_en-llama3/loss",
+  "eval/macro_loss",
+  "eval_dropless/macro_loss"
+ ],
+ "tokens_per_step": 46137344,
+ "final_step": 99257.0,
+ "final_tokens": 4579454353408.0,
+ "final_loss": {
+  "train/loss": 1.2076177597045898,
+  "eval/paloma/c4_en-llama3/loss": 2.4508602619171143,
+  "eval_dropless/paloma/c4_en-llama3/loss": 2.29097056388855,
+  "eval/macro_loss": 2.290562152862549,
+  "eval_dropless/macro_loss": 2.0505518913269043
+ },
+ "note": "in progress; segments to step 58,020, 81,919 and running from 81k (99k on 2026-09-13)",
+ "segments": [
+  {
+   "run": "hero-12d8b6f0-dee637",
+   "display_name": "hero-12d8b6f0-dee637",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin_moe/runs/hero-12d8b6f0-dee637",
+   "created": "2026-08-20T02:04:58Z",
+   "last_heartbeat": "2026-09-03T23:14:25Z",
+   "final_step": 58020,
+   "summary": {
+    "train/loss": 1.2424730062484741,
+    "eval/paloma/c4_en-llama3/loss": 2.4508602619171143,
+    "eval_dropless/paloma/c4_en-llama3/loss": 2.3209316730499268,
+    "eval/macro_loss": 2.290562152862549,
+    "eval_dropless/macro_loss": 2.079505681991577
+   },
+   "rows": 1520
+  },
+  {
+   "run": "hero-wd-gate-router-p02-step58k",
+   "display_name": "hero-wd-gate-router-p02-step58k",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin_moe/runs/hero-wd-gate-router-p02-step58k",
+   "created": "2026-09-04T00:43:09Z",
+   "last_heartbeat": "2026-09-09T19:34:06Z",
+   "final_step": 81919,
+   "summary": {
+    "train/loss": 1.230409860610962,
+    "eval_dropless/paloma/c4_en-llama3/loss": 2.30021333694458,
+    "eval_dropless/macro_loss": 2.0602807998657227
+   },
+   "rows": 1506
+  },
+  {
+   "run": "hero-ragged_a2a-nccl2307-ep-step81k",
+   "display_name": "hero-ragged_a2a-nccl2307-ep-step81k",
+   "state": "running",
+   "url": "https://wandb.ai/marin-community/marin_moe/runs/hero-ragged_a2a-nccl2307-ep-step81k",
+   "created": "2026-09-09T22:52:18Z",
+   "last_heartbeat": "2026-09-13T18:32:56Z",
+   "final_step": 99262,
+   "summary": {
+    "train/loss": 1.203007698059082,
+    "eval_dropless/paloma/c4_en-llama3/loss": 2.29097056388855,
+    "eval_dropless/macro_loss": 2.0505518913269043
+   },
+   "rows": 1506
+  }
+ ],
+ "rows": 4532,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

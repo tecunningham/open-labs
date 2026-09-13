@@ -270,6 +270,354 @@ def loss_trajectory(segs, ax=None, title: str | None = None, ylabel: str = "Loss
     return ax
 
 
+def loss_curves(curves, x: str = "flops", ax=None, title: str | None = None, ylabel: str = "Loss",
+                min_tokens: float = 0.0, label_ends: bool = True):
+    """Several whole pretraining runs on one axis: eval loss against cumulative tokens (`x="tokens"`)
+    or cumulative compute 6ND (`x="flops"`), log x. `curves` are src.losses.Curve objects. Final
+    runs solid in project colours, abandoned trials dashed, ladder runs thin and grey."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 5))
+    slot = 0
+    ends: list[tuple[float, float]] = []      # (log10 x, adjusted y) of placed end-labels, for repelling
+    y_span = max(np.nanmax(np.concatenate([c.loss[c.tokens >= min_tokens] for c in curves if (c.tokens >= min_tokens).sum() >= 2])) -
+                 np.nanmin(np.concatenate([c.loss[c.tokens >= min_tokens] for c in curves if (c.tokens >= min_tokens).sum() >= 2])), 1e-6)
+    step_y = 0.026 * y_span                  # about one 8pt label height on a 5in axis
+    for c in curves:
+        keep = c.tokens >= min_tokens
+        if keep.sum() < 2:
+            continue
+        xv = (c.flops if x == "flops" else c.tokens)[keep]; yv = c.loss[keep]
+        if c.kind == "ladder":
+            color, lw, ls, z = MUTED, 1.2, "-", 2
+        elif c.kind == "aborted":
+            color, lw, ls, z = PROJECT_SLOTS[(slot := slot + 1) % len(PROJECT_SLOTS)], 1.6, (0, (4, 2)), 3
+        elif c.kind == "delphi":
+            color, lw, ls, z = INK2, 1.4, "-", 3
+        elif c.kind == "moe":
+            color, lw, ls, z = PROJECT_SLOTS[(slot := slot + 1) % len(PROJECT_SLOTS)], 2.2, (0, (1, 1.5)), 4
+        else:
+            color, lw, ls, z = PROJECT_SLOTS[(slot := slot + 1) % len(PROJECT_SLOTS)], 2.2, "-", 4
+        ax.plot(xv, yv, color=color, lw=lw, ls=ls, zorder=z, solid_capstyle="round")
+        if label_ends:
+            lx, y0 = np.log10(xv[-1]), float(yv[-1])
+            free = lambda yy: not any(abs(lx - px) < 0.9 and abs(yy - py) < step_y for px, py in ends)
+            ly = next(y0 + k * step_y for k in [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5] if free(y0 + k * step_y))
+            ends.append((lx, ly))
+            ax.annotate(c.name, (xv[-1], yv[-1]), xytext=(5, (ly - yv[-1]) / step_y * 8), textcoords="offset points",
+                        fontsize=8, color=color if c.kind != "ladder" else INK2, ha="left", va="center")
+    ax.set_xscale("log")
+    ax.set_xlabel("Cumulative training compute (FLOPs, 6ND)" if x == "flops" else "Cumulative training tokens")
+    ax.set_ylabel(ylabel)
+    ax.set_title(title or ("Pretraining runs on one compute axis" if x == "flops" else "Pretraining runs by tokens"))
+    ax.margins(x=0.18)
+    from matplotlib.lines import Line2D
+    kinds = {c.kind for c in curves}
+    handles = [Line2D([], [], color=INK2, lw=2.2, label="Released dense run (phases stitched)"),
+               Line2D([], [], color=INK2, lw=1.6, ls=(0, (4, 2)), label="Abandoned trial"),
+               Line2D([], [], color=MUTED, lw=1.2, label="Ladder run (210B tokens each)")]
+    if "delphi" in kinds:
+        handles.append(Line2D([], [], color=INK2, lw=1.4, label="Delphi held-out target (compute-optimal)"))
+    if "moe" in kinds:
+        handles.append(Line2D([], [], color=INK2, lw=2.2, ls=(0, (1, 1.5)), label="MoE run (compute on active params)"))
+    ax.legend(handles=handles, loc="lower left", fontsize=8)
+    return ax
+
+
+def capability_timeline(points: pd.DataFrame, ax=None, title: str | None = None, ylabel: str = "Score",
+                        ref_lines: dict[str, float] | None = None, max_radius_pt: float = 22.0,
+                        min_radius_pt: float = 3.0, fmax: float | None = None, notes: str | None = None):
+    """Released or evaluated checkpoints over time: x = date, y = a benchmark score, circle area
+    proportional to cumulative pretraining compute (`flops`), with a ring for post-training compute
+    (`post_flops`) where known. Columns: date, label, value, flops, post_flops (optional),
+    kind ('final', 'midtrain', 'aborted', ...). Reference lines mark other labs' models."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 4.5))
+    d = points.dropna(subset=["date", "value"]).copy()
+    fmax = fmax or float(d["flops"].max())
+    s_of = lambda f: max(np.pi * max_radius_pt ** 2 * f / fmax, np.pi * min_radius_pt ** 2)
+    r_of = lambda f: np.sqrt(s_of(f) / np.pi)
+    for _, r in d.iterrows():
+        kind = r.get("kind", "final")
+        ax.scatter([r["date"]], [r["value"]], s=s_of(r["flops"]), c=RUN_COLORS.get(kind, RUN_COLORS["final"]),
+                   alpha=0.6, edgecolors=SURFACE, linewidths=1, zorder=3)
+        post = r.get("post_flops", np.nan)
+        if pd.notna(post) and post > 0:
+            # Ring whose extra area is the post-training compute, at the same scale as the disk. It is
+            # drawn only when it would be distinguishable from the disk (at least 2% wider).
+            disk = s_of(r["flops"]); outer = disk + np.pi * max_radius_pt ** 2 * post / fmax
+            if outer / disk >= 1.04:
+                ax.scatter([r["date"]], [r["value"]], s=outer, facecolors="none",
+                           edgecolors=RUN_COLORS["ladder"], linewidths=1.5, zorder=2)
+        ax.annotate(r["label"], (r["date"], r["value"]), xytext=(r_of(r["flops"]) + 4, 0), textcoords="offset points",
+                    fontsize=8, color=INK2, ha="left", va="center")
+    for name, v in (ref_lines or {}).items():
+        ax.axhline(v, color=GRID, lw=1.5, zorder=1)
+        ax.annotate(name, (ax.get_xlim()[0], v), xytext=(4, 3), textcoords="offset points", fontsize=7.5, color=MUTED)
+    import matplotlib.dates as mdates
+    loc = mdates.AutoDateLocator(); ax.xaxis.set_major_locator(loc); ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
+    ax.set_ylabel(ylabel); ax.set_title(title or "Capability over time (circle area = pretraining compute)")
+    ax.margins(x=0.25, y=0.3)
+    if notes:
+        ax.text(0.99, 0.02, notes, transform=ax.transAxes, fontsize=7.5, color=MUTED, ha="right", va="bottom")
+    return ax
+
+
+def sft_scaling(df: pd.DataFrame, benchmark: str, ax=None, title: str | None = None, teachers: list[str] | None = None,
+                x: str = "flops", tokens_per_example: float = 1.0e4, base_styles: dict[str, str] | None = None,
+                annotate_n: bool = True):
+    """Returns to supervised fine-tuning: benchmark accuracy at the final checkpoint against SFT
+    compute (`x="flops"`, 6 * params * examples * tokens_per_example) or SFT examples
+    (`x="examples"`), log x. Colour follows the teacher model whose reasoning traces were used;
+    line style follows the base model (solid, dashed, ...). Points average the training repeats,
+    error bars are the spread across repeats. `df` is data/posttraining/*_sft_scaling.csv."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 5))
+    d = df[df["benchmark"] == benchmark]
+    d = d.loc[d.groupby(["base", "teacher", "n_examples", "repeat"])["step"].idxmax()]     # final checkpoint of each run
+    g = d.groupby(["base", "teacher", "n_examples", "params"])["mean"].agg(["mean", "std", "count"]).reset_index()
+    g["flops"] = 6 * g["params"] * g["n_examples"] * tokens_per_example
+    xcol = "flops" if x == "flops" else "n_examples"
+    order = teachers or list(g.groupby("teacher")["mean"].max().sort_values(ascending=False).index)
+    bases = list(dict.fromkeys(sorted(g["base"], key=lambda b: float(g.loc[g["base"] == b, "params"].iloc[0]))))
+    styles = base_styles or dict(zip(bases, ["-", (0, (4, 2)), (0, (1, 1.5))]))
+    for i, t in enumerate(order):
+        c = PROJECT_SLOTS[i % len(PROJECT_SLOTS)]
+        for b in bases:
+            s = g[(g["teacher"] == t) & (g["base"] == b)].sort_values(xcol)
+            if s.empty:
+                continue
+            ax.errorbar(s[xcol], 100 * s["mean"], yerr=100 * s["std"].fillna(0), color=c, lw=2, ls=styles[b], marker="o", ms=4.5,
+                        capsize=2, elinewidth=1, label=t if b == bases[0] or (g["teacher"] == t).sum() == len(s) else None, zorder=3)
+    if annotate_n and x == "flops":     # label the example counts along the largest base's best line
+        b = bases[-1]; t = order[0]
+        s = g[(g["teacher"] == t) & (g["base"] == b)].sort_values(xcol)
+        for _, r in s.iterrows():
+            ax.annotate(f"{r['n_examples']:,.0f}", (r["flops"], 100 * r["mean"]), xytext=(0, 9), textcoords="offset points",
+                        fontsize=7, color=MUTED, ha="center")
+    from matplotlib.lines import Line2D
+    handles, labels = ax.get_legend_handles_labels()
+    handles = [h[0] if hasattr(h, "__len__") else h for h in handles]
+    base_handles = [Line2D([], [], color=INK2, lw=2, ls=styles[b], label=b) for b in bases]
+    ax.legend(handles + base_handles, labels + bases, title="colour: teacher (trace source); line: base", fontsize=7.5,
+              title_fontsize=8, loc="upper left", ncol=2)
+    ax.set_xscale("log")
+    ax.set_xlabel(f"SFT compute (FLOPs, 6ND at {tokens_per_example:,.0f} tokens per example)" if x == "flops"
+                  else "SFT examples (OpenThoughts-4 math, with teacher reasoning traces)")
+    ax.set_ylabel(f"{benchmark} accuracy (%)")
+    ax.set_title(title or f"Returns to SFT compute: {benchmark}")
+    return ax
+
+
+def generation_frontier(points: pd.DataFrame, ax=None, title: str | None = None, guides: list[float] | None = None,
+                        ylabel: str = "Final loss", guide_tol: float = 0.06):
+    """Algorithmic efficiency across recipe generations: the final (loss, total compute) of every
+    finished run, one colour per generation, with a power-law line through each generation's
+    points (dashed where extrapolated). Horizontal guides at fixed losses show how much less
+    compute each generation needs for the same loss. `points` columns: generation, name, flops,
+    loss, kind ('dense' or 'moe'). Generations are drawn in the order they first appear."""
+    style()
+    from .fits import fit_power_law
+    if ax is None:
+        _, ax = plt.subplots(figsize=(9, 5.5))
+    gens = list(dict.fromkeys(points["generation"]))
+    xlo, xhi = points["flops"].min() / 3, points["flops"].max() * 3
+    xs = np.geomspace(xlo, xhi, 200)
+    fits = {}
+    for i, gname in enumerate(gens):
+        g = points[points["generation"] == gname].sort_values("flops")
+        c = PROJECT_SLOTS[i % len(PROJECT_SLOTS)]
+        for _, p in g.iterrows():
+            hollow = p["kind"] == "moe"
+            ax.scatter([p["flops"]], [p["loss"]], s=80, facecolors="none" if hollow else c, edgecolors=c, linewidths=1.8, zorder=4)
+            ax.annotate(p["name"], (p["flops"], p["loss"]), xytext=(6, 4), textcoords="offset points", fontsize=7.5, color=INK2)
+        if len(g) >= 2:
+            f = fit_power_law(g["flops"], g["loss"]); fits[gname] = f
+            inside = (xs >= g["flops"].min()) & (xs <= g["flops"].max())
+            ax.plot(xs[inside], f.predict(xs[inside]), color=c, lw=2, zorder=3, label=gname)
+            ax.plot(xs, f.predict(xs), color=c, lw=1.2, ls=(0, (3, 3)), alpha=0.7, zorder=2)
+        else:
+            ax.plot([], [], color=c, lw=2, label=gname)
+    for L in guides or []:
+        ax.axhline(L, color=GRID, lw=1.2, zorder=1)
+        note, prev = [], None
+        for gname, f in fits.items():
+            g = points[points["generation"] == gname]
+            if f.alpha <= 0 or not (g["loss"].min() - guide_tol <= L <= g["loss"].max() + guide_tol):
+                continue        # only quote generations whose finished runs bracket this loss (a small extrapolation allowed)
+            C = (f.A / (L - f.E)) ** (1 / f.alpha) if L > f.E else np.nan
+            if np.isfinite(C):
+                short = gname.split(" (")[0]
+                note.append(f"{short}: {C:.1e}" + (f" ({prev / C:.1f}x less)" if prev else ""))
+                prev = C
+        ax.annotate(f"loss {L:.2f}:  " + "   ".join(note), (xlo, L), xytext=(6, 4), textcoords="offset points",
+                    fontsize=7.5, color=INK2, ha="left")
+    ax.set_xscale("log"); ax.set_xlim(xlo, xhi)
+    ax.set_ylim(points["loss"].min() - 0.2, points["loss"].max() + 0.25)
+    ax.set_xlabel("Total training compute of the finished run (FLOPs, 6ND; active parameters for MoEs)")
+    ax.set_ylabel(ylabel); ax.set_title(title or "Finished runs by recipe generation: loss against total compute")
+    ax.legend(fontsize=8, loc="upper right")
+    return ax, fits
+
+
+def experiment_timeline(families: list[dict], ticks: pd.DataFrame | None = None, fig=None, xlim=(1e17, 1e25),
+                        ylim=(2.0, 3.7), title: str | None = None, inset_w: float = 0.16):
+    """All of a lab's scaling experiments on one time axis. Each family (a ladder, an IsoFLOP suite,
+    a fitted law) is a small inset with its own loss-vs-compute curve, drawn by `family["draw"](ax)`
+    on shared axis limits so shapes are comparable, placed above its date on a timeline that also
+    carries every other experiment as a tick. families: dicts with date, title, metric, draw.
+    ticks: DataFrame with date, label, stage."""
+    style()
+    import matplotlib.dates as mdates
+    fig = fig or plt.figure(figsize=(12, 7))
+    tl = fig.add_axes([0.05, 0.08, 0.92, 0.30])            # timeline
+    dates = [pd.Timestamp(f["date"]) for f in families]
+    all_dates = dates + ([pd.Timestamp(d) for d in ticks["date"]] if ticks is not None else [])
+    lo, hi = min(all_dates) - pd.Timedelta(days=45), max(all_dates) + pd.Timedelta(days=45)
+    tl.set_xlim(lo, hi); tl.set_ylim(0, 1)
+    tl.set_yticks([]); tl.grid(False); tl.spines["left"].set_visible(False)
+    loc = mdates.MonthLocator(bymonth=[1, 4, 7, 10]); tl.xaxis.set_major_locator(loc); tl.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
+    stage_c = {"pretraining": RUN_COLORS["ladder"], "midtraining": RUN_COLORS["midtrain"], "post-training/RL": RUN_COLORS["ablation"]}
+    if ticks is not None:
+        # every dated experiment as a tick, jittered in height when several share a month
+        month_count: dict = {}
+        for _, t in ticks.sort_values("date").iterrows():
+            d = pd.Timestamp(t["date"]); c = stage_c.get(t.get("stage", "pretraining"), MUTED)
+            k = (d.year, d.month); j = month_count.get(k, 0); month_count[k] = j + 1
+            y0 = 0.25 + 0.12 * j
+            tl.plot([d, d], [y0, y0 + 0.09], color=c, lw=2.2, solid_capstyle="butt", zorder=3)
+        from matplotlib.lines import Line2D
+        tl.legend(handles=[Line2D([], [], color=c, lw=2.2, label=f"{s} experiment") for s, c in stage_c.items()],
+                  loc="lower left", fontsize=7, ncol=3, frameon=False, bbox_to_anchor=(0, -0.02))
+    # insets on an even grid in date order (never overlapping), each connected to its date
+    n = len(families); span = (hi - lo).total_seconds()
+    xs = [(d - lo).total_seconds() / span for d in dates]
+    w = min(inset_w, (0.92 - 0.02 * (n - 1)) / n)
+    pos = [i * (w + 0.02) for i in range(n)]
+    import textwrap
+    from matplotlib.patches import ConnectionPatch
+    for f, x, x0 in zip(families, xs, pos):
+        ax = fig.add_axes([0.05 + x0, 0.52, w, 0.33])
+        f["draw"](ax)
+        ax.set_xscale("log"); ax.set_xlim(*xlim); ax.set_ylim(*ylim)
+        ax.set_title("\n".join(textwrap.wrap(f["title"], 24)), fontsize=7.5, loc="left"); ax.tick_params(labelsize=6)
+        ax.set_xlabel("FLOPs", fontsize=6.5); ax.set_ylabel(f.get("metric", "loss"), fontsize=6.5)
+        ax.xaxis.set_major_locator(mpl.ticker.LogLocator(numticks=5))
+        cx = 0.05 + x0 + w / 2; dx = 0.05 + x * 0.92
+        fig.add_artist(ConnectionPatch((cx, 0.52), (dx, 0.08 + 0.30 * 0.88), "figure fraction", "figure fraction",
+                                       color=AXIS, lw=1, zorder=1))
+        tl.scatter([dates[families.index(f)]], [0.88], s=40, c=INK2, zorder=4)
+    fig.suptitle(title or "Scaling experiments over time (insets on shared axes; metric per panel)", x=0.05, ha="left",
+                 fontsize=12, fontweight="bold", y=0.97)
+    return fig
+
+
+LAB_LABELS = {"meta": "Meta Llama", "deepseek": "DeepSeek", "ai2-olmo": "Ai2 OLMo", "marin": "Marin",
+              "prime-intellect": "Prime Intellect", "eleutherai": "EleutherAI Pythia", "cerebras": "Cerebras-GPT"}
+LAB_ORDER = ["meta", "deepseek", "ai2-olmo", "marin", "prime-intellect", "eleutherai", "cerebras"]
+
+# One H100-hour at 40% of 1e15 FLOP/s = 1.44e18 FLOPs; at $2/hour that is $1.4M per 1e24 FLOPs.
+FLOPS_PER_GPU_HOUR = 1.44e18
+USD_PER_GPU_HOUR = 2.0
+
+
+def release_timeline(df: pd.DataFrame, ax=None, title: str | None = None, max_radius_pt: float = 30.0,
+                     min_radius_pt: float = 1.6, ref_flops=(1e23, 1e24, 1e25)):
+    """Every released model as a circle on a lab row against release date, area proportional to
+    training compute. Filled = pretrained from scratch (pretraining compute); hollow orange =
+    post-training-only release (post-training compute); dashed grey = planned; x = compute not
+    stated. Models a lab released on the same day are drawn as concentric circles with one label."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 7))
+    labs = [l for l in LAB_ORDER if l in set(df["lab"])] + sorted(set(df["lab"]) - set(LAB_ORDER))
+    y_of = {lab: len(labs) - 1 - i for i, lab in enumerate(labs)}
+    fmax = float(df["flops"].max())
+    s_of = lambda f: max(np.pi * max_radius_pt ** 2 * f / fmax, np.pi * min_radius_pt ** 2)   # points^2
+    r_of = lambda f: np.sqrt(s_of(f) / np.pi)
+
+    x_lo = pd.Timestamp("2022-11-01")
+    x_hi = max(pd.Timestamp("2027-03-01"), df["release_date"].max() + pd.Timedelta(days=120))
+    ax.set_xlim(x_lo, x_hi)
+    for y in y_of.values():
+        ax.axhline(y, color=GRID, lw=1, zorder=0)
+
+    # Label placement: alternate above/below the row; within a side, step outward to the first
+    # level whose already-placed labels do not overlap this one. Widths are estimated from the
+    # character count and the axes width in points.
+    fontsize = 7.5
+    ax_w_pt = ax.figure.get_figwidth() * 72 * ax.get_position().width
+    days_per_pt = (x_hi - x_lo).days / ax_w_pt
+    placed: dict[tuple[str, int, int], list[tuple[float, float]]] = {}   # (lab, side, level) -> [(x0, x1)] in day numbers
+    import matplotlib.dates as mdates
+    flip = {lab: 0 for lab in labs}
+    for (lab, date), g in df.sort_values("release_date").groupby(["lab", "release_date"], sort=False):
+        y = y_of[lab]
+        g = g.sort_values("flops", ascending=False, na_position="last")
+        kinds = set(g["kind"])
+        for _, r in g.iterrows():
+            if pd.isna(r["flops"]):
+                ax.scatter([date], [y], s=40, marker="x", c=MUTED, linewidths=1.5, zorder=4)
+                continue
+            s = s_of(r["flops"])
+            if r["kind"] == "posttrain":
+                ax.scatter([date], [y], s=s, facecolors="none", edgecolors=RUN_COLORS["ladder"], linewidths=1.6, zorder=3)
+            elif r["kind"] == "planned":
+                ax.scatter([date], [y], s=s, facecolors="none", edgecolors=MUTED, linewidths=1.4, linestyle=(0, (3, 2)), zorder=3)
+            else:
+                ax.scatter([date], [y], s=s, c=RUN_COLORS["final"], alpha=0.55, edgecolors=SURFACE, linewidths=0.8, zorder=3)
+        fam = g["family"].iloc[0]
+        variants = [v for v in g["variant"] if v][::-1]          # smallest first reads better
+        label = (fam + " " + " / ".join(variants)).strip()
+        if g["flops"].isna().all():
+            label += " (compute not stated)"
+        rmax = r_of(g["flops"].max()) if g["flops"].notna().any() else 4
+        side = 1 if flip[lab] % 2 == 0 else -1; flip[lab] += 1
+        if g["flops"].notna().any() and g["flops"].max() >= fmax:
+            side = 1        # the largest circle spills into the row below; keep its label above
+        half_w_days = 0.5 * len(label) * 0.52 * fontsize * days_per_pt
+        xc = mdates.date2num(date); span = (xc - half_w_days, xc + half_w_days)
+        level = 0
+        while any(not (span[1] < a or span[0] > b) for a, b in placed.get((lab, side, level), [])):
+            level += 1
+        placed.setdefault((lab, side, level), []).append(span)
+        dy = side * (rmax + 3 + level * (fontsize + 2))
+        ax.annotate(label, (date, y), xytext=(0, dy), textcoords="offset points", ha="center",
+                    va="bottom" if side > 0 else "top", fontsize=fontsize,
+                    color=INK2 if "pretrain" in kinds or "planned" in kinds else RUN_COLORS["ladder"], zorder=5)
+
+    ax.set_yticks(list(y_of.values())); ax.set_yticklabels([LAB_LABELS.get(l, l) for l in labs], fontsize=9)
+    ax.set_ylim(-0.55, len(labs) + 0.05)
+    loc = mdates.YearLocator(); ax.xaxis.set_major_locator(loc); ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    ax.xaxis.set_minor_locator(mdates.MonthLocator(bymonth=[4, 7, 10]))
+    ax.grid(axis="y", visible=False); ax.grid(axis="x", which="major", color=GRID)
+    ax.set_title(title or "Releases by lab, circle area proportional to training compute")
+
+    # Marker legend (below left) and size key (below right, an inset outside the axes), so neither
+    # covers a lab row. Key circles use the same point scale as the main axes.
+    from matplotlib.lines import Line2D
+    handles = [Line2D([], [], marker="o", ls="", ms=8, color=RUN_COLORS["final"], alpha=0.55, label="Pretrained from scratch (pretraining compute)"),
+               Line2D([], [], marker="o", ls="", ms=8, markerfacecolor="none", markeredgecolor=RUN_COLORS["ladder"], markeredgewidth=1.6, label="Post-training-only release (post-training compute)"),
+               Line2D([], [], marker="o", ls="", ms=8, markerfacecolor="none", markeredgecolor=MUTED, label="Planned / in progress"),
+               Line2D([], [], marker="x", ls="", ms=6, color=MUTED, label="Compute not stated")]
+    ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.0, -0.06), fontsize=7.5, ncol=1)
+    key = ax.inset_axes([0.50, -0.30, 0.50, 0.26])
+    key.set_axis_off(); key.set_xlim(0, 1); key.set_ylim(0, 1)
+    key.text(0.02, 0.97, f"Circle area = training compute. Dollars: accelerator time at \\${USD_PER_GPU_HOUR:.0f} per H100-hour, 40% MFU.",
+             fontsize=7, color=MUTED, va="top")
+    yk = 0.10
+    for f in ref_flops:
+        r = r_of(f)
+        yk += r / 300
+        key.scatter([0.14], [yk], s=s_of(f), c=RUN_COLORS["final"], alpha=0.55, edgecolors=SURFACE, linewidths=0.8, clip_on=False)
+        usd = f / FLOPS_PER_GPU_HOUR * USD_PER_GPU_HOUR
+        key.text(0.28, yk, f"{f:.0e} FLOPs   (about \\${usd / 1e6:,.1f}M)", fontsize=7, color=MUTED, va="center")
+        yk += r / 300 + 0.10
+    return ax
+
+
 def stated_split(parts: dict[str, float], ax=None, title: str | None = None, unit: str = "GPU-hours"):
     """The lab's own stated split (e.g. development vs final GPU-hours) as one stacked bar."""
     style()
