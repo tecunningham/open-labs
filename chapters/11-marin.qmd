@@ -17,7 +17,7 @@ import numpy as np
 Marin's flagship 2025 runs were **not** preceded by a scaling ladder. The 8B was chosen "mostly
 out of pragmatism" (reserved capacity) and started "with what we had"; the 32B was "largely a
 scale-up of the 8B recipe" and needed two rescues and a discarded cooldown. In 2026 the lab
-built the machinery it had lacked: Delphi (a 78-run IsoFLOP suite whose pre-registered forecast
+built the machinery it had lacked: Delphi (an 81-run IsoFLOP suite whose pre-registered forecast
 hit the 1e23 run within 0.2 percent at a 300x extrapolation), a mixture-of-experts law validated
 at 1e21, a learning-rate law that removed per-size sweeps, and a four-rung ladder costing about
 1 percent of the 535B run. So this chapter shows both regimes in one lab: scale-up by hand, then
@@ -71,7 +71,7 @@ most rows with a loss are continuation phases whose `flops` is that phase's comp
 cumulative compute the loss reflects, and the cooldown losses are on a different learning-rate
 footing from the pretraining phases. Read the stars (released 8B and 32B) against the abandoned
 trials: the 70B trial at 277k steps sat at 2.42 and the 13B at 2.50, against 2.35 for the
-finished 8B and 2.20 for the finished 32B. Delphi's 78-run grid is one row here; its
+finished 8B and 2.20 for the finished 32B. Delphi's 81-run grid is one row here; its
 per-run sizes are in the repository's hard-coded suite and can be expanded later.
 
 One clean experiment series does exist: a five-width ladder from December 2024
@@ -151,4 +151,4 @@ daily canary. Ideas for the MoE are screened at d512 to d1280 against the fitted
 **Not reconstructable from here.** Delphi's fitted exponent and the 535B
 ladder forecast (both in blocked pages or reports), the compute of the long tail of small
 ablations, any dollar figure (compute was donated by Google TRC and the Huang Foundation), and the
-8B token total (12.7T in the retrospective versus 13.7T in a model-card snippet).
+the reasons the 13B, 24B and 70B trials were abandoned (their W&B runs simply stop in April 2025 at 2.3T, 2.4T and 1.5T tokens).
