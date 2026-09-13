@@ -63,12 +63,14 @@ experiments→final-run record is public.
 | Lab / project | What is public | Why it matters for us |
 |---|---|---|
 | Marin (Stanford CRFM) | Every experiment is a GitHub issue with W&B links; Marin 8B and 32B final runs | The only lab whose entire experiment record is browsable. Best pilot chapter. |
-| Ai2 OLMo (OLMo 2, OLMo 3) | W&B logs, model-ladder paper (Bhagia et al. 2024), full "model flow" for OLMo 3 | Already cited in the paper via Morrison et al. 2026 for the experiment/final compute ratio. Multiple generations for the curve-shift question. |
-| Hugging Face SmolLM (2, 3) | Ablation writeups, training configs, FineWeb/FineMath data ablations; SmolLM3 = 3B on 11T tokens, 384 H100s for 24 days | Very detailed data-ablation record at small scale. |
-| LLM360 (Amber, CrystalCoder, K2) | 360 intermediate checkpoints, data, code, training logs | Full transparency on the final run; experiments less so. |
+| Ai2 OLMo (OLMo 2, OLMo 3, Olmo Hybrid) | Data, code, recipes, W&B logs, thousands of intermediate checkpoints; model-ladder paper (Bhagia et al. 2024); Olmo Hybrid (2026) fits scaling laws to predict how token-efficiency changes with size | Best overall source today. Already cited in the paper via Morrison et al. 2026 for the experiment/final compute ratio. Multiple generations for the curve-shift question. Tülu covers post-training. |
+| LLM360 (Amber, CrystalCoder, K2-65B) | Exact data sequence per checkpoint, W&B and system logs, 140 intermediate checkpoints for K2, records of training incidents (loss spikes and fixes) | Closest thing to a lab notebook for one large run. Forensic view of the final run rather than of the experiment ladder. |
+| EleutherAI Pythia (and GPT-NeoX) | 70M to 12B, same 300B tokens in the same order, 154 checkpoints per model; models, data, and code released | Cleanest controlled size/compute scaling dataset. No experiments-vs-final split, so it is a reference curve, not a lab chapter. |
+| Cerebras-GPT | Seven model sizes trained as a deliberately compute-optimal family; fitted scaling law published with weights and methodology | Literal Chinchilla-style curve on a public dataset. Cheap chapter; pairs with Pythia. |
+| Prime Intellect (INTELLECT-1, INTELLECT-2) | INTELLECT-2: code, data, reward trajectories and ablations from a 32B asynchronous RL run, including failures (gradient instability, length-reward effects, filtering); agentic-RL environment scaling | Best open record of post-training / RL experiments. Anchors the RL part of the book. |
+| Hugging Face SmolLM (2, 3) | Ablation writeups, training configs, FineWeb/FineMath data ablations; 125M model trained at several token budgets to pick how far past Chinchilla-optimal to go; SmolLM3 = 3B on 11T tokens, 384 H100s for 24 days | Very detailed data- and token-budget ablations at small scale. |
 | Apertus (Swiss AI Initiative: ETH, EPFL, CSCS) | 8B and 70B, full data recipe, tech report | Public-compute lab; likely publishes GPU-hours cleanly. |
-| EleutherAI (Pythia, GPT-NeoX) | 8 sizes × 2 data variants, 154 checkpoints each | A deliberately designed scaling suite; clean curve, no "experiments vs final" distinction. |
-| BigScience BLOOM | Training chronicles and engineering logs, 1.08M A100-hours | Historical (2022) but unusually candid about failed runs. |
+| BigScience BLOOM | Training chronicles and engineering logs, architecture and hyperparameter experiments, 1.08M A100-hours | Historical (2022) but unusually candid about failed runs. |
 | modded-nanogpt speedrun | Every record is a logged run | A miniature lab with a complete experiment record. Ties to METR's own NanoGPT / expenditure-horizon work. |
 
 **Tier B: open weights plus a tech report with scaling-law experiments, but no raw logs.**
@@ -77,16 +79,26 @@ Chapters here will lean on the report's figures and stated GPU-hours.
 DeepSeek (DeepSeek LLM scaling-law paper; V3: 2.788M H800-hours, small-scale ablations for
 MTP and FP8), Meta Llama 3 (IsoFLOP experiments from 6e18 to 1e22 FLOPs to pick 405B / 15.6T
 tokens; 39.3M GPU-hours), MiniCPM ("wind tunnel" experiments, WSD schedule), Moonshot Kimi K2
-(Muon scaling experiments), Qwen 2.5 / 3, Prime Intellect INTELLECT, NVIDIA Nemotron,
+(Muon scaling experiments), Qwen 2.5 / 3 (thin on pretraining, but the GSPO work publishes RL reward
+and performance against training compute on a shared cold-start model), NVIDIA Nemotron,
 TII Falcon, European public-compute models (EuroLLM, Salamandra, Teuken, Poro).
 
 **Tier C: closed labs with one published experiments→final figure.** Reference points only,
 not chapters: GPT-4 tech report (loss predicted from runs at 1/1,000 to 1/10,000 of compute),
 Chinchilla (400+ runs), GPT-3, Anthropic scaling-laws papers.
 
+**Two parts, not one.** The sources split cleanly by training stage, so the book should too:
+
+- *Part I, pretraining scaling:* Pythia and Cerebras-GPT as clean reference curves, then the lab
+  chapters (Marin, OLMo, SmolLM, LLM360, Apertus, DeepSeek, Llama 3, BLOOM, modded-nanogpt).
+- *Part II, post-training / RL scaling:* OLMo / Tülu, Prime Intellect, Qwen (GSPO), DeepSeek R1.
+  Same chapter template, but the x-axis is RL compute or environment steps and the y-axis is
+  reward or a benchmark, and "final run" means the released post-trained model.
+
 **Proposed order.** Pilot with Marin and OLMo 3 (richest records, and they exercise every
-figure). Then SmolLM3, DeepSeek V3, Llama 3, LLM360 K2, Apertus, modded-nanogpt. Decide on
-the rest of Tier B after seeing how thin the reports are.
+figure). Pythia and Cerebras-GPT next because they are nearly free and give the reference
+curves. Then SmolLM3, LLM360 K2, DeepSeek V3, Llama 3, Apertus, modded-nanogpt. Prime Intellect
+opens Part II. Decide on the rest of Tier B after seeing how thin the reports are.
 
 ## 5. Data model
 
@@ -108,6 +120,23 @@ Hand-curated CSVs with a source URL on every row. No scraping pipeline in the fi
 | benchmarks (wide or long) | for cross-lab comparison |
 | purpose | free text: what the experiment tested |
 | source_url, confidence | `reported` / `derived` / `guess` |
+
+`data/experiments.csv`, one row per *published scaling experiment or figure* (a ladder, an
+ablation series, an RL curve), separate from individual runs:
+
+| column | notes |
+|---|---|
+| lab, project, date | |
+| stage | `pretraining`, `midtraining`, `post-training/RL` |
+| intervention | what was varied: size, tokens, data mix, optimizer, schedule, RL algorithm |
+| model_sizes, compute_range | as reported |
+| metric | loss, benchmark, reward |
+| fitted_exponent | the lab's own fit if given, ours otherwise, flagged |
+| raw_data_available | `logs`, `figure_only`, `numbers_in_text` |
+| source_url | |
+
+This is the "matrix of every publicly available scaling curve" and is probably the single most
+reusable output of the project.
 
 `data/labs.csv`: headcount, project start and release dates, total compute, funding type,
 sources. `data/claims.csv`: verbatim quantitative statements from the lab ("experiments were
@@ -148,6 +177,10 @@ Section 2 tabulated per lab.
 - **Compute accounting.** 6ND vs. reported GPU-hours can differ by 2x once MFU, MoE, and
   restarts are included. Store both; plot the reported one when available.
 - **Dollars.** Cloud list prices vs. owned hardware. Record the assumption per row.
+- **Secondhand claims.** The lab descriptions in Section 4 come from memory and from a ChatGPT
+  summary Tom supplied (2026-09-13). Every factual claim there (checkpoint counts, GPU-hours,
+  "first scaling law on a public dataset") gets verified against the primary source before it
+  appears in a chapter.
 
 ## 8. Deliverable and repo layout
 
@@ -182,8 +215,9 @@ Effort figures are guesses and assume one person part-time.
 ## 10. Decisions needed
 
 1. **y-axis:** loss first with benchmarks second (recommended), or benchmarks only?
-2. **Scope of "experiments":** pretraining only in the first pass (recommended), or include
-   post-training and RL budgets from the start?
+2. **Scope of "experiments":** build Part I (pretraining) fully before starting Part II
+   (post-training / RL), or run the Prime Intellect chapter in the pilot so the template is
+   tested on RL data early? Recommend the latter.
 3. **How deep into Tier B** before stopping? Recommend: stop after DeepSeek and Llama 3 unless a
    report turns out to be unusually detailed.
 4. **Closed-lab reference figures** (GPT-4, Chinchilla): include as an appendix, or leave out?
