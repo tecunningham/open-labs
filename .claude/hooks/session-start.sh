@@ -1,7 +1,7 @@
 #!/bin/bash
 # SessionStart hook for Claude Code on the web: install Quarto and the Python stack the chapters need.
 # Idempotent; only runs in remote sessions. Requires the environment's network policy to allow
-# github.com (Quarto release tarball) and pypi.org + files.pythonhosted.org (pip).
+# github.com (Quarto release tarball) and pypi.org + files.pythonhosted.org (pip); with 'full' access both work.
 set -uo pipefail
 
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
@@ -33,7 +33,10 @@ if python3 -c "import pandas, scipy, matplotlib, nbclient, ipykernel" 2>/dev/nul
   echo "[session-start] python deps already present"
 else
   echo "[session-start] pip install -r requirements.txt"
-  if ! python3 -m pip install -q --disable-pip-version-check -r "${CLAUDE_PROJECT_DIR:-.}/requirements.txt" 2>/tmp/pip.err; then
+  # The agent proxy's NO_PROXY list sends pypi.org and files.pythonhosted.org direct, and that direct
+  # route is denied even when the environment allows the hosts; force pip through the proxy.
+  if ! env NO_PROXY="localhost,127.0.0.1,::1" no_proxy="localhost,127.0.0.1,::1" \
+      python3 -m pip install -q --disable-pip-version-check -r "${CLAUDE_PROJECT_DIR:-.}/requirements.txt" 2>/tmp/pip.err; then
     echo "[session-start] WARNING: pip install failed; PyPI is probably not allowed by this environment's network policy."
     echo "[session-start] Allow pypi.org and files.pythonhosted.org in the environment settings. pip said:"
     tail -3 /tmp/pip.err
