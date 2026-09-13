@@ -112,7 +112,7 @@ def compute_split(df: pd.DataFrame, ax=None, title: str | None = None, value: st
     unit = "FLOPs" if value == "flops" else value.replace("_", " ")
     n_exp = int((~df["is_final"]).sum()); n_fin = int(df["is_final"].sum())
     ax.set_title(title or f"Share of logged {unit}: {n_exp} experimental runs vs {n_fin} final")
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=len(order))
+    ax.legend(loc="center left", bbox_to_anchor=(1.01, 0.5), ncol=1)
     return ax
 
 
@@ -154,6 +154,8 @@ def timeline(df: pd.DataFrame, ax=None, title: str | None = None):
         ax.scatter(s["date_start"], np.log10(s["flops"]), s=size[s.index], marker=RUN_MARKERS[rt],
                    c=RUN_COLORS[rt], edgecolors=SURFACE, linewidths=1.5, label=RUN_LABELS[rt], zorder=3)
     ax.set_ylabel("log10 FLOPs"); ax.set_title(title or "Runs over time (marker size ∝ log compute)")
+    import matplotlib.dates as mdates
+    loc = mdates.AutoDateLocator(); ax.xaxis.set_major_locator(loc); ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
     ax.legend(loc="upper left")
     return ax
 
