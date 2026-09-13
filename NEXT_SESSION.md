@@ -24,6 +24,16 @@ level with `main`):
   `data/notes/*.md` on 2026-09-13. ECI (Epoch Capabilities Index) membership was checked only for
   Llama 3.1 405B and DeepSeek V2/V3/R1 via Epoch's own write-ups; epoch.ai itself was blocked.
   `styles.css` (wired in `_quarto.yml`) holds the `.availability` table style.
+- **AI R&D benchmarks appendix** (`chapters/95-ai-rd-benchmarks.qmd`, `src/benchmarks.py`,
+  `data/ai_rd_benchmarks.csv`, notes in `data/notes/ai-rd-benchmarks.md`). One benchmark-by-model
+  table per closed lab (GDM, OpenAI, Anthropic), columns = frontier cards through Sep 2026. The
+  2026-09-13 session could not fetch anthropic.com, openai.com, deepmind.google or most write-ups
+  (egress policy), so every cell is `snippet` (from a search-result excerpt) or `memory`; none is
+  `reported`. The notes file lists the open questions per lab. Verifying the cells against the
+  cards and switching them to `reported` is the next step for this appendix; the highest-value
+  gaps are OpenAI per-benchmark values for GPT-5.2 through GPT-6 Astra (SWE-Lancer, OpenAI PRs,
+  PaperBench), Anthropic Suite 1 per-task numbers for 3.7 Sonnet and Opus 4.5, the Gemini 3.7
+  Flash FSF report's ML R&D section, and the Sonnet 5 / Opus 5 SWE-bench Verified conflicts.
 - **Rendered.** `quarto render` passes for all chapters (Quarto 1.7.32, pandas 3.0, scipy 1.17).
 
 Environment setup: `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`) installs

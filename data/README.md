@@ -8,5 +8,6 @@ Hand-curated. Every row carries a `source_url`. Numeric cells are plain numbers 
 | `experiments.csv` | published scaling experiment or ablation series | `raw_data_available` in logs / figure_only / numbers_in_text |
 | `labs.csv` | lab × project | headcount, dates, total compute, hardware, funding |
 | `claims.csv` | verbatim quantitative statement by a lab | quote and citation, to compare against reconstructed numbers |
+| `ai_rd_benchmarks.csv` | AI R&D benchmark score in a closed-lab model or system card (GDM, OpenAI, Anthropic) | `frontier` yes/no picks the columns shown in the appendix; `confidence` in reported / snippet / memory (no card could be fetched on 2026-09-13, so nothing is `reported` yet); `family` groups benchmarks; `conditions` holds scaffold, subset and budget |
 
 `flops_method`: `reported`, `6ND` (6 × active params × tokens), or `gpu_hours×peak×MFU` with the assumption in `notes`.

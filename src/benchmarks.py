@@ -20,18 +20,23 @@ CONFIDENCE_MARK = {"reported": "", "snippet": "†", "memory": "‡"}
 
 # Row order in the wide tables: AI R&D suites, then research-replication and competition suites,
 # then agentic-coding benchmarks, then the lab's own threshold determination.
-FAMILY_ORDER = ["re_bench", "ai_rd_suite1", "ai_rd_suite2", "ml_rd_internal", "ai_rd_uplift",
-                "mle_bench", "paperbench", "openai_prs", "swe_lancer", "re_interviews", "agentic_tasks",
-                "openai_proof_qa", "swe_bench_verified", "swe_bench_pro", "terminal_bench",
-                "agentic_coding_internal", "other", "ml_rd_determination"]
+FAMILY_ORDER = ["re_bench", "ai_rd_suite1", "ai_rd_suite2", "ml_rd_internal", "internal_research_debugging",
+                "openai_proof_qa", "mle_bench", "paperbench", "openai_prs", "swe_lancer", "re_interviews",
+                "agentic_tasks", "ai_rd_uplift", "metr_external", "swe_bench_verified", "swe_bench_pro",
+                "terminal_bench", "agentic_coding_internal", "other", "ml_rd_determination"]
 
 
-def load(lab: str | None = None) -> pd.DataFrame:
+def load(lab: str | None = None, frontier_only: bool = False) -> pd.DataFrame:
+    """`frontier_only` keeps the cards flagged `frontier == yes`: the lab's most capable released
+    model at the card date, or a card that moved the lab's frontier. Smaller siblings (Sonnet 4,
+    Haiku 4.5, Codex addenda, Gemini Flash-Lite) stay in the CSV."""
     df = pd.read_csv(DATA / "ai_rd_benchmarks.csv", dtype=str, keep_default_na=False)
     df["score_num"] = pd.to_numeric(df["score"], errors="coerce")
     df["card_date"] = pd.to_datetime(df["card_date"], errors="coerce")
     if lab:
         df = df[df["lab"] == lab]
+    if frontier_only:
+        df = df[df["frontier"] == "yes"]
     return df.reset_index(drop=True)
 
 

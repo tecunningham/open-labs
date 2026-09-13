@@ -2,7 +2,9 @@
 
 **Status (2026-09-13):** scope agreed; Quarto book scaffolded, rendering and published; data and
 chapters in for Marin, Ai2 OLMo, Meta Llama, Prime Intellect (RL pilot), and the Pythia /
-Cerebras-GPT reference suites; DeepSeek in progress. The Marin chapter now draws the 8B and 32B
+Cerebras-GPT reference suites; DeepSeek in progress. Appendix A tabulates the AI R&D benchmark
+scores in GDM, OpenAI and Anthropic model cards (`data/ai_rd_benchmarks.csv`), collected from search
+snippets only and flagged accordingly. The Marin chapter now draws the 8B and 32B
 runs as loss-versus-cumulative-token trajectories from the W&B curves (`src/losses.py`). Render
 with `quarto render`; merge new data with `python -m src.merge <dir>`. Agent working notes with
 per-claim verification lists are in `data/notes/`.

@@ -25,7 +25,7 @@ from src import benchmarks
 from IPython.display import Markdown, display
 
 def show(lab, families=None, caption=""):
-    df = benchmarks.load(lab)
+    df = benchmarks.load(lab, frontier_only=True)
     if families:
         df = df[df["family"].isin(families)]
     if df.empty:
@@ -34,7 +34,7 @@ def show(lab, families=None, caption=""):
     display(Markdown(benchmarks.to_markdown(t) + (f"\n\n: {caption}" if caption else "")))
 
 def show_cards(lab):
-    t = benchmarks.cards(benchmarks.load(lab))
+    t = benchmarks.cards(benchmarks.load(lab, frontier_only=True))
     t["card"] = t.apply(lambda r: f"[{r['card_title']}]({r['card_url']})" if r["card_url"] else r["card_title"], axis=1)
     display(Markdown(benchmarks.to_markdown(t[["model", "card_date", "card"]].set_index("model").rename_axis("Model"))))
 ```
@@ -45,7 +45,7 @@ DeepMind's Frontier Safety Framework has a Machine Learning R&D critical capabil
 evaluates it mainly on METR's RE-Bench, reported as a human-normalized average across challenges.
 Earlier cards state only whether the alert threshold was reached.
 
-::: {.availability .column-page}
+::: {.benchmarks .column-screen-inset}
 
 ```{python}
 show("gdm", caption="Google DeepMind: AI R&D and agentic-coding scores by model card. {#tbl-gdm}")
@@ -63,7 +63,7 @@ OpenAI's Preparedness Framework tracks "AI Self-improvement" (earlier "Model aut
 mix of public and internal evaluations: SWE-bench Verified, SWE-Lancer, internal pull-request
 replication (OpenAI PRs), MLE-bench, PaperBench and research-engineer interview questions.
 
-::: {.availability .column-page}
+::: {.benchmarks .column-screen-inset}
 
 ```{python}
 show("openai", caption="OpenAI: AI self-improvement and agentic-coding scores by system card. {#tbl-openai}")
@@ -81,7 +81,7 @@ Anthropic's Responsible Scaling Policy defines AI R&D capability thresholds and 
 Verified, two internal AI research evaluation suites, a subset of METR's RE-Bench, and internal
 surveys of how much its own researchers are sped up.
 
-::: {.availability .column-page}
+::: {.benchmarks .column-screen-inset}
 
 ```{python}
 show("anthropic", caption="Anthropic: AI R&D and agentic-coding scores by system card. {#tbl-anthropic}")
