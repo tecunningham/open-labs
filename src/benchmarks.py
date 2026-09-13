@@ -180,10 +180,7 @@ def timeseries(df: pd.DataFrame, title: str | None = None, ncols: int = 3, min_p
     nrows = int(np.ceil(len(order) / ncols))
     fig, axes = plt.subplots(nrows, ncols, figsize=(3.4 * ncols, 2.8 * nrows), squeeze=False, sharex=True)
     x0, x1 = d["card_date"].min(), d["card_date"].max()
-    deps = [meta_for(meta, lab, s) for s in order]
-    deps = [m["deprecated_date"] for m in deps if m is not None and pd.notna(m["deprecated_date"])]
-    if deps:
-        x1 = max([x1] + deps)
+    latest_card = df["card_date"].max()
     pad = pd.Timedelta(days=45)
     for ax, s in zip(axes.flat, order):
         g = d[d["series"] == s].sort_values("card_date")
@@ -199,7 +196,7 @@ def timeseries(df: pd.DataFrame, title: str | None = None, ncols: int = 3, min_p
                    edgecolors=c, linewidths=1)
         if not extra.empty:
             ax.scatter(extra["card_date"], extra["score_num"], s=26, facecolors="none", edgecolors=c, linewidths=1.2, zorder=3)
-        _retire_mark(ax, m, base["card_date"].iloc[-1], base["score_num"].iloc[-1], c)
+        _retire_mark(ax, m, base["card_date"].iloc[-1], base["score_num"].iloc[-1], latest_card)
         for i, (_, r) in enumerate(base.iterrows()):
             up = i % 2 == 0
             ax.annotate(_short(r["model"]), (r["card_date"], r["score_num"]), xytext=(0, 6 if up else -6),
@@ -258,15 +255,14 @@ def series_meta() -> pd.DataFrame:
     return m.set_index(["lab", "series"])
 
 
-def _retire_mark(ax, m, last_x, last_y, color):
-    """Black cross where the lab stopped reporting the series, joined to its last value."""
-    if m is None or pd.isna(m.get("deprecated_date", pd.NaT)):
-        return None
-    xd = m["deprecated_date"]
-    if xd > last_x:
-        ax.plot([last_x, xd], [last_y, last_y], color=color, lw=0.8, ls=(0, (2, 2)), alpha=0.7, zorder=2)
-    ax.scatter([xd], [last_y], marker="x", s=44, c=plots.INK, linewidths=1.4, zorder=5)
-    return xd
+def _retire_mark(ax, m, last_x, last_y, latest_card):
+    """Black cross on the last reported value when later cards stop reporting the series: either the
+    series metadata records a retirement, or the last value predates the lab's newest card."""
+    documented = m is not None and pd.notna(m.get("deprecated_date", pd.NaT))
+    if not documented and not (latest_card is not None and last_x < latest_card):
+        return False
+    ax.scatter([last_x], [last_y], marker="x", s=46, c=plots.INK, linewidths=1.5, zorder=5)
+    return True
 
 
 def meta_for(meta: pd.DataFrame, lab: str, series: str):
@@ -298,6 +294,25 @@ def _ref_lines(ax, m, x0, x1):
                     textcoords="offset points", ha="left", va="top", fontsize=6.3, color=plots.INK2)
 
 
+def _card_labels(ax, df, x0, x1):
+    """Model names above the ceiling at their card dates, pushed apart so they stay legible."""
+    cards = (df[df["card_date"].notna()].groupby("model")["card_date"].min().sort_values())
+    names = [_short(m) for m in cards.index]
+    xs = [pd.Timestamp(v).value for v in cards.values]
+    lo, hi = pd.Timestamp(x0).value, pd.Timestamp(x1).value
+    gap = (hi - lo) * 0.021
+    pos = list(xs)
+    for i in range(1, len(pos)):
+        if pos[i] - pos[i - 1] < gap:
+            pos[i] = pos[i - 1] + gap
+    for xd, xp, name in zip(xs, pos, names):
+        xd, xp = pd.Timestamp(xd), pd.Timestamp(xp)
+        ax.axvline(xd, color=plots.GRID, lw=0.8, zorder=0)
+        ax.plot([xd, xp], [100, 104], color=plots.AXIS, lw=0.5, zorder=1, clip_on=False)
+        ax.annotate(name, (xp, 104), xytext=(0, 2), textcoords="offset points", rotation=90, ha="center",
+                    va="bottom", fontsize=6.3, color=plots.INK2, annotation_clip=False)
+
+
 def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: int = 2):
     """Every bounded series of one lab on a single 0 to 100 percent axis, as percent of its ceiling.
 
@@ -317,25 +332,25 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
             continue
         base = base.assign(pct=base["score_num"] / m["ceiling"] * 100, category=m["category"], series=s)
         rows.append((base, m))
-    fig, ax = plt.subplots(figsize=(10, 5.6))
+    fig, ax = plt.subplots(figsize=(10, 6.6))
     if not rows:
         plots._empty(ax, "No bounded series with two or more points"); return fig
     allb = pd.concat([b for b, _ in rows])
     x0, x1 = allb["card_date"].min(), allb["card_date"].max()
-    retire_dates = [m["deprecated_date"] for _, m in rows if pd.notna(m["deprecated_date"])]
-    x1 = max([x1] + retire_dates)
+    latest_card = df["card_date"].max()
+    retired = 0
     span = (x1 - x0).days or 1
     ax.axhline(100, color=plots.INK2, lw=1, zorder=1)
-    ax.annotate("ceiling", (x0, 100), xytext=(0, 3), textcoords="offset points", fontsize=7, color=plots.INK2)
+    ax.annotate("ceiling", (x0, 100), xytext=(2, -9), textcoords="offset points", fontsize=7, color=plots.INK2)
     ends = []
     for b, m in sorted(rows, key=lambda bm: bm[0]["card_date"].min()):
         c = CATEGORY_COLORS[b["category"].iloc[0]]
         ax.plot(b["card_date"], b["pct"], color=c, lw=1.6, alpha=0.9, zorder=2)
         ax.scatter(b["card_date"], b["pct"], s=16, c=c, edgecolors=plots.SURFACE, linewidths=0.8, zorder=3)
         last = b.iloc[-1]
-        xd = _retire_mark(ax, m, last["card_date"], last["pct"], c)
-        ends.append((max(last["card_date"], xd) if xd is not None else last["card_date"], last["pct"],
-                     short_name(b["series"].iloc[0]), c))
+        if _retire_mark(ax, m, last["card_date"], last["pct"], latest_card):
+            retired += 1
+        ends.append((last["card_date"], last["pct"], short_name(b["series"].iloc[0]), c))
     # Right-hand labels, nudged apart so they do not overlap.
     ends.sort(key=lambda e: e[1])
     ys = [e[1] for e in ends]
@@ -359,10 +374,11 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%b %Y"))
     handles = [plt.Line2D([], [], color=CATEGORY_COLORS[k], lw=2, label=CATEGORY_LABELS[k])
                for k in CATEGORY_COLORS if k in set(allb["category"])]
-    if retire_dates:
+    if retired:
         handles.append(plt.Line2D([], [], color=plots.INK, marker="x", ls="none", markersize=7, markeredgewidth=1.4,
-                                  label="retired or replaced (card stops reporting it)"))
+                                  label="last reported value; later cards drop it"))
+    _card_labels(ax, df, x0, x1)
     ax.legend(handles=handles, loc="lower left", fontsize=8, title=None)
-    ax.set_title(title or f"{LABS.get(lab, lab)}: every bounded AI R&D evaluation, as percent of its ceiling")
+    ax.set_title(title or f"{LABS.get(lab, lab)}: every bounded AI R&D evaluation, as percent of its ceiling", pad=78)
     fig.tight_layout(rect=(0, 0, 0.8, 1))
     return fig
