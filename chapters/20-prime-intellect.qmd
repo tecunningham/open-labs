@@ -1,22 +1,73 @@
 # Prime Intellect (RL pilot)
 
-The pilot chapter for post-training and RL. INTELLECT-2's report publishes reward trajectories and ablations, including things that did not work. Here the x-axis is RL compute and "final run" is the released post-trained model.
+The pilot chapter for post-training and RL. Prime Intellect's INTELLECT-2 and INTELLECT-3
+reports are unusually explicit that their recipe sections describe "the ablation experiments that
+led to it", and both document abandoned paths. That makes them a good test of whether the
+experiments-to-final-run template works when the "experiments" are RL ablations on small proxy
+models and the "final run" is a released post-trained model. Working notes with sources are in
+`data/notes/prime-intellect.md`; the three technical reports were read in full.
 
 ```{python}
 #| echo: false
 from src.chapter import *  # noqa
 ```
 
-## Scaling curve, compute split, run sizes, timeline
+## What the template can and cannot do here
+
+Two things break relative to pretraining. First, there is no compute axis: neither report gives
+GPU-hours, cluster size for INTELLECT-2, or the compute of any ablation, so every RL step count
+in the data is read off a figure. Second, there is no fitted scaling relation to test: Prime
+Intellect's evidence is that findings on 1.5B, 4B and 7B proxies transfer qualitatively to 32B
+and 106B, and that benchmark-vs-step curves for INTELLECT-3 showed "no sign of plateauing".
+What the record does give is a clean **experiment ladder**: which ablation, at what size,
+licensed which decision in the main run.
+
+## The RL experiment ladder
 
 ```{python}
-df, fit, res = standard_figures("prime-intellect")
+e = load.experiments("prime-intellect")
+ladder = e[e["stage"] == "post-training/RL"][["project", "intervention", "model_sizes", "metric", "raw_data_available", "source_url"]].copy()
+ladder["source_url"] = ladder["source_url"].map(lambda u: f"[src]({u})" if u else "")
+display(ladder.reset_index(drop=True))
 ```
 
-## Published scaling experiments
+Reading the INTELLECT-2 ladder in order: an async-delay ablation at 1.5B licensed two-step
+asynchrony; a difficulty-filtering ablation at 7B (reward 0.34 to 0.42 over about 700 steps once
+problems outside a 12.5 to 50 percent pass@8 band were dropped) licensed the 7B model as a
+pre-filter for the 285k-task dataset; gradient-norm and entropy-collapse behaviour at 32B led to
+two-sided clipping and aggressive gradient clipping (adopted), a larger KL weight (rejected as
+too slow) and disabling torch.compile (adopted). The length reward that worked at 1.5B and 7B
+did not converge at 32B in the 200 to 350 step main runs and was left unresolved.
+
+INTELLECT-3 added a proxy-model stage: a 4B model validated each new environment and annotated
+problem difficulty before anything ran at 106B, and algorithms were ablated under deliberately
+high off-policyness (GSPO collapsed, CISPO climbed from 0.3 to 0.8 over about 400 steps).
+
+## Final run against its base
+
+The RL analogue of the final-run star is the released model's score against the base it started
+from. INTELLECT-2 started from an already heavily RL-trained base (QwQ-32B) and moved little;
+INTELLECT-3 started from a base model (GLM-4.5-Air-Base) and moved a lot.
 
 ```{python}
-experiments_table("prime-intellect");
+c = load.claims("prime-intellect")
+def pairs(project):
+    out = []
+    for _, r in c[(c["project"] == project) & c["value"].str.contains(" vs ")].iterrows():
+        new, base = [float(x) for x in r["value"].split(" vs ")]
+        out.append((r["claim"].split(":")[0], base, new))
+    return out
+fig, ax = plt.subplots(figsize=(8, 4)); plots.paired_deltas(pairs("intellect-2"), "QwQ-32B (base)", "INTELLECT-2", ax=ax); plt.show()
+fig, ax = plt.subplots(figsize=(8, 4)); plots.paired_deltas(pairs("intellect-3"), "GLM-4.5-Air", "INTELLECT-3", ax=ax); plt.show()
+```
+
+## Run sizes, compute split, timeline
+
+Only INTELLECT-1 (pretraining) and the derived INTELLECT-3 RL figure carry compute, so these
+standard panels are thin. They are kept so the chapter has the same skeleton as the others.
+
+```{python}
+df, fit, res = standard_figures("prime-intellect", split_by="gpu_hours")
 ```
 
 ## What the lab says about itself
@@ -33,5 +84,20 @@ display(key_numbers(df)) if not df.empty else display(Markdown("_No runs recorde
 
 ## Narrative
 
-_To be written once the data is in: what the experiments were for, what the lab said it learned,
-and what cannot be reconstructed._
+**Lab shape.** Three flagship runs about six months apart, moving from donated decentralised
+compute (INTELLECT-1: up to 112 H100s from 30 contributors over 42 days) to a trusted training
+cluster plus a permissionless inference swarm (INTELLECT-2: all runs "over the duration of two
+weeks") to a centralised 512-H200 cluster (INTELLECT-3: SFT and RL "including multiple ablations
+over the course of two months"). Author counts grew from 12 to 13 to 22.
+
+**Compute that is not published.** INTELLECT-2's training-cluster size, GPU-hours and cost;
+the number of ablation runs for either RL project; any development-vs-final split. The derived
+figures in the data (about 1.2e5 H200-hours for the INTELLECT-3 RL run, up to about 7.5e5 for
+the whole two-month programme) come from node counts, step times and step counts, with the
+method in each row. The report does state one compute ratio: inference to training FLOPs of
+about 4.5 to 1 in decentralised RL.
+
+**Implication for the template.** For RL labs the reconstructable object is the ladder of
+decisions, not a curve. The chapter template should carry a decision-ladder table as a standard
+section for Part II, and treat reward-vs-step figures as `figure_only` evidence unless a lab
+publishes W&B exports (Prime Intellect's are private).

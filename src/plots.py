@@ -206,20 +206,22 @@ def ladder_map(df: pd.DataFrame, ax=None, title: str | None = None):
         final = rt == "final"
         ax.scatter(s["params_active"], s["tokens"], s=220 if final else 55, marker=RUN_MARKERS[rt],
                    c=RUN_COLORS[rt], edgecolors=SURFACE, linewidths=2 if final else 1.5, label=RUN_LABELS[rt], zorder=4 if final else 3)
-        if final:
+        if final and len(s) <= 6:
             for _, r in s.iterrows():
                 ax.annotate(r["run_id"], (r["params_active"], r["tokens"]), xytext=(8, 4), textcoords="offset points", fontsize=8, color=INK2)
-    nmin, nmax = d["params_active"].min() / 2, d["params_active"].max() * 2
-    ns = np.geomspace(nmin, nmax, 50)
-    for C in [1e19, 1e20, 1e21, 1e22, 1e23, 1e24, 1e25]:
+    xlo, xhi = d["params_active"].min() / 3, d["params_active"].max() * 3
+    ylo, yhi = d["tokens"].min() / 3, d["tokens"].max() * 3
+    ns = np.geomspace(xlo, xhi, 50)
+    for C in [1e18, 1e19, 1e20, 1e21, 1e22, 1e23, 1e24, 1e25, 1e26]:
         ds = C / (6 * ns)
-        if ds.max() < d["tokens"].min() / 3 or ds.min() > d["tokens"].max() * 3:
+        inside = (ds > ylo) & (ds < yhi)
+        if inside.sum() < 2:
             continue
-        ax.plot(ns, ds, color=GRID, lw=1, zorder=1)
-        ax.annotate(f"{C:.0e} FLOPs", (ns[-1], ds[-1]), fontsize=7, color=MUTED, ha="right", va="bottom")
-    ax.set_xscale("log"); ax.set_yscale("log")
+        ax.plot(ns[inside], ds[inside], color=GRID, lw=1, zorder=1)
+        ax.annotate(f"{C:.0e}", (ns[inside][-1], ds[inside][-1]), fontsize=7, color=MUTED, ha="right", va="bottom")
+    ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlim(xlo, xhi); ax.set_ylim(ylo, yhi)
     ax.set_xlabel("Active parameters"); ax.set_ylabel("Training tokens")
-    ax.set_title(title or "Run sizes: parameters vs tokens (grey lines: equal compute)")
+    ax.set_title(title or "Run sizes: parameters vs tokens (grey lines: equal FLOPs)")
     ax.legend(loc="upper left")
     return ax
 
@@ -241,4 +243,21 @@ def stated_split(parts: dict[str, float], ax=None, title: str | None = None, uni
     ax.spines["left"].set_visible(False); ax.spines["bottom"].set_visible(False)
     ax.set_title(title or f"Lab-stated split of {unit}")
     ax.legend(loc="center left", bbox_to_anchor=(1.01, 0.5))
+    return ax
+
+
+def paired_deltas(pairs: list[tuple[str, float, float]], base_label: str, new_label: str, ax=None, title: str | None = None):
+    """Benchmark before vs after post-training as paired dots with a connector: the RL analogue of the final-run star."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 0.6 * len(pairs) + 1.5))
+    ys = np.arange(len(pairs))[::-1]
+    for y, (name, b, n) in zip(ys, pairs):
+        ax.plot([b, n], [y, y], color=GRID, lw=2, zorder=1)
+        ax.scatter([b], [y], s=70, c=MUTED, edgecolors=SURFACE, linewidths=1.5, zorder=3, label=base_label if y == ys[0] else None)
+        ax.scatter([n], [y], s=90, c=RUN_COLORS["final"], edgecolors=SURFACE, linewidths=1.5, zorder=4, label=new_label if y == ys[0] else None)
+        ax.annotate(f"{n - b:+.1f}", (max(b, n), y), xytext=(8, -3), textcoords="offset points", fontsize=9, color=INK2)
+    ax.set_yticks(ys); ax.set_yticklabels([p[0] for p in pairs])
+    ax.set_xlabel("Score"); ax.set_title(title or f"{new_label} vs {base_label}")
+    ax.legend(loc="lower right")
     return ax

@@ -1,3 +1,18 @@
 lab,project,claim,value,unit,source_url,quote,notes
 ai2-olmo,olmo3,olmo3-all-development-aggregate: GPU-hours,6.85e6,H100-hours,https://arxiv.org/abs/2605.01158,,"Aggregate, not a single run. Per-stage split of development compute not retrieved (arXiv blocked in this environment). | All Olmo 3 development compute: experimentation, failed runs, ablations across pretraining/midtraining/post-training (82.2% of 8.34M total GPU-h)"
 ai2-olmo,olmo3,olmo3-all-final-runs-aggregate: GPU-hours,1.49e6,H100-hours,https://arxiv.org/abs/2605.01158,,Derived: 8.34M total - 6.85M development = 1.49M; consistent with 234k+1.05M pretraining + ~120k post-training/midtraining. | Sum of all final Olmo 3 runs (7B+32B pretrain/midtrain/long-context/post-training)
+prime-intellect,intellect-2,AIME24: INTELLECT-2 vs QwQ-32B base,78.8 vs 76.6,accuracy,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,,final eval table
+prime-intellect,intellect-2,AIME25: INTELLECT-2 vs QwQ-32B base,64.9 vs 64.8,accuracy,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,,
+prime-intellect,intellect-2,LiveCodeBench v5: INTELLECT-2 vs QwQ-32B base,67.8 vs 66.1,accuracy,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,,
+prime-intellect,intellect-2,GPQA-Diamond: INTELLECT-2 vs QwQ-32B base,66.8 vs 66.3,accuracy,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,,
+prime-intellect,intellect-2,IFEval: INTELLECT-2 vs QwQ-32B base,81.5 vs 83.4,accuracy,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,,
+prime-intellect,intellect-2,Inference to training FLOPs ratio in decentralized RL,4.5,ratio,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,,stated in report
+prime-intellect,intellect-2,Rollouts per RL step,4096,rollouts,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,256 prompts x 16 samples,
+prime-intellect,intellect-2,Duration of all INTELLECT-2 runs,2,weeks,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,"""over the duration of two weeks""",training cluster size not disclosed
+prime-intellect,intellect-3,AIME24 avg@32: INTELLECT-3 vs GLM-4.5-Air,90.8 vs 84.6,accuracy,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,,
+prime-intellect,intellect-3,AIME25: INTELLECT-3 vs GLM-4.5-Air,88.0 vs 82.0,accuracy,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,,
+prime-intellect,intellect-3,LiveCodeBench v6: INTELLECT-3 vs GLM-4.5-Air,69.3 vs 61.5,accuracy,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,,
+prime-intellect,intellect-3,GPQA-Diamond: INTELLECT-3 vs GLM-4.5-Air,74.4 vs 73.3,accuracy,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,,
+prime-intellect,intellect-3,HLE: INTELLECT-3 vs GLM-4.5-Air,14.6 vs 13.3,accuracy,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,,
+prime-intellect,intellect-3,Cluster and duration for SFT+RL including ablations,"512 H200, 2 months",,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,"""both stages, including multiple ablations, were carried out ... over the course of two months""",
+prime-intellect,intellect-3,"RL step time at 65,536 context on 16 train + 44 inference nodes",1500,seconds,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,,without in-flight weight updates >2x

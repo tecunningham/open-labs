@@ -35,12 +35,12 @@ run-size map shows the ladder and the released models on the parameters-vs-token
 ## Run sizes, compute split, timeline
 
 ```{python}
-df, fit, res = standard_figures("ai2-olmo", split_by="gpu_hours")
+df, fit, res = standard_figures("ai2-olmo")
 ```
 
-The logged-compute split above counts only runs we have individually: the 16 ladder runs are
-about 1% of the compute of the two OLMo 2 targets they predicted, so the per-run picture shows a
-final-run-dominated budget. The lab's own accounting, which includes everything, says the
+The logged-compute split above counts only runs we have individually, by 6ND FLOPs: the 16
+ladder runs are about 1% of the compute of the two OLMo 2 targets they predicted, and the
+ablation series have no sizes attached, so the per-run picture shows a final-run-dominated budget. The lab's own accounting, which includes everything, says the
 opposite. The gap between those two bars is the survivorship problem in one picture.
 
 ## Published scaling experiments
