@@ -18,8 +18,8 @@ import numpy as np
 The V3 report describes its ablations by size and tokens: multi-token prediction and
 auxiliary-loss-free balancing each tested on a 15.7B mixture-of-experts model at 1.33T tokens and
 a 228.7B model at 540 to 578B tokens, and FP8 against BF16 on models "similar to DeepSeek-V2-Lite
-and DeepSeek-V2" for about 1T tokens each. Summed at 6ND those disclosed ablations are about
-5e23 FLOPs, roughly 15 percent of the 3.3e24 final run. Nothing about the many runs behind the
+and DeepSeek-V2" for about 1T tokens each. Summed at 6ND with both runs of each pair counted, those disclosed ablations come to roughly
+one fifth of the compute of the 3.3e24 final run (the bar below gives the exact share). Nothing about the many runs behind the
 architecture and data choices is counted, so this is a floor, and a low one.
 
 ```{python}
