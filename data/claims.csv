@@ -8,7 +8,7 @@ prime-intellect,intellect-2,GPQA-Diamond: INTELLECT-2 vs QwQ-32B base,66.8 vs 66
 prime-intellect,intellect-2,IFEval: INTELLECT-2 vs QwQ-32B base,81.5 vs 83.4,accuracy,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,,
 prime-intellect,intellect-2,Inference to training FLOPs ratio in decentralized RL,4.5,ratio,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,,stated in report
 prime-intellect,intellect-2,Rollouts per RL step,4096,rollouts,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,256 prompts x 16 samples,
-prime-intellect,intellect-2,Duration of all INTELLECT-2 runs,2,weeks,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,"""over the duration of two weeks""",training cluster size not disclosed
+prime-intellect,intellect-2,Duration of all INTELLECT-2 runs,2,weeks,https://storage.googleapis.com/public-technical-paper/INTELLECT_2_Technical_Report.pdf,"""over the duration of two weeks""","training cluster size not disclosed; 18 compute contributors named in the acknowledgements; the Fig 12 W&B export is dated 2025-05-08 (https://arxiv.org/html/2505.07291v1, verified 2026-09-13)"
 prime-intellect,intellect-3,AIME24 avg@32: INTELLECT-3 vs GLM-4.5-Air,90.8 vs 84.6,accuracy,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,,
 prime-intellect,intellect-3,AIME25: INTELLECT-3 vs GLM-4.5-Air,88.0 vs 82.0,accuracy,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,,
 prime-intellect,intellect-3,LiveCodeBench v6: INTELLECT-3 vs GLM-4.5-Air,69.3 vs 61.5,accuracy,https://storage.googleapis.com/intellect-3-paper/INTELLECT_3_Technical_Report.pdf,,

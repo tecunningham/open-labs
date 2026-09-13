@@ -23,6 +23,15 @@ Remaining steps, in order:
    ladder (five sizes, in `marin-community/marin`) is public and could be added as ladder rows.
 3. Marin phase rows carry per-phase `tokens`/`flops`; a loss-vs-cumulative-tokens figure built
    from the CSVs in `data/losses/marin/` would be more honest than the compute axis for them.
-4. Work through the "Verification status" lists in `data/notes/*.md` against arXiv (reachable in
-   this environment), flipping `confidence` from `guess` to `reported` where confirmed.
-5. Commit the CSVs. Never commit a key; none is needed for the fetcher.
+4. Verification pass done 2026-09-13 for all six notes files (item-by-item outcomes with
+   sources are in each file). Refuted and corrected: DeepSeek V3/V3.2 author counts (199, 263),
+   Olmo 3 base MMLU (66.9 / 76.2) and Think-32B MATH/MMLU (96.1 / 85.4), Delphi grid size (81),
+   Snowball hardware (TPU v4-2048), 535B device count (704 GB200), OpenDiLoCo 1.1B run (44k
+   steps), INTELLECT-3.1 (public model exists). Still open: Cerebras paper-vs-model-card Pile
+   loss discrepancy (card returns 401 via proxy); OLMo 2 7B/13B GPU-hours; Prime Intellect
+   headcount and funding; Marin 8B phase dates (private W&B project); the INTELLECT-3 SFT token
+   conflict (217B in Table 1 vs ~50B from steps x tokens/step).
+5. Hosts still blocked from this environment: raw.githubusercontent.com, api.github.com, PyPI,
+   ai.meta.com, primeintellect.ai, cerebras.ai, x.com, web.archive.org, marin.readthedocs.io,
+   storage.googleapis.com. `git clone` from github.com and huggingface.co API/raw work.
+6. Never commit a key; none is needed for the fetcher.
