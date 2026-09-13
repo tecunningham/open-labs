@@ -1,1 +1,3 @@
 lab,project,claim,value,unit,source_url,quote,notes
+ai2-olmo,olmo3,olmo3-all-development-aggregate: GPU-hours,6.85e6,H100-hours,https://arxiv.org/abs/2605.01158,,"Aggregate, not a single run. Per-stage split of development compute not retrieved (arXiv blocked in this environment). | All Olmo 3 development compute: experimentation, failed runs, ablations across pretraining/midtraining/post-training (82.2% of 8.34M total GPU-h)"
+ai2-olmo,olmo3,olmo3-all-final-runs-aggregate: GPU-hours,1.49e6,H100-hours,https://arxiv.org/abs/2605.01158,,Derived: 8.34M total - 6.85M development = 1.49M; consistent with 234k+1.05M pretraining + ~120k post-training/midtraining. | Sum of all final Olmo 3 runs (7B+32B pretrain/midtrain/long-context/post-training)

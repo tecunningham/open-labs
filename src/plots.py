@@ -188,3 +188,57 @@ def overlay_projects(dfs: dict[str, pd.DataFrame], fits: dict[str, PowerLawFit |
     ax.set_xlabel("Training compute (FLOPs)"); ax.set_ylabel("Loss" if y == "loss" else y)
     ax.set_title(title or "Across releases (stars = final runs)"); ax.legend()
     return ax
+
+
+def ladder_map(df: pd.DataFrame, ax=None, title: str | None = None):
+    """Parameters vs tokens (log-log) for every run: where the ladder sits relative to the final runs.
+    Useful when a lab publishes run sizes but not losses. Iso-FLOP guide lines at 1e20 ... 1e25."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 5))
+    d = df.dropna(subset=["params_active", "tokens"])
+    if d.empty:
+        _empty(ax); return ax
+    for rt in ["ladder", "ablation", "midtrain", "aborted", "unknown", "final"]:
+        s = d[d["run_type"] == rt]
+        if s.empty:
+            continue
+        final = rt == "final"
+        ax.scatter(s["params_active"], s["tokens"], s=220 if final else 55, marker=RUN_MARKERS[rt],
+                   c=RUN_COLORS[rt], edgecolors=SURFACE, linewidths=2 if final else 1.5, label=RUN_LABELS[rt], zorder=4 if final else 3)
+        if final:
+            for _, r in s.iterrows():
+                ax.annotate(r["run_id"], (r["params_active"], r["tokens"]), xytext=(8, 4), textcoords="offset points", fontsize=8, color=INK2)
+    nmin, nmax = d["params_active"].min() / 2, d["params_active"].max() * 2
+    ns = np.geomspace(nmin, nmax, 50)
+    for C in [1e19, 1e20, 1e21, 1e22, 1e23, 1e24, 1e25]:
+        ds = C / (6 * ns)
+        if ds.max() < d["tokens"].min() / 3 or ds.min() > d["tokens"].max() * 3:
+            continue
+        ax.plot(ns, ds, color=GRID, lw=1, zorder=1)
+        ax.annotate(f"{C:.0e} FLOPs", (ns[-1], ds[-1]), fontsize=7, color=MUTED, ha="right", va="bottom")
+    ax.set_xscale("log"); ax.set_yscale("log")
+    ax.set_xlabel("Active parameters"); ax.set_ylabel("Training tokens")
+    ax.set_title(title or "Run sizes: parameters vs tokens (grey lines: equal compute)")
+    ax.legend(loc="upper left")
+    return ax
+
+
+def stated_split(parts: dict[str, float], ax=None, title: str | None = None, unit: str = "GPU-hours"):
+    """The lab's own stated split (e.g. development vs final GPU-hours) as one stacked bar."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 1.8))
+    total = sum(parts.values()); left = 0.0
+    colors = [RUN_COLORS["final"], RUN_COLORS["ladder"], RUN_COLORS["ablation"], RUN_COLORS["midtrain"]]
+    for (k, v), c in zip(parts.items(), colors):
+        w = v / total
+        ax.barh(0, w, left=left, color=c, height=0.5, edgecolor=SURFACE, linewidth=2, label=f"{k}: {v:,.0f} {unit}")
+        if w > 0.07:
+            ax.text(left + w / 2, 0, f"{w:.0%}", ha="center", va="center", fontsize=9, color="white" if c == RUN_COLORS["final"] else INK)
+        left += w
+    ax.set_xlim(0, 1); ax.set_yticks([]); ax.set_xticks([]); ax.grid(False)
+    ax.spines["left"].set_visible(False); ax.spines["bottom"].set_visible(False)
+    ax.set_title(title or f"Lab-stated split of {unit}")
+    ax.legend(loc="center left", bbox_to_anchor=(1.01, 0.5))
+    return ax

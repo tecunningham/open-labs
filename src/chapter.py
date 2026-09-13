@@ -30,14 +30,22 @@ def key_numbers(df: pd.DataFrame) -> pd.DataFrame:
     return t
 
 
-def standard_figures(lab: str, project: str | None = None, y: str = "loss", irreducible: bool = False):
+def standard_figures(lab: str, project: str | None = None, y: str = "loss", irreducible: bool = False,
+                     split_by: str = "flops"):
     """Emit the chapter's standard figure set and return (df, fit, residuals)."""
     df = load.runs(lab, project)
     fit = fits.fit_experiments(df, y=y, irreducible=irreducible)
     res = fits.final_residuals(df, fit, y=y)
 
+    if df[y].notna().sum() >= 2:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        plots.scaling_curve(df, y=y, fit=fit, ax=ax)
+        plt.show()
+    else:
+        display(Markdown(f"_No `{y}` values recorded for these runs, so there is no loss-vs-compute curve yet. "
+                         "The run-size map below shows where experiments sit relative to the final runs._"))
     fig, ax = plt.subplots(figsize=(8, 5))
-    plots.scaling_curve(df, y=y, fit=fit, ax=ax)
+    plots.ladder_map(df, ax=ax)
     plt.show()
 
     if not res.empty:
@@ -46,7 +54,7 @@ def standard_figures(lab: str, project: str | None = None, y: str = "loss", irre
         display(res.round(4))
 
     fig, ax = plt.subplots(figsize=(8, 1.8))
-    plots.compute_split(df, ax=ax)
+    plots.compute_split(df, ax=ax, value=split_by)
     plt.show()
     display(Markdown(f"Experimental share of logged FLOPs: **{load.experiment_share(df):.0%}** "
                      "(a lower bound: unlogged and failed runs are missing)."))

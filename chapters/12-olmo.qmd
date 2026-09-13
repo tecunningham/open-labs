@@ -1,17 +1,47 @@
 # Ai2 OLMo
 
-Ai2 publishes data, code, recipes, W&B logs, and intermediate checkpoints for OLMo 2 and OLMo 3, plus a model-ladder paper on predicting task performance from small runs. Morrison et al. (2026) estimate the experimental vs. final compute ratio for OLMo 3.
+Ai2 publishes data, code, recipes, W&B logs, and intermediate checkpoints for OLMo 2 and OLMo 3,
+plus a model-ladder paper on predicting task performance from small runs. Two accounting papers
+by Morrison et al. give the development vs. final-run split directly: roughly 50/50 for the OLMo 2
+era (ICLR 2025) and 82/18 for the whole Olmo 3 pipeline (2026). Working notes with sources are in
+`data/notes/olmo.md`.
 
 ```{python}
 #| echo: false
 from src.chapter import *  # noqa
 ```
 
-## Scaling curve, compute split, run sizes, timeline
+## The number that matters: development vs. final-run compute
+
+Morrison et al. (2026) account for the entire Olmo 3 pipeline (7B and 32B, Instruct and Think).
+Of 8.34M H100-hours, development (experimentation, failed runs, ablations, synthetic data)
+took 6.85M and the final runs 1.49M. That is an experiment-to-final ratio near 4.6 to 1, up from
+about 1 to 1 in their OLMo 2-era paper.
 
 ```{python}
-df, fit, res = standard_figures("ai2-olmo")
+c = load.claims("ai2-olmo")
+dev = float(c.loc[c["claim"].str.contains("development"), "value"].iloc[0])
+fin = float(c.loc[c["claim"].str.contains("final"), "value"].iloc[0])
+fig, ax = plt.subplots(figsize=(8, 1.8))
+plots.stated_split({"Final runs": fin, "Development": dev}, ax=ax, unit="H100-hours",
+                   title="Olmo 3 pipeline: final runs vs development (Morrison et al. 2026)")
+plt.show()
 ```
+
+The rows below are the runs we can reconstruct individually. Losses are not yet transcribed
+(they live in public W&B and comet.ml dashboards), so the loss-vs-compute curve is pending; the
+run-size map shows the ladder and the released models on the parameters-vs-tokens plane.
+
+## Run sizes, compute split, timeline
+
+```{python}
+df, fit, res = standard_figures("ai2-olmo", split_by="gpu_hours")
+```
+
+The logged-compute split above counts only runs we have individually: the 16 ladder runs are
+about 1% of the compute of the two OLMo 2 targets they predicted, so the per-run picture shows a
+final-run-dominated budget. The lab's own accounting, which includes everything, says the
+opposite. The gap between those two bars is the survivorship problem in one picture.
 
 ## Published scaling experiments
 
@@ -33,5 +63,24 @@ display(key_numbers(df)) if not df.empty else display(Markdown("_No runs recorde
 
 ## Narrative
 
-_To be written once the data is in: what the experiments were for, what the lab said it learned,
-and what cannot be reconstructed._
+**Process.** The OLMo 2 development pattern: architecture and stability changes ablated at 1B,
+19 "microanneal" runs totalling 130B tokens to test individual data sources, then final stage-1
+runs (1 to 1.2 epochs) and several stage-2 anneals weight-averaged into the released model.
+Olmo 3 formalised this into per-source microanneals (5B target tokens plus 5B web) feeding
+"integration tests" (full 100B midtraining anneals on candidate mixes).
+
+**Ladder.** Bhagia et al. (2024) trained 16 ladder models (190M, 370M, 760M, 1.3B, each at 1x,
+2x, 5x, 10x Chinchilla tokens) and predicted OLMo 2 7B-4T and 13B-5T task accuracy within about
+2 points on four tasks and about 4 points averaged over eight. The ladder cost about 1% of the
+targets' compute.
+
+**Run management visible in the scripts.** The official training scripts show decisions the
+papers do not: the Olmo 3 7B schedule was extended from 5T to 7T tokens mid-run and then
+hard-stopped at one epoch (5.93T); the 32B midtraining branched at 5.50T while pretraining ran
+on to 5.70T, so about 196B tokens of 32B pretraining were not used by the released model.
+
+**Not yet reconstructable.** Per-task fitted coefficients from the ladder paper; the split of the
+6.85M development hours across pretraining, midtraining, post-training and synthetic data; OLMo 2
+7B and 13B GPU-hours; loss values (pending a pull from the public dashboards). arXiv was
+unreachable from this environment, so paper numbers came via secondary summaries and Ai2's
+GitHub repositories; the notes file lists 13 items to verify against the primary sources.
