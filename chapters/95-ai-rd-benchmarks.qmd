@@ -29,8 +29,12 @@ a harder version, or dropped from the determination; the documented reason, wher
 one, is in the series file. Card names run along the top of the overview at their dates. Each lab then gets one overview panel with all of its bounded
 evaluations on the same 0 to 100 percent axis, so the order in which benchmarks saturate and get
 replaced is visible. Ceilings, directions and reference values are in
-`data/ai_rd_benchmark_series.csv`; unbounded metrics (speedups, human-normalized scores above 1,
-time horizons) and lower-is-better metrics stay out of the overview.
+`data/ai_rd_benchmark_series.csv`. Unbounded metrics (speedups, human-normalized scores above 1,
+time horizons, lower-is-better errors) get a second overview per lab on a log axis of multiples:
+a series with a card-stated human reference is divided by it, so 1x is the reference reached and
+the label says what the reference is and how much human time the card equates it to; a series
+with no reference (METR's time horizons, Anthropic's staff-survey uplift) is indexed to its first
+card and drawn dashed.
 
 Only cards on the evaluation frontier are shown. A card that improves on at most a quarter of the
 evaluations it shares with earlier cards (given at least three shared) adds no frontier
@@ -62,8 +66,8 @@ def show_overview(lab):
     fig = benchmarks.overview(benchmarks.load_frontier(lab), lab)
     plt.show()
 
-def show_unbounded():
-    fig = benchmarks.unbounded_overview(benchmarks.load_frontier())
+def show_unbounded(lab):
+    fig = benchmarks.unbounded_overview(benchmarks.load_frontier(lab), lab)
     plt.show()
 
 def show_cards(lab):
@@ -88,6 +92,11 @@ Monorepo-Bench. The High threshold is worded as "a performant mid-career researc
 ```{python}
 #| fig-cap: "OpenAI: every bounded evaluation on one 0 to 100 percent axis. The research-engineer coding interview saturated first (retired after ChatGPT agent); MLE-bench was revised once the 30-competition subset climbed; OpenAI-Proof Q&A stays near the floor. A black cross marks the last reported value of a series later cards drop; card names run along the top."
 show_overview("openai")
+```
+
+```{python}
+#| fig-cap: "OpenAI: every unbounded evaluation as a multiple, on a log axis. METR's 50 percent time horizon has no human reference, so it is indexed to the first frontier card and drawn dashed."
+show_unbounded("openai")
 ```
 
 ```{python}
@@ -122,6 +131,11 @@ show_overview("anthropic")
 ```
 
 ```{python}
+#| fig-cap: "Anthropic: every unbounded evaluation as a multiple, on a log axis. Solid lines are divided by the card's human reference (1x = the reference reached; the label gives the reference value and the human time it represents); dashed lines have no reference and are indexed to their first card."
+show_unbounded("anthropic")
+```
+
+```{python}
 #| fig-cap: "Anthropic: numeric scores over card date. Same marks as above. Terminal-Bench is split by version; the quadruped task is split at its rescale."
 show_series("anthropic")
 ```
@@ -152,6 +166,11 @@ show_overview("gdm")
 ```
 
 ```{python}
+#| fig-cap: "Google DeepMind: every unbounded evaluation as a multiple. RE-Bench's human-normalized average is already a multiple of the best 8-hour human attempt; Optimize LLM Foundry is the human runtime divided by the model's."
+show_unbounded("gdm")
+```
+
+```{python}
 #| fig-cap: "Google DeepMind: numeric scores over card date. Same marks as above."
 show_series("gdm")
 ```
@@ -166,24 +185,6 @@ show("gdm", caption="Google DeepMind: AI R&D and agentic-coding scores by model 
 
 ```{python}
 show_cards("gdm")
-```
-
-## Unbounded evaluations against their human references
-
-The overview panels above leave out metrics with no ceiling: speedups, human-normalized scores that
-can exceed 1, and lower-is-better error metrics. These are the evaluations that say most about
-saturation relative to people rather than to a test set, because each card states a human
-reference point for them. The figure below puts every such series from all three labs on one log
-axis, each score divided by its card's human reference (reference divided by score where lower is
-better), so 1.0 means the reference has been reached. The references stand for different amounts
-of human effort, which colour carries: Anthropic's quadruped threshold is about 4 hours, its LLM
-training reference 4 to 8 hours, RE-Bench's human baseline 8 hours, and its kernel and time-series
-thresholds about 40 hours. PaperBench's 48-hour PhD baseline is bounded and appears in the OpenAI
-overview instead.
-
-```{python}
-#| fig-cap: "Unbounded AI R&D evaluations from all three labs as a multiple of the human reference the card states, on a log axis. Colour is the human effort the reference represents; a black cross marks the last reported value of a series its lab's later cards drop."
-show_unbounded()
 ```
 
 ## Reading across the three
