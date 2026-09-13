@@ -24,6 +24,7 @@ book:
       chapters:
         - chapters/90-cross-lab.qmd
   appendices:
+    - chapters/95-ai-rd-benchmarks.qmd
     - chapters/99-methods.qmd
 
 format:

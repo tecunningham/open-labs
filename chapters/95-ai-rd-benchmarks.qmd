@@ -1,0 +1,105 @@
+# AI R&D benchmarks in closed-lab model cards {.appendix}
+
+The three closed frontier labs publish, with each frontier release, a system or model card whose
+dangerous-capability section reports how far the model is from automating AI research. This
+appendix collects those AI R&D scores, one table per lab, with the lab's successive frontier
+models as columns and the benchmarks as rows. It is a reference for the cross-lab discussion of
+returns to research effort, not a chapter: the runs behind these numbers are not public.
+
+The long-form data with a source and a confidence flag on every row is `data/ai_rd_benchmarks.csv`.
+Provenance marks in the cells: no mark means the number was read from the card; **†** means it was
+read from a search-result excerpt of the card or of a write-up quoting it; **‡** means it was
+recalled from memory and not checked against a source. The collection environment on 2026-09-13
+could not fetch anthropic.com, openai.com or deepmind.google, so most cells carry a mark; treat
+marked cells as pointers to the card, not as citable numbers, until a session with access to the
+cards has verified them.
+
+Scores are as the lab reports them and are not comparable across labs: each lab uses its own
+scaffold, time budget, attempt count and problem subset, and internal suites are only defined
+inside one lab. Conditions that change the number are given in parentheses inside the cell.
+
+```{python}
+#| echo: false
+from src.chapter import *  # noqa
+from src import benchmarks
+from IPython.display import Markdown, display
+
+def show(lab, families=None, caption=""):
+    df = benchmarks.load(lab)
+    if families:
+        df = df[df["family"].isin(families)]
+    if df.empty:
+        display(Markdown("_No rows recorded._")); return
+    t = benchmarks.wide(df)
+    display(Markdown(benchmarks.to_markdown(t) + (f"\n\n: {caption}" if caption else "")))
+
+def show_cards(lab):
+    t = benchmarks.cards(benchmarks.load(lab))
+    t["card"] = t.apply(lambda r: f"[{r['card_title']}]({r['card_url']})" if r["card_url"] else r["card_title"], axis=1)
+    display(Markdown(benchmarks.to_markdown(t[["model", "card_date", "card"]].set_index("model").rename_axis("Model"))))
+```
+
+## Google DeepMind
+
+DeepMind's Frontier Safety Framework has a Machine Learning R&D critical capability level and
+evaluates it mainly on METR's RE-Bench, reported as a human-normalized average across challenges.
+Earlier cards state only whether the alert threshold was reached.
+
+::: {.availability .column-page}
+
+```{python}
+show("gdm", caption="Google DeepMind: AI R&D and agentic-coding scores by model card. {#tbl-gdm}")
+```
+
+:::
+
+```{python}
+show_cards("gdm")
+```
+
+## OpenAI
+
+OpenAI's Preparedness Framework tracks "AI Self-improvement" (earlier "Model autonomy") with a
+mix of public and internal evaluations: SWE-bench Verified, SWE-Lancer, internal pull-request
+replication (OpenAI PRs), MLE-bench, PaperBench and research-engineer interview questions.
+
+::: {.availability .column-page}
+
+```{python}
+show("openai", caption="OpenAI: AI self-improvement and agentic-coding scores by system card. {#tbl-openai}")
+```
+
+:::
+
+```{python}
+show_cards("openai")
+```
+
+## Anthropic
+
+Anthropic's Responsible Scaling Policy defines AI R&D capability thresholds and reports SWE-bench
+Verified, two internal AI research evaluation suites, a subset of METR's RE-Bench, and internal
+surveys of how much its own researchers are sped up.
+
+::: {.availability .column-page}
+
+```{python}
+show("anthropic", caption="Anthropic: AI R&D and agentic-coding scores by system card. {#tbl-anthropic}")
+```
+
+:::
+
+```{python}
+show_cards("anthropic")
+```
+
+## Reading across the three
+
+Each lab measures a different thing under the AI R&D heading. DeepMind reports a single
+human-normalized number on a public METR suite; OpenAI reports pass rates on internal replication
+tasks and Kaggle-style competitions; Anthropic reports fractions of a human baseline on internal
+tasks plus its own RE-Bench subset. SWE-bench Verified is the only benchmark all three report, and
+even there the subset and scaffold differ. The common thread is qualitative: every lab has moved
+from "well below human" statements in 2024 to reporting models at or above the human baseline on
+several-hour ML engineering tasks by 2026, while each still judges the model below its own
+threshold for autonomous AI R&D.
