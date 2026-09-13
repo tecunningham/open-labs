@@ -458,3 +458,61 @@ def unbounded_overview(df: pd.DataFrame, title: str | None = None):
     ax.set_title(title or "Unbounded AI R&D evaluations, as a multiple of the human reference the card states")
     fig.tight_layout(rect=(0, 0, 0.78, 1))
     return fig
+
+
+# ----------------------------------------------------------------------------- evaluation frontier
+DOMINATED_MIN_SHARED = 3      # need this many shared evaluations to judge a card
+DOMINATED_MAX_IMPROVED = 0.25  # improving on at most this share of them = dominated
+
+
+def dominance(df: pd.DataFrame, lab: str) -> pd.DataFrame:
+    """For each card in date order: how many evaluations it shares with earlier cards, how many of
+    those it improves on (base condition, direction-aware), and whether it counts as dominated.
+    A card that is worse or equal on all but a quarter of the evaluations it shares with earlier
+    cards adds no frontier information and is left out of the figures and tables."""
+    meta = series_meta()
+    d = numeric_series(df)
+    if d.empty:
+        return pd.DataFrame(columns=["model", "card_date", "shared", "improved", "new", "dominated"])
+    d["dir"] = d["series"].map(lambda s: (lambda m: m["direction"] if m is not None else "higher")(meta_for(meta, lab, s)))
+    base = (d.groupby(["model", "series", "dir"])["score_num"].min().reset_index()
+              .merge(d.groupby("model")["card_date"].min().rename("card_date"), on="model"))
+    best: dict[str, float] = {}
+    out = []
+    for model in base.sort_values("card_date").drop_duplicates("model")["model"]:
+        rows = base[base["model"] == model]
+        shared = improved = new = 0
+        upd = []
+        for _, r in rows.iterrows():
+            v = r["score_num"] if r["dir"] == "higher" else -r["score_num"]
+            if r["series"] in best:
+                shared += 1
+                improved += int(v > best[r["series"]])
+            else:
+                new += 1
+            upd.append((r["series"], v))
+        for s, v in upd:
+            best[s] = max(best.get(s, -np.inf), v)
+        dominated = shared >= DOMINATED_MIN_SHARED and improved / shared <= DOMINATED_MAX_IMPROVED
+        out.append(dict(model=model, card_date=rows["card_date"].iloc[0], shared=shared, improved=improved,
+                        new=new, dominated=dominated))
+    return pd.DataFrame(out)
+
+
+def frontier(df: pd.DataFrame, lab: str) -> pd.DataFrame:
+    """Rows of the cards that are not dominated (see `dominance`)."""
+    dom = dominance(df, lab)
+    drop = set(dom.loc[dom["dominated"], "model"])
+    return df[~df["model"].isin(drop)].reset_index(drop=True)
+
+
+def load_frontier(lab: str | None = None) -> pd.DataFrame:
+    """Frontier-flagged cards minus the dominated ones, for one lab or all labs."""
+    if lab:
+        return frontier(load(lab, frontier_only=True), lab)
+    return pd.concat([frontier(load(l, frontier_only=True), l) for l in LABS], ignore_index=True)
+
+
+def omitted(lab: str) -> pd.DataFrame:
+    dom = dominance(load(lab, frontier_only=True), lab)
+    return dom[dom["dominated"]].reset_index(drop=True)
