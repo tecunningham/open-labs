@@ -26,14 +26,15 @@ level with `main`):
   `styles.css` (wired in `_quarto.yml`) holds the `.availability` table style.
 - **AI R&D benchmarks appendix** (`chapters/95-ai-rd-benchmarks.qmd`, `src/benchmarks.py`,
   `data/ai_rd_benchmarks.csv`, notes in `data/notes/ai-rd-benchmarks.md`). One benchmark-by-model
-  table per closed lab (GDM, OpenAI, Anthropic), columns = frontier cards through Sep 2026. The
-  2026-09-13 session could not fetch anthropic.com, openai.com, deepmind.google or most write-ups
-  (egress policy), so every cell is `snippet` (from a search-result excerpt) or `memory`; none is
-  `reported`. The notes file lists the open questions per lab. Verifying the cells against the
-  cards and switching them to `reported` is the next step for this appendix; the highest-value
-  gaps are OpenAI per-benchmark values for GPT-5.2 through GPT-6 Astra (SWE-Lancer, OpenAI PRs,
-  PaperBench), Anthropic Suite 1 per-task numbers for 3.7 Sonnet and Opus 4.5, the Gemini 3.7
-  Flash FSF report's ML R&D section, and the Sonnet 5 / Opus 5 SWE-bench Verified conflicts.
+  table and one time-series figure per closed lab (GDM, OpenAI, Anthropic); columns are the frontier
+  cards through Sep 2026 (Gemini 2.5 Pro to 3.8 Flash, o1-preview to GPT-6 Astra, Claude 3.5 Sonnet
+  to Fable 5.1). 396 rows; 371 read from the cards themselves after the network was opened
+  mid-session, the rest are launch-post or blog figures no card contains. The notes file records
+  every correction made against the cards and the cross-card inconsistencies (later cards re-run
+  earlier models with different results). Open items: per-task RE-Bench scores for Gemini 2.5 Pro,
+  2.5 Deep Think and 3 Pro are figure-only; GPT-5.6 and GPT-6 Astra report most self-improvement
+  evals as curves without printed values; Anthropic's Sonnet 4 and Opus 4.1 launch-time
+  Terminal-bench numbers are memory-only.
 - **Rendered.** `quarto render` passes for all chapters (Quarto 1.7.32, pandas 3.0, scipy 1.17).
 
 Environment setup: `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`) installs

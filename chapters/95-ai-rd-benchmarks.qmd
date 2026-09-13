@@ -7,12 +7,14 @@ models as columns and the benchmarks as rows. It is a reference for the cross-la
 returns to research effort, not a chapter: the runs behind these numbers are not public.
 
 The long-form data with a source and a confidence flag on every row is `data/ai_rd_benchmarks.csv`.
-Provenance marks in the cells: no mark means the number was read from the card; **†** means it was
-read from a search-result excerpt of the card or of a write-up quoting it; **‡** means it was
-recalled from memory and not checked against a source. The collection environment on 2026-09-13
-could not fetch anthropic.com, openai.com or deepmind.google, so most cells carry a mark; treat
-marked cells as pointers to the card, not as citable numbers, until a session with access to the
-cards has verified them.
+Provenance marks in the cells: no mark means the number was read from the card itself (or from the
+METR report the card cites); **\*** means it was read from the lab's launch post because the card
+does not give it; **†** means it was read from a search-result excerpt of a write-up and not found
+in any primary document; **‡** means it was recalled from memory and not checked. Almost every cell
+was verified against the card on 2026-09-13; the handful still marked † or ‡ are launch-blog
+figures (SWE-bench Verified for the Codex models, Terminal-Bench for OpenAI models) that no card
+contains. Where a later card re-runs an earlier model and gets a different number, the cell keeps
+the model's own card value and the notes column records the re-run.
 
 Scores are as the lab reports them and are not comparable across labs: each lab uses its own
 scaffold, time budget, attempt count and problem subset, and internal suites are only defined
@@ -45,9 +47,11 @@ def show_cards(lab):
 
 ## Google DeepMind
 
-DeepMind's Frontier Safety Framework has a Machine Learning R&D critical capability level and
-evaluates it mainly on METR's RE-Bench, reported as a human-normalized average across challenges.
-Earlier cards state only whether the alert threshold was reached.
+DeepMind's Frontier Safety Framework has a Machine Learning R&D critical capability level. Through
+Gemini 3.1 Pro it was evaluated on five of METR's seven RE-Bench tasks, reported as a human-normalized
+average within a 32-hour budget; the Gemini 3.7 Flash FSF report switches to an internal research
+engineering benchmark (GRB, 74 tasks, 2-hour timeout) with a 90 percent pass@1 rule-out threshold.
+Flash cards defer the determination to the most capable Pro model of the time.
 
 ::: {.benchmarks .column-screen-inset}
 
@@ -69,8 +73,11 @@ show_series("gdm")
 ## OpenAI
 
 OpenAI's Preparedness Framework tracks "AI Self-improvement" (earlier "Model autonomy") with a
-mix of public and internal evaluations: SWE-bench Verified, SWE-Lancer, internal pull-request
-replication (OpenAI PRs), MLE-bench, PaperBench and research-engineer interview questions.
+mix of public and internal evaluations: SWE-bench Verified on a 477-problem subset, SWE-Lancer,
+internal pull-request replication (OpenAI PRs), MLE-bench (full set with pass@10 in the o1 era, a
+30-competition subset with pass@1 from mid-2025, a revised 72-problem set from GPT-5.6), PaperBench,
+research-engineer interview questions, OpenAI-Proof Q&A, an internal research debugging eval and
+Monorepo-Bench. The High threshold is worded as "a performant mid-career research engineer".
 
 ::: {.benchmarks .column-screen-inset}
 
@@ -91,9 +98,12 @@ show_series("openai")
 
 ## Anthropic
 
-Anthropic's Responsible Scaling Policy defines AI R&D capability thresholds and reports SWE-bench
-Verified, two internal AI research evaluation suites, a subset of METR's RE-Bench, and internal
-surveys of how much its own researchers are sped up.
+Anthropic's Responsible Scaling Policy defines AI R&D capability thresholds (AI R&D-4 through Opus
+4.6, an "automated AI R&D" threshold from Mythos Preview on) and reports SWE-bench Verified plus a
+hard subset used as an RSP checkpoint, two internal AI research evaluation suites with thresholds
+stated in human-expert hours, a subset of METR's RE-Bench, staff surveys, and from 2026 an internal
+acceleration measure built on a fork of Epoch's Capabilities Index. From Opus 4.8 the card says the
+task suites are no longer load-bearing for the determination.
 
 ::: {.benchmarks .column-screen-inset}
 
@@ -121,4 +131,7 @@ tasks plus its own RE-Bench subset. SWE-bench Verified is the only benchmark all
 even there the subset and scaffold differ. The common thread is qualitative: every lab has moved
 from "well below human" statements in 2024 to reporting models at or above the human baseline on
 several-hour ML engineering tasks by 2026, while each still judges the model below its own
-threshold for autonomous AI R&D.
+threshold for autonomous AI R&D. Two things to watch when reading across cards: benchmark versions
+and subsets change (Terminal-Bench 1 to 2.0, 2.1 and 4.0; MLE-bench full to 30 to revised; RE-Bench
+7 tasks to 5), and later cards re-run earlier models and print different numbers, so a single
+model's score can differ between its own card and a successor's comparison table.

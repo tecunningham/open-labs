@@ -13,10 +13,11 @@ from src.load import DATA
 
 LABS = {"gdm": "Google DeepMind", "openai": "OpenAI", "anthropic": "Anthropic"}
 
-# How the number reached this table. `reported` = read from the card itself; `snippet` = read from
+# How the number reached this table. `reported` = read from the card itself (or the METR report the
+# card cites); `announcement` = read from the lab's launch post, not the card; `snippet` = read from
 # a search-result excerpt of the card or of a write-up quoting it; `memory` = recalled without a
 # source check. Marks are appended to the cell.
-CONFIDENCE_MARK = {"reported": "", "snippet": "†", "memory": "‡"}
+CONFIDENCE_MARK = {"reported": "", "announcement": "*", "snippet": "†", "memory": "‡"}
 
 # Row order in the wide tables: AI R&D suites, then research-replication and competition suites,
 # then agentic-coding benchmarks, then the lab's own threshold determination.
@@ -123,11 +124,22 @@ def numeric_series(df: pd.DataFrame) -> pd.DataFrame:
             s += f" {m.group(0)}"
         return s
     d["series"] = d.apply(key, axis=1)
+    # An internal task rescaled between cards is split at the known break (see SCALE_BREAKS).
+    for series, (cut, lo_label, hi_label) in SCALE_BREAKS.items():
+        m = d["series"] == series
+        d.loc[m, "series"] = d.loc[m, "score_num"].map(lambda v: f"{series} ({hi_label if v >= cut else lo_label})")
     # A benchmark reported in two different units (percent uplift vs a multiple) is two series.
     d["_unit"] = d["metric"].map(_unit)
     d["series"] = d["series"] + d.groupby("series")["_unit"].transform(
         lambda u: u.map(lambda v: "" if u.nunique() == 1 else f" [{v}]"))
     return d
+
+
+# Series whose scores are not comparable across a card boundary: (cutoff, label below, label at or above).
+# Anthropic's quadruped task was re-normalised between Sonnet 4.5 (threshold 1.0) and Opus 4.5 (threshold 12).
+SCALE_BREAKS = {
+    "Internal AI Research Evaluation Suite 1: Quadruped RL": (5, "threshold 1 scale", "threshold 12 scale"),
+}
 
 
 def _unit(metric: str) -> str:
@@ -173,7 +185,7 @@ def timeseries(df: pd.DataFrame, title: str | None = None, ncols: int = 3, min_p
         extra = g.drop(base.index)
         c = plots.RUN_COLORS["final"]
         ax.plot(base["card_date"], base["score_num"], color=c, lw=1.5, zorder=2)
-        verified = base["confidence"] == "reported"
+        verified = base["confidence"].isin(["reported", "announcement"])
         ax.scatter(base["card_date"][verified], base["score_num"][verified], s=28, c=c, zorder=3,
                    edgecolors=plots.SURFACE, linewidths=1)
         ax.scatter(base["card_date"][~verified], base["score_num"][~verified], s=28, c="#a9c8ee", zorder=3,
