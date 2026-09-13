@@ -2,8 +2,8 @@
 
 The three closed frontier labs publish, with each frontier release, a system or model card whose
 dangerous-capability section reports how far the model is from automating AI research. This
-appendix collects those AI R&D scores, one table per lab, with the lab's successive frontier
-models as columns and the benchmarks as rows. It is a reference for the cross-lab discussion of
+appendix collects those AI R&D scores, per lab: a saturation overview, one panel per evaluation over
+time, then the table with the lab's successive frontier models as columns and the benchmarks as rows. It is a reference for the cross-lab discussion of
 returns to research effort, not a chapter: the runs behind these numbers are not public.
 
 The long-form data with a source and a confidence flag on every row is `data/ai_rd_benchmarks.csv`.
@@ -32,6 +32,13 @@ replaced is visible. Ceilings, directions and reference values are in
 `data/ai_rd_benchmark_series.csv`; unbounded metrics (speedups, human-normalized scores above 1,
 time horizons) and lower-is-better metrics stay out of the overview.
 
+Only cards on the evaluation frontier are shown. A card that improves on at most a quarter of the
+evaluations it shares with earlier cards (given at least three shared) adds no frontier
+information and is left out of the figures and tables; each lab section names the cards this
+removes, and their rows stay in the CSV. Smaller siblings released alongside a frontier model
+(Sonnet 4, Haiku 4.5, the Codex addenda, Gemini Flash-Lite) are flagged in the CSV and also left
+out.
+
 ```{python}
 #| echo: false
 from src.chapter import *  # noqa
@@ -39,7 +46,7 @@ from src import benchmarks
 from IPython.display import Markdown, display
 
 def show(lab, families=None, caption=""):
-    df = benchmarks.load(lab, frontier_only=True)
+    df = benchmarks.load_frontier(lab)
     if families:
         df = df[df["family"].isin(families)]
     if df.empty:
@@ -48,47 +55,25 @@ def show(lab, families=None, caption=""):
     display(Markdown(benchmarks.to_markdown(t) + (f"\n\n: {caption}" if caption else "")))
 
 def show_series(lab):
-    fig = benchmarks.timeseries(benchmarks.load(lab, frontier_only=True), lab=lab)
+    fig = benchmarks.timeseries(benchmarks.load_frontier(lab), lab=lab)
     plt.show()
 
 def show_overview(lab):
-    fig = benchmarks.overview(benchmarks.load(lab, frontier_only=True), lab)
+    fig = benchmarks.overview(benchmarks.load_frontier(lab), lab)
+    plt.show()
+
+def show_unbounded():
+    fig = benchmarks.unbounded_overview(benchmarks.load_frontier())
     plt.show()
 
 def show_cards(lab):
-    t = benchmarks.cards(benchmarks.load(lab, frontier_only=True))
+    t = benchmarks.cards(benchmarks.load_frontier(lab))
     t["card"] = t.apply(lambda r: f"[{r['card_title']}]({r['card_url']})" if r["card_url"] else r["card_title"], axis=1)
     display(Markdown(benchmarks.to_markdown(t[["model", "card_date", "card"]].set_index("model").rename_axis("Model"))))
-```
-
-## Google DeepMind
-
-DeepMind's Frontier Safety Framework has a Machine Learning R&D critical capability level. Through
-Gemini 3.1 Pro it was evaluated on five of METR's seven RE-Bench tasks, reported as a human-normalized
-average within a 32-hour budget; the Gemini 3.7 Flash FSF report switches to an internal research
-engineering benchmark (GRB, 74 tasks, 2-hour timeout) with a 90 percent pass@1 rule-out threshold.
-Flash cards defer the determination to the most capable Pro model of the time.
-
-::: {.benchmarks .column-screen-inset}
-
-```{python}
-show("gdm", caption="Google DeepMind: AI R&D and agentic-coding scores by model card. {#tbl-gdm}")
-```
-
-:::
-
-```{python}
-show_cards("gdm")
-```
-
-```{python}
-#| fig-cap: "Google DeepMind: every bounded evaluation on one 0 to 100 percent axis. Colour is the benchmark category; the label at each line's end names the benchmark; a black cross marks the last reported value of a series that later cards drop; card names run along the top."
-show_overview("gdm")
-```
-
-```{python}
-#| fig-cap: "Google DeepMind: numeric scores over card date, one panel per benchmark series. Bounded metrics show their full range with the ceiling as a solid line; red dotted is a human reference stated by the card, grey dashed a rule-out threshold. Filled points are read from the card; light-filled points are unverified; hollow points are the same model under a different condition."
-show_series("gdm")
+    om = benchmarks.omitted(lab)
+    if len(om):
+        items = "; ".join(f"{r.model} ({r.card_date:%b %Y}: better on {r.improved} of {r.shared} shared evaluations)" for r in om.itertuples())
+        display(Markdown(f"_Cards left out as dominated, that is no better than an earlier card on all or almost all of the evaluations they share: {items}. Their rows stay in the CSV._"))
 ```
 
 ## OpenAI
@@ -99,6 +84,16 @@ internal pull-request replication (OpenAI PRs), MLE-bench (full set with pass@10
 30-competition subset with pass@1 from mid-2025, a revised 72-problem set from GPT-5.6), PaperBench,
 research-engineer interview questions, OpenAI-Proof Q&A, an internal research debugging eval and
 Monorepo-Bench. The High threshold is worded as "a performant mid-career research engineer".
+
+```{python}
+#| fig-cap: "OpenAI: every bounded evaluation on one 0 to 100 percent axis. The research-engineer coding interview saturated first (retired after ChatGPT agent); MLE-bench was revised once the 30-competition subset climbed; OpenAI-Proof Q&A stays near the floor. A black cross marks the last reported value of a series later cards drop; card names run along the top."
+show_overview("openai")
+```
+
+```{python}
+#| fig-cap: "OpenAI: numeric scores over card date, one panel per benchmark series. Bounded metrics show their full range with the ceiling as a solid line; red dotted is a human reference stated by the card, grey dashed a rule-out threshold. Filled points are read from the card or launch post; light-filled points are unverified; hollow points are the same model under another condition. MLE-bench appears twice because the o1-era cards used the full competition set and pass@10, later cards a 30-competition subset."
+show_series("openai")
+```
 
 ::: {.benchmarks .column-screen-inset}
 
@@ -112,16 +107,6 @@ show("openai", caption="OpenAI: AI self-improvement and agentic-coding scores by
 show_cards("openai")
 ```
 
-```{python}
-#| fig-cap: "OpenAI: every bounded evaluation on one 0 to 100 percent axis. The research-engineer coding interview saturated first (retired after ChatGPT agent); MLE-bench was revised once the 30-competition subset climbed; OpenAI-Proof Q&A stays near the floor."
-show_overview("openai")
-```
-
-```{python}
-#| fig-cap: "OpenAI: numeric scores over card date. Same marks as above. MLE-bench appears twice because the o1-era cards used the full competition set and pass@10, later cards a 30-competition subset."
-show_series("openai")
-```
-
 ## Anthropic
 
 Anthropic's Responsible Scaling Policy defines AI R&D capability thresholds (AI R&D-4 through Opus
@@ -130,6 +115,16 @@ hard subset used as an RSP checkpoint, two internal AI research evaluation suite
 stated in human-expert hours, a subset of METR's RE-Bench, staff surveys, and from 2026 an internal
 acceleration measure built on a fork of Epoch's Capabilities Index. From Opus 4.8 the card says the
 task suites are no longer load-bearing for the determination.
+
+```{python}
+#| fig-cap: "Anthropic: every bounded evaluation on one 0 to 100 percent axis. Text-based RL and SWE-bench Verified approach the ceiling; the novel compiler's complex tests and Suite 2 do not, and from Opus 4.8 the card stops treating the task suites as load-bearing. Same marks as above."
+show_overview("anthropic")
+```
+
+```{python}
+#| fig-cap: "Anthropic: numeric scores over card date. Same marks as above. Terminal-Bench is split by version; the quadruped task is split at its rescale."
+show_series("anthropic")
+```
 
 ::: {.benchmarks .column-screen-inset}
 
@@ -143,14 +138,52 @@ show("anthropic", caption="Anthropic: AI R&D and agentic-coding scores by system
 show_cards("anthropic")
 ```
 
+## Google DeepMind
+
+DeepMind's Frontier Safety Framework has a Machine Learning R&D critical capability level. Through
+Gemini 3.1 Pro it was evaluated on five of METR's seven RE-Bench tasks, reported as a human-normalized
+average within a 32-hour budget; the Gemini 3.7 Flash FSF report switches to an internal research
+engineering benchmark (GRB, 74 tasks, 2-hour timeout) with a 90 percent pass@1 rule-out threshold.
+Flash cards defer the determination to the most capable Pro model of the time.
+
 ```{python}
-#| fig-cap: "Anthropic: every bounded evaluation on one 0 to 100 percent axis. Text-based RL and SWE-bench Verified approach the ceiling; the novel compiler's complex tests and Suite 2 do not, and from Opus 4.8 the card stops treating the task suites as load-bearing."
-show_overview("anthropic")
+#| fig-cap: "Google DeepMind: every bounded evaluation on one 0 to 100 percent axis. Same marks as above; the internal GRB benchmark replaces RE-Bench from the Gemini 3.7 Flash report."
+show_overview("gdm")
 ```
 
 ```{python}
-#| fig-cap: "Anthropic: numeric scores over card date. Same marks as above. Terminal-Bench is split by version; the Suite 1 speedups use a log axis."
-show_series("anthropic")
+#| fig-cap: "Google DeepMind: numeric scores over card date. Same marks as above."
+show_series("gdm")
+```
+
+::: {.benchmarks .column-screen-inset}
+
+```{python}
+show("gdm", caption="Google DeepMind: AI R&D and agentic-coding scores by model card. {#tbl-gdm}")
+```
+
+:::
+
+```{python}
+show_cards("gdm")
+```
+
+## Unbounded evaluations against their human references
+
+The overview panels above leave out metrics with no ceiling: speedups, human-normalized scores that
+can exceed 1, and lower-is-better error metrics. These are the evaluations that say most about
+saturation relative to people rather than to a test set, because each card states a human
+reference point for them. The figure below puts every such series from all three labs on one log
+axis, each score divided by its card's human reference (reference divided by score where lower is
+better), so 1.0 means the reference has been reached. The references stand for different amounts
+of human effort, which colour carries: Anthropic's quadruped threshold is about 4 hours, its LLM
+training reference 4 to 8 hours, RE-Bench's human baseline 8 hours, and its kernel and time-series
+thresholds about 40 hours. PaperBench's 48-hour PhD baseline is bounded and appears in the OpenAI
+overview instead.
+
+```{python}
+#| fig-cap: "Unbounded AI R&D evaluations from all three labs as a multiple of the human reference the card states, on a log axis. Colour is the human effort the reference represents; a black cross marks the last reported value of a series its lab's later cards drop."
+show_unbounded()
 ```
 
 ## Reading across the three
