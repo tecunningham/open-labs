@@ -26,7 +26,9 @@ level with `main`):
   `styles.css` (wired in `_quarto.yml`) holds the `.availability` table style.
 - **AI R&D benchmarks appendix** (`chapters/95-ai-rd-benchmarks.qmd`, `src/benchmarks.py`,
   `data/ai_rd_benchmarks.csv`, notes in `data/notes/ai-rd-benchmarks.md`). One benchmark-by-model
-  table and one time-series figure per closed lab (GDM, OpenAI, Anthropic); columns are the frontier
+  table, one saturation overview (all bounded evals on a 0 to 100 percent axis) and one
+  small-multiples time-series figure per closed lab (GDM, OpenAI, Anthropic); ceilings and human
+  reference lines come from `data/ai_rd_benchmark_series.csv`; columns are the frontier
   cards through Sep 2026 (Gemini 2.5 Pro to 3.8 Flash, o1-preview to GPT-6 Astra, Claude 3.5 Sonnet
   to Fable 5.1). 396 rows; 371 read from the cards themselves after the network was opened
   mid-session, the rest are launch-post or blog figures no card contains. The notes file records

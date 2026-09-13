@@ -20,6 +20,15 @@ Scores are as the lab reports them and are not comparable across labs: each lab 
 scaffold, time budget, attempt count and problem subset, and internal suites are only defined
 inside one lab. Conditions that change the number are given in parentheses inside the cell.
 
+The figures are built for reading saturation. Every bounded metric is drawn on its full range with
+the ceiling as a solid line; a human reference point stated by the card (an expert solution, a
+threshold the card expresses in human-hours) is a red dotted line; a rule-out threshold not tied to
+human performance is a grey dashed line. Each lab then gets one overview panel with all of its
+bounded evaluations on the same 0 to 100 percent axis, so the order in which benchmarks saturate
+and get replaced is visible. Ceilings, directions and reference values are in
+`data/ai_rd_benchmark_series.csv`; unbounded metrics (speedups, human-normalized scores above 1,
+time horizons) and lower-is-better metrics stay out of the overview.
+
 ```{python}
 #| echo: false
 from src.chapter import *  # noqa
@@ -36,7 +45,11 @@ def show(lab, families=None, caption=""):
     display(Markdown(benchmarks.to_markdown(t) + (f"\n\n: {caption}" if caption else "")))
 
 def show_series(lab):
-    fig = benchmarks.timeseries(benchmarks.load(lab, frontier_only=True))
+    fig = benchmarks.timeseries(benchmarks.load(lab, frontier_only=True), lab=lab)
+    plt.show()
+
+def show_overview(lab):
+    fig = benchmarks.overview(benchmarks.load(lab, frontier_only=True), lab)
     plt.show()
 
 def show_cards(lab):
@@ -66,7 +79,12 @@ show_cards("gdm")
 ```
 
 ```{python}
-#| fig-cap: "Google DeepMind: numeric scores over card date. Filled points are read from the card; light-filled points are unverified; hollow points are the same model under a different condition (more attempts, another mode)."
+#| fig-cap: "Google DeepMind: every bounded evaluation on one 0 to 100 percent axis. Colour is the benchmark category; the label at each line's end names the benchmark."
+show_overview("gdm")
+```
+
+```{python}
+#| fig-cap: "Google DeepMind: numeric scores over card date, one panel per benchmark series. Bounded metrics show their full range with the ceiling as a solid line; red dotted is a human reference stated by the card, grey dashed a rule-out threshold. Filled points are read from the card; light-filled points are unverified; hollow points are the same model under a different condition."
 show_series("gdm")
 ```
 
@@ -89,6 +107,11 @@ show("openai", caption="OpenAI: AI self-improvement and agentic-coding scores by
 
 ```{python}
 show_cards("openai")
+```
+
+```{python}
+#| fig-cap: "OpenAI: every bounded evaluation on one 0 to 100 percent axis. The research-engineer coding interview saturated first (retired after ChatGPT agent); MLE-bench was revised once the 30-competition subset climbed; OpenAI-Proof Q&A stays near the floor."
+show_overview("openai")
 ```
 
 ```{python}
@@ -115,6 +138,11 @@ show("anthropic", caption="Anthropic: AI R&D and agentic-coding scores by system
 
 ```{python}
 show_cards("anthropic")
+```
+
+```{python}
+#| fig-cap: "Anthropic: every bounded evaluation on one 0 to 100 percent axis. Text-based RL and SWE-bench Verified approach the ceiling; the novel compiler's complex tests and Suite 2 do not, and from Opus 4.8 the card stops treating the task suites as load-bearing."
+show_overview("anthropic")
 ```
 
 ```{python}
