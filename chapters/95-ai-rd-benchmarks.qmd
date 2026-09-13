@@ -23,9 +23,11 @@ inside one lab. Conditions that change the number are given in parentheses insid
 The figures are built for reading saturation. Every bounded metric is drawn on its full range with
 the ceiling as a solid line; a human reference point stated by the card (an expert solution, a
 threshold the card expresses in human-hours) is a red dotted line; a rule-out threshold not tied to
-human performance is a grey dashed line. Each lab then gets one overview panel with all of its
-bounded evaluations on the same 0 to 100 percent axis, so the order in which benchmarks saturate
-and get replaced is visible. Ceilings, directions and reference values are in
+human performance is a grey dashed line. A black cross marks the card at which the lab stopped
+reporting a series, whether because it was retired as saturated, replaced by a harder version, or
+dropped from the determination. Each lab then gets one overview panel with all of its bounded
+evaluations on the same 0 to 100 percent axis, so the order in which benchmarks saturate and get
+replaced is visible. Ceilings, directions and reference values are in
 `data/ai_rd_benchmark_series.csv`; unbounded metrics (speedups, human-normalized scores above 1,
 time horizons) and lower-is-better metrics stay out of the overview.
 
@@ -79,7 +81,7 @@ show_cards("gdm")
 ```
 
 ```{python}
-#| fig-cap: "Google DeepMind: every bounded evaluation on one 0 to 100 percent axis. Colour is the benchmark category; the label at each line's end names the benchmark."
+#| fig-cap: "Google DeepMind: every bounded evaluation on one 0 to 100 percent axis. Colour is the benchmark category; the label at each line's end names the benchmark; a black cross is the card at which the series stops being reported."
 show_overview("gdm")
 ```
 

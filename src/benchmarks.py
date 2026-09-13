@@ -180,12 +180,17 @@ def timeseries(df: pd.DataFrame, title: str | None = None, ncols: int = 3, min_p
     nrows = int(np.ceil(len(order) / ncols))
     fig, axes = plt.subplots(nrows, ncols, figsize=(3.4 * ncols, 2.8 * nrows), squeeze=False, sharex=True)
     x0, x1 = d["card_date"].min(), d["card_date"].max()
+    deps = [meta_for(meta, lab, s) for s in order]
+    deps = [m["deprecated_date"] for m in deps if m is not None and pd.notna(m["deprecated_date"])]
+    if deps:
+        x1 = max([x1] + deps)
     pad = pd.Timedelta(days=45)
     for ax, s in zip(axes.flat, order):
         g = d[d["series"] == s].sort_values("card_date")
         base = g.loc[g.groupby("model")["score_num"].idxmin()].sort_values("card_date")
         extra = g.drop(base.index)
         c = plots.RUN_COLORS["final"]
+        m = meta_for(meta, lab, s)
         ax.plot(base["card_date"], base["score_num"], color=c, lw=1.5, zorder=2)
         verified = base["confidence"].isin(["reported", "announcement"])
         ax.scatter(base["card_date"][verified], base["score_num"][verified], s=28, c=c, zorder=3,
@@ -194,6 +199,7 @@ def timeseries(df: pd.DataFrame, title: str | None = None, ncols: int = 3, min_p
                    edgecolors=c, linewidths=1)
         if not extra.empty:
             ax.scatter(extra["card_date"], extra["score_num"], s=26, facecolors="none", edgecolors=c, linewidths=1.2, zorder=3)
+        _retire_mark(ax, m, base["card_date"].iloc[-1], base["score_num"].iloc[-1], c)
         for i, (_, r) in enumerate(base.iterrows()):
             up = i % 2 == 0
             ax.annotate(_short(r["model"]), (r["card_date"], r["score_num"]), xytext=(0, 6 if up else -6),
@@ -204,7 +210,6 @@ def timeseries(df: pd.DataFrame, title: str | None = None, ncols: int = 3, min_p
         metric = g["metric"].iloc[0]
         ax.set_ylabel(textwrap.fill(metric, 22), fontsize=7)
         lo, hi = base["score_num"].min(), base["score_num"].max()
-        m = meta_for(meta, lab, s)
         refs = [v for v in ([m["human_ref"], m["threshold"]] if m is not None else []) if pd.notna(v)]
         if m is not None and pd.notna(m["ceiling"]):
             # Bounded metric: show the whole range so saturation is visible.
@@ -249,7 +254,19 @@ def series_meta() -> pd.DataFrame:
     m = pd.read_csv(DATA / "ai_rd_benchmark_series.csv", dtype=str, keep_default_na=False)
     for c in ["ceiling", "human_ref", "threshold"]:
         m[c] = pd.to_numeric(m[c], errors="coerce")
+    m["deprecated_date"] = pd.to_datetime(m["deprecated_date"], errors="coerce")
     return m.set_index(["lab", "series"])
+
+
+def _retire_mark(ax, m, last_x, last_y, color):
+    """Black cross where the lab stopped reporting the series, joined to its last value."""
+    if m is None or pd.isna(m.get("deprecated_date", pd.NaT)):
+        return None
+    xd = m["deprecated_date"]
+    if xd > last_x:
+        ax.plot([last_x, xd], [last_y, last_y], color=color, lw=0.8, ls=(0, (2, 2)), alpha=0.7, zorder=2)
+    ax.scatter([xd], [last_y], marker="x", s=44, c=plots.INK, linewidths=1.4, zorder=5)
+    return xd
 
 
 def meta_for(meta: pd.DataFrame, lab: str, series: str):
@@ -299,22 +316,26 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
         if base["model"].nunique() < min_points:
             continue
         base = base.assign(pct=base["score_num"] / m["ceiling"] * 100, category=m["category"], series=s)
-        rows.append(base)
+        rows.append((base, m))
     fig, ax = plt.subplots(figsize=(10, 5.6))
     if not rows:
         plots._empty(ax, "No bounded series with two or more points"); return fig
-    allb = pd.concat(rows)
+    allb = pd.concat([b for b, _ in rows])
     x0, x1 = allb["card_date"].min(), allb["card_date"].max()
+    retire_dates = [m["deprecated_date"] for _, m in rows if pd.notna(m["deprecated_date"])]
+    x1 = max([x1] + retire_dates)
     span = (x1 - x0).days or 1
     ax.axhline(100, color=plots.INK2, lw=1, zorder=1)
     ax.annotate("ceiling", (x0, 100), xytext=(0, 3), textcoords="offset points", fontsize=7, color=plots.INK2)
     ends = []
-    for b in sorted(rows, key=lambda b: b["card_date"].min()):
+    for b, m in sorted(rows, key=lambda bm: bm[0]["card_date"].min()):
         c = CATEGORY_COLORS[b["category"].iloc[0]]
         ax.plot(b["card_date"], b["pct"], color=c, lw=1.6, alpha=0.9, zorder=2)
         ax.scatter(b["card_date"], b["pct"], s=16, c=c, edgecolors=plots.SURFACE, linewidths=0.8, zorder=3)
         last = b.iloc[-1]
-        ends.append((last["card_date"], last["pct"], short_name(b["series"].iloc[0]), c))
+        xd = _retire_mark(ax, m, last["card_date"], last["pct"], c)
+        ends.append((max(last["card_date"], xd) if xd is not None else last["card_date"], last["pct"],
+                     short_name(b["series"].iloc[0]), c))
     # Right-hand labels, nudged apart so they do not overlap.
     ends.sort(key=lambda e: e[1])
     ys = [e[1] for e in ends]
@@ -338,6 +359,9 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%b %Y"))
     handles = [plt.Line2D([], [], color=CATEGORY_COLORS[k], lw=2, label=CATEGORY_LABELS[k])
                for k in CATEGORY_COLORS if k in set(allb["category"])]
+    if retire_dates:
+        handles.append(plt.Line2D([], [], color=plots.INK, marker="x", ls="none", markersize=7, markeredgewidth=1.4,
+                                  label="retired or replaced (card stops reporting it)"))
     ax.legend(handles=handles, loc="lower left", fontsize=8, title=None)
     ax.set_title(title or f"{LABS.get(lab, lab)}: every bounded AI R&D evaluation, as percent of its ceiling")
     fig.tight_layout(rect=(0, 0, 0.8, 1))
