@@ -152,6 +152,16 @@ TARGETS: dict[str, list[Target]] = {
         Target("marin-32b-base Mantis (aggregate final artifact)", "marin-community/marin", ["tootsie-32b-cooldown-mantis-adamc-v2"], MARIN_KEYS, 33_554_432,
                "display name 'Marin 32B Mantis Cooldown'; released base = end of this run (step 191,999)",
                aliases=["exp1529_32b_mantis_cooldown (released cooldown)"]),
+        Target("tootsie-scaling-512 (Dec 2024 ladder, 16L, 210B tokens)", "marin-community/marin", ["tootsie-scaling-512-81c36c"], MARIN_KEYS, 4194304,
+               "hidden 512, 16 layers, 50k steps; one of five ladder widths"),
+        Target("tootsie-scaling-768 (Dec 2024 ladder, 16L, 210B tokens)", "marin-community/marin", ["tootsie-scaling-768-d17a90"], MARIN_KEYS, 4194304,
+               "hidden 768, 16 layers, 50k steps; one of five ladder widths"),
+        Target("tootsie-scaling-1024 (Dec 2024 ladder, 16L, 210B tokens)", "marin-community/marin", ["tootsie-scaling-1024-b45766"], MARIN_KEYS, 4194304,
+               "hidden 1024, 16 layers, 50k steps; one of five ladder widths"),
+        Target("tootsie-scaling-1536 (Dec 2024 ladder, 16L, 210B tokens)", "marin-community/marin", ["tootsie-scaling-1536-350a3a"], MARIN_KEYS, 4194304,
+               "hidden 1536, 16 layers, 50k steps; one of five ladder widths"),
+        Target("tootsie-scaling-2048 (Dec 2024 ladder, 16L, 210B tokens)", "marin-community/marin", ["tootsie-scaling-2048-1ed392"], MARIN_KEYS, 4194304,
+               "hidden 2048, 16 layers, 50k steps; one of five ladder widths"),
     ],
 }
 

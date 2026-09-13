@@ -74,6 +74,39 @@ trials: the 70B trial at 277k steps sat at 2.42 and the 13B at 2.50, against 2.3
 finished 8B and 2.20 for the finished 32B. Delphi's 78-run grid is one row here; its
 per-run sizes are in the repository's hard-coded suite and can be expanded later.
 
+One clean experiment series does exist: a five-width ladder from December 2024
+(`tootsie-scaling-*`, hidden 512 to 2048 at 16 layers, each 210B tokens of DCLM-baseline, so 90
+to 900 tokens per parameter rather than compute-optimal). Fitting a two-parameter power law to
+those five points and extrapolating to the released 8B and 32B is the report's basic move, shown
+here on Marin's own data; the residuals are in the table.
+
+```{python}
+dm = load.runs("marin")
+lad = dm[dm["run_id"].str.startswith("tootsie-scaling-")].dropna(subset=["flops", "loss"]).sort_values("flops")
+fin = dm[dm["run_id"].isin(["marin-8b-base-deeper-starling (exp600_tootsie, aggregate)",
+                            "marin-32b-base Mantis (aggregate final artifact)"])].dropna(subset=["flops", "loss"])
+fit_m = fits.fit_power_law(lad["flops"], lad["loss"]) if len(lad) >= 2 else None
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.scatter(lad["flops"], lad["loss"], s=60, c=plots.PROJECT_SLOTS[0], edgecolors=plots.SURFACE, linewidths=1.5, label="Dec 2024 ladder (210B tokens each)", zorder=3)
+ax.scatter(fin["flops"], fin["loss"], s=240, marker="*", c=plots.PROJECT_SLOTS[1], edgecolors=plots.SURFACE, linewidths=2, label="released 8B and 32B", zorder=4)
+if fit_m is not None:
+    xs = np.geomspace(lad["flops"].min(), fin["flops"].max() * 1.5, 100)
+    ax.plot(xs, fit_m.predict(xs), color=plots.MUTED, lw=2, ls=(0, (1, 2)), label=fit_m.label(), zorder=1)
+ax.set_xscale("log"); ax.set_yscale("log")
+ax.set_xlabel("Training compute (FLOPs, 6ND)"); ax.set_ylabel("Paloma c4_en eval loss (nats/token)")
+ax.set_title("Marin: ladder law vs released models"); ax.legend(loc="upper right"); plt.show()
+if fit_m is not None and not fin.empty:
+    t = fin[["run_id", "flops", "loss"]].copy()
+    t["predicted"] = fit_m.predict(t["flops"]); t["log_residual"] = np.log(t["loss"]) - np.log(t["predicted"])
+    display(t.round(4))
+```
+
+The ladder is not a compute-optimal sweep, the law has no irreducible term (so it keeps falling
+where a real curve flattens), and the finals sit at the end of long cooldowns on a different data
+mix, so the residual mixes all three effects; a 200x to 400x extrapolation from five points is
+a demonstration of the method, not a test of Marin's forecasting. It is still the only Marin
+curve that runs from experiments to finals on one metric.
+
 ```{python}
 df, fit, res = # Marin (Stanford CRFM)
 
@@ -150,6 +183,39 @@ footing from the pretraining phases. Read the stars (released 8B and 32B) agains
 trials: the 70B trial at 277k steps sat at 2.42 and the 13B at 2.50, against 2.35 for the
 finished 8B and 2.20 for the finished 32B. Delphi's 78-run grid is one row here; its
 per-run sizes are in the repository's hard-coded suite and can be expanded later.
+
+One clean experiment series does exist: a five-width ladder from December 2024
+(`tootsie-scaling-*`, hidden 512 to 2048 at 16 layers, each 210B tokens of DCLM-baseline, so 90
+to 900 tokens per parameter rather than compute-optimal). Fitting a two-parameter power law to
+those five points and extrapolating to the released 8B and 32B is the report's basic move, shown
+here on Marin's own data; the residuals are in the table.
+
+```{python}
+dm = load.runs("marin")
+lad = dm[dm["run_id"].str.startswith("tootsie-scaling-")].dropna(subset=["flops", "loss"]).sort_values("flops")
+fin = dm[dm["run_id"].isin(["marin-8b-base-deeper-starling (exp600_tootsie, aggregate)",
+                            "marin-32b-base Mantis (aggregate final artifact)"])].dropna(subset=["flops", "loss"])
+fit_m = fits.fit_power_law(lad["flops"], lad["loss"]) if len(lad) >= 2 else None
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.scatter(lad["flops"], lad["loss"], s=60, c=plots.PROJECT_SLOTS[0], edgecolors=plots.SURFACE, linewidths=1.5, label="Dec 2024 ladder (210B tokens each)", zorder=3)
+ax.scatter(fin["flops"], fin["loss"], s=240, marker="*", c=plots.PROJECT_SLOTS[1], edgecolors=plots.SURFACE, linewidths=2, label="released 8B and 32B", zorder=4)
+if fit_m is not None:
+    xs = np.geomspace(lad["flops"].min(), fin["flops"].max() * 1.5, 100)
+    ax.plot(xs, fit_m.predict(xs), color=plots.MUTED, lw=2, ls=(0, (1, 2)), label=fit_m.label(), zorder=1)
+ax.set_xscale("log"); ax.set_yscale("log")
+ax.set_xlabel("Training compute (FLOPs, 6ND)"); ax.set_ylabel("Paloma c4_en eval loss (nats/token)")
+ax.set_title("Marin: ladder law vs released models"); ax.legend(loc="upper right"); plt.show()
+if fit_m is not None and not fin.empty:
+    t = fin[["run_id", "flops", "loss"]].copy()
+    t["predicted"] = fit_m.predict(t["flops"]); t["log_residual"] = np.log(t["loss"]) - np.log(t["predicted"])
+    display(t.round(4))
+```
+
+The ladder is not a compute-optimal sweep, the law has no irreducible term (so it keeps falling
+where a real curve flattens), and the finals sit at the end of long cooldowns on a different data
+mix, so the residual mixes all three effects; a 200x to 400x extrapolation from five points is
+a demonstration of the method, not a test of Marin's forecasting. It is still the only Marin
+curve that runs from experiments to finals on one metric.
 
 ```{python}
 df, fit, res = standard_figures("marin", fit_experiments=False)
