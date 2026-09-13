@@ -30,6 +30,12 @@ level with `main`):
   posttrain / planned, and confidence). Post-training-only releases are converted from GPU-hours
   at 1.44e18 FLOPs per H100-hour (40% MFU); dollars in the key assume $2 per H100-hour. Add a
   row there when a lab ships something.
+- **Marin 2026 curves.** Delphi's held-out 1e21/1e22/1e23 runs, Snowball 67B-A2B (four segments)
+  and the 535B hero run (three segments, still running; re-fetch it with
+  `python -m src.fetch_wandb marin` to extend the curve) are now in `data/losses/marin/` and
+  their final c4_en losses in `runs.csv`. The hero run logs `eval/...` in its first segment and
+  `eval_dropless/...` afterwards; only the dropless series is drawn (the other is ~0.1 higher).
+  No 2026 run has a benchmark table yet, so the capability timeline still stops at the 32B.
 - **Marin at a glance.** The Marin chapter opens with two figures: a capability timeline
   (`plots.capability_timeline`; points are a small table in the chapter, 19-task average and
   MMLU, circle area = cumulative pretraining compute, optional post-training ring) and every dense

@@ -19,8 +19,10 @@ on Marin's own 19-task base-model average and on MMLU, with circle area proporti
 cumulative pretraining compute behind each checkpoint. Post-training compute would be drawn as
 a ring around the disk, but the 8B instruct model's SFT used 2.6e20 FLOPs, four ten-thousandths
 of the base's 6.1e23, so the ring would be indistinguishable from the disk and is omitted; the
-32B has no post-trained release. Snowball (67B-A2B, pretraining finished August 2026) has no
-published evaluations yet.
+32B has no post-trained release. The 2026 runs are missing from this figure because none has a
+published benchmark table yet: Delphi's held-out models (March 2026), Snowball 67B-A2B
+(pretraining finished August 2026) and the 535B-A23B hero run (in progress) have public loss
+curves, which the next figure uses, but no evaluations.
 
 ```{python}
 #| column: page
@@ -53,13 +55,16 @@ Two released dense models in five months is a short series, and the 32B's 19-tas
 32B's gains were on MMLU (+7), MMLU-Pro (+9) and BBH. The discarded Bison cooldown sits two
 points under Mantis on the same tokens.
 
-Second, every Marin dense pretraining run with a public loss curve on one axis: the five-width
-December 2024 ladder, the 8B with all its phases stitched together, the three abandoned Tootsie
-trials, and the 32B. The right panel puts them on cumulative compute (6ND), which is what makes
-sizes comparable. Two things it shows: at equal compute the larger dense runs sit below the 8B
-while both are still at full learning rate, and the ladder's small models, trained to 90 to 900
-tokens per parameter, sit well above the big runs at equal compute, which is what over-training
-past the compute-optimal point costs. The first 50B tokens of each run are cut.
+Second, every Marin pretraining run with a public loss curve on one axis, three generations of
+recipe: the five-width December 2024 ladder and the 2025 dense runs (the 8B with all its phases
+stitched together, the three abandoned Tootsie trials, the 32B) in the hand-tuned Llama-style
+recipe; Delphi's three held-out compute-optimal models from March 2026 in the AdamH recipe; and
+the 2026 mixture-of-experts runs, Snowball 67B-A2B and the 535B-A23B hero run as far as it has
+got. The right panel puts them on cumulative compute (6ND, active parameters for the MoEs),
+which is what makes sizes and recipes comparable. The first 20B tokens of each run are cut. The
+MoE curves are the Paloma c4_en loss under dropless routing (no capacity-factor token dropping);
+the hero run's first segment logged a capacity-dropped evaluation instead, which sits about 0.13
+nats higher at the same step and is not drawn.
 
 ```{python}
 #| column: page
@@ -67,20 +72,44 @@ past the compute-optimal point costs. The first 50B tokens of each run are cut.
 #| fig-height: 5
 cur = losses.marin_pretraining_curves()
 fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-plots.loss_curves(cur, x="tokens", ax=axes[0], ylabel="Paloma c4_en eval loss (nats/token)", min_tokens=5e10,
+plots.loss_curves(cur, x="tokens", ax=axes[0], ylabel="Paloma c4_en eval loss (nats/token)", min_tokens=2e10,
                   title="By tokens")
-plots.loss_curves(cur, x="flops", ax=axes[1], ylabel="", min_tokens=5e10, title="By compute (6ND)")
+plots.loss_curves(cur, x="flops", ax=axes[1], ylabel="", min_tokens=2e10, title="By compute (6ND)")
+for a in axes:
+    a.set_ylim(2.08, 3.45)   # the 32B's first eval points are above 4 and would set the scale
 fig.tight_layout(); plt.show()
 ```
 
-Read the trials against the 8B on the compute axis. Where the 13B stopped (1.8e23 FLOPs) it was
-at 2.50 against the 8B's 2.60 at the same compute; the 24B at 3.5e23 was 2.45 against 2.51. The
-70B stopped at 6.5e23, just past the finished 8B's 6.1e23, at 2.42 against the 8B's final 2.35:
-on matched compute the smaller model won, because it had a cooldown and the 70B never did. That
-is the same lesson as the trajectory figure below, from the other side: without a cooldown a
-trial's loss understates the model. The 13B trial's curve starts at 1.7T tokens because only its
-longest restart segment was fetched; the trials' token axes use the average tokens per step from
-W&B, since their batch ramps are not public.
+Three readings from the compute axis.
+
+**Size, within one recipe.** Where the 13B trial stopped (1.8e23 FLOPs) it was at 2.50 against
+the 8B's 2.60 at the same compute; the 24B at 3.5e23 was 2.45 against 2.51. The 70B stopped at
+6.5e23, just past the finished 8B's 6.1e23, at 2.42 against the 8B's final 2.35: on matched
+compute the smaller model won, because it had a cooldown and the 70B never did. That is the same
+lesson as the trajectory figure below, from the other side: without a cooldown a trial's loss
+understates the model. The ladder's small models, trained to 90 to 900 tokens per parameter, sit
+well above everything else at equal compute, which is what over-training past the
+compute-optimal point costs.
+
+**Recipe, at equal compute.** Delphi's 1e23 model reached 2.34 on 9.4e22 FLOPs. The 32B, on the
+2025 recipe, was at 2.42 when it had spent the same compute, and the 8B at 2.55; the finished
+32B needed 1.2e24, thirteen times as much, to get to 2.20. Delphi's 1e22 model likewise beats
+the 8B at matched compute by 0.12. Some of that is compute-optimal allocation rather than
+recipe, since the 2025 runs were far past optimal tokens per parameter at any given point, but
+it is the cleanest cross-generation comparison Marin's record allows.
+
+**Architecture.** Snowball, at 1.2e23 FLOPs of active-parameter compute, ended at 2.27, below
+Delphi's 25B dense model at similar compute and below where the 32B was at that compute by
+0.12. The hero run at 4.6T tokens (6.3e23 FLOPs so far) is at 2.29, level with where the 32B
+was at the same compute, and still at full learning rate with three quarters of its tokens to
+go. The 6ND-on-active-parameters convention flatters MoEs, since it ignores the memory and
+communication cost of the inactive experts, and the two MoE curves should be read against each
+other and against the Marin MoE law rather than as a like-for-like efficiency gain.
+
+Bookkeeping: the 13B trial's curve starts at 1.7T tokens because only its longest restart
+segment was fetched; the trials' token axes use the average tokens per step from W&B, since
+their batch ramps are not public; Snowball's active parameter count (about 2B) is from the model
+name, not a stated figure.
 
 ## What is unusual here
 

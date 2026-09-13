@@ -279,6 +279,10 @@ def loss_curves(curves, x: str = "flops", ax=None, title: str | None = None, yla
     if ax is None:
         _, ax = plt.subplots(figsize=(8, 5))
     slot = 0
+    ends: list[tuple[float, float]] = []      # (log10 x, adjusted y) of placed end-labels, for repelling
+    y_span = max(np.nanmax(np.concatenate([c.loss[c.tokens >= min_tokens] for c in curves if (c.tokens >= min_tokens).sum() >= 2])) -
+                 np.nanmin(np.concatenate([c.loss[c.tokens >= min_tokens] for c in curves if (c.tokens >= min_tokens).sum() >= 2])), 1e-6)
+    step_y = 0.026 * y_span                  # about one 8pt label height on a 5in axis
     for c in curves:
         keep = c.tokens >= min_tokens
         if keep.sum() < 2:
@@ -287,24 +291,36 @@ def loss_curves(curves, x: str = "flops", ax=None, title: str | None = None, yla
         if c.kind == "ladder":
             color, lw, ls, z = MUTED, 1.2, "-", 2
         elif c.kind == "aborted":
-            color, lw, ls, z = RUN_COLORS["aborted"], 1.6, (0, (4, 2)), 3
-            color = PROJECT_SLOTS[(slot := slot + 1) % len(PROJECT_SLOTS)]
+            color, lw, ls, z = PROJECT_SLOTS[(slot := slot + 1) % len(PROJECT_SLOTS)], 1.6, (0, (4, 2)), 3
+        elif c.kind == "delphi":
+            color, lw, ls, z = INK2, 1.4, "-", 3
+        elif c.kind == "moe":
+            color, lw, ls, z = PROJECT_SLOTS[(slot := slot + 1) % len(PROJECT_SLOTS)], 2.2, (0, (1, 1.5)), 4
         else:
             color, lw, ls, z = PROJECT_SLOTS[(slot := slot + 1) % len(PROJECT_SLOTS)], 2.2, "-", 4
         ax.plot(xv, yv, color=color, lw=lw, ls=ls, zorder=z, solid_capstyle="round")
         if label_ends:
-            ax.annotate(c.name, (xv[-1], yv[-1]), xytext=(5, 0), textcoords="offset points", fontsize=8,
-                        color=color if c.kind != "ladder" else INK2, ha="left", va="center")
+            lx, y0 = np.log10(xv[-1]), float(yv[-1])
+            free = lambda yy: not any(abs(lx - px) < 0.9 and abs(yy - py) < step_y for px, py in ends)
+            ly = next(y0 + k * step_y for k in [0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5] if free(y0 + k * step_y))
+            ends.append((lx, ly))
+            ax.annotate(c.name, (xv[-1], yv[-1]), xytext=(5, (ly - yv[-1]) / step_y * 8), textcoords="offset points",
+                        fontsize=8, color=color if c.kind != "ladder" else INK2, ha="left", va="center")
     ax.set_xscale("log")
     ax.set_xlabel("Cumulative training compute (FLOPs, 6ND)" if x == "flops" else "Cumulative training tokens")
     ax.set_ylabel(ylabel)
     ax.set_title(title or ("Pretraining runs on one compute axis" if x == "flops" else "Pretraining runs by tokens"))
     ax.margins(x=0.18)
     from matplotlib.lines import Line2D
-    handles = [Line2D([], [], color=INK2, lw=2.2, label="Released run (phases stitched)"),
+    kinds = {c.kind for c in curves}
+    handles = [Line2D([], [], color=INK2, lw=2.2, label="Released dense run (phases stitched)"),
                Line2D([], [], color=INK2, lw=1.6, ls=(0, (4, 2)), label="Abandoned trial"),
                Line2D([], [], color=MUTED, lw=1.2, label="Ladder run (210B tokens each)")]
-    ax.legend(handles=handles, loc="upper right", fontsize=8)
+    if "delphi" in kinds:
+        handles.append(Line2D([], [], color=INK2, lw=1.4, label="Delphi held-out target (compute-optimal)"))
+    if "moe" in kinds:
+        handles.append(Line2D([], [], color=INK2, lw=2.2, ls=(0, (1, 1.5)), label="MoE run (compute on active params)"))
+    ax.legend(handles=handles, loc="lower left", fontsize=8)
     return ax
 
 

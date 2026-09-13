@@ -172,12 +172,20 @@ class Curve:
         return 6.0 * self.params * self.tokens
 
 
-def stitch(lab: str, run_ids: list[str], schedule: Schedule, key: str) -> tuple[np.ndarray, np.ndarray]:
-    """Concatenate several runs.csv rows (phases of one run) into one token-sorted curve."""
+def stitch(lab: str, run_ids: list[str], schedule: Schedule, key: str | list[str]) -> tuple[np.ndarray, np.ndarray]:
+    """Concatenate several runs.csv rows (phases of one run) into one token-sorted curve. `key` may
+    be a list of alternative column names (a metric renamed between segments); the first non-null
+    value per row is used."""
+    keys = [key] if isinstance(key, str) else key
     xs, ys = [], []
     for rid in run_ids:
-        c = curve(lab, rid).dropna(subset=[key]).sort_values("_step")
-        xs.append(cumulative_tokens(c["_step"], schedule)); ys.append(c[key].to_numpy())
+        c = curve(lab, rid)
+        present = [k for k in keys if k in c.columns]
+        if not present:
+            continue
+        v = c[present].bfill(axis=1).iloc[:, 0]
+        c = c.assign(_v=v).dropna(subset=["_v"]).sort_values("_step")
+        xs.append(cumulative_tokens(c["_step"], schedule)); ys.append(c["_v"].to_numpy())
     x = np.concatenate(xs); y = np.concatenate(ys)
     o = np.argsort(x, kind="stable")
     return x[o], y[o]
@@ -200,16 +208,34 @@ MARIN_PRETRAINING = [
     ("Marin 32B (Mantis)", "final", 3.2e10,
      ["exp1295_32b phase1 (Llama-3-style 32B, spiky)", "exp1395_qwen3_32b phase3 (QK-Norm switch, warm-start from 80k)",
       "marin-32b-base Mantis (aggregate final artifact)"], MARIN_32B),
+    # 2026: Delphi's held-out dense targets (compute-optimal, AdamH recipe) and the MoE runs. MoE
+    # compute uses active parameters (about 2B of 67B for Snowball; 23B of 535B for the hero run).
+    ("Delphi 1e21 (3.4B)", "delphi", 3.383e9, ["Delphi optimal 1e21 (3 seeds: 0, 42, 62746)"], [(0, 2_097_152)]),
+    ("Delphi 1e22 (9.7B)", "delphi", 9.715e9, ["delphi-1e22-9.7Bparams-160Btokens (3 seeds)"], [(0, 4_194_304)]),
+    ("Delphi 1e23 (25B)", "delphi", 2.496e10, ["Delphi optimal 1e23 (25B params, 600B tokens)"], [(0, 8_388_608)]),
+    ("Snowball 67B-A2B", "moe", 2.0e9, ["Snowball 67B-A2B pretrain+midtrain on 10T tokens (#6044)"],
+     [(0, 4096 * 8192), (15_288, 8192 * 8192)]),
+    ("535B-A23B hero (running)", "moe", 2.3e10, ["[Hero Run] 535B-A23B on 18.75T tokens (#8435)"], [(0, 46_137_344)]),
 ]
+# The hero run's later segments re-log the evaluation from step 0 under `eval_dropless/...`
+# (routing without capacity-factor token dropping), which spans the whole run; the first segment's
+# `eval/...` values are a different evaluation mode and are not mixed in.
+MARIN_CURVE_KEYS = {"535B-A23B hero (running)": ["eval_dropless/paloma/c4_en-llama3/loss"]}
 
 
-def marin_pretraining_curves() -> list[Curve]:
-    """Every Marin dense pretraining run with a public c4_en curve, as one curve each. The 32B
-    trunk stops at the cooldown branch point (phase 3 ran 10k steps past it); the 13B curve
-    starts at step 280k because only its longest restart segment was fetched."""
+def marin_pretraining_curves(include_2026: bool = True) -> list[Curve]:
+    """Every Marin pretraining run with a public c4_en curve, as one curve each. The 32B trunk
+    stops at the cooldown branch point (phase 3 ran 10k steps past it); the 13B curve starts at
+    step 280k because only its longest restart segment was fetched. Runs whose curve has not been
+    fetched are skipped."""
     out = []
     for name, kind, params, run_ids, schedule in MARIN_PRETRAINING:
-        x, y = stitch("marin", run_ids, schedule, MARIN_KEY)
+        if not include_2026 and kind in ("delphi", "moe"):
+            continue
+        try:
+            x, y = stitch("marin", run_ids, schedule, MARIN_CURVE_KEYS.get(name, MARIN_KEY))
+        except FileNotFoundError:
+            continue
         if name.startswith("Marin 32B"):
             cut = cumulative_tokens(160_000, schedule)   # drop phase-3 points past the cooldown fork
             keep = (x <= cut) | (x >= cumulative_tokens(160_002, schedule) - 1)

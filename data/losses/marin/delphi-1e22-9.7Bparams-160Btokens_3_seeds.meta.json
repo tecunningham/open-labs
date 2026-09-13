@@ -1,0 +1,41 @@
+{
+ "run_id": "delphi-1e22-9.7Bparams-160Btokens (3 seeds)",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": 4194304,
+ "final_step": 38234.0,
+ "final_tokens": 160365019136.0,
+ "final_loss": {
+  "train/loss": 2.262873649597168,
+  "eval/paloma/c4_en/loss": 2.5181772708892822,
+  "eval/loss": 2.274888515472412,
+  "eval/macro_loss": 2.3929169178009033
+ },
+ "note": "9.71B params, 160.4B tokens; seed-0 run of three",
+ "segments": [
+  {
+   "run": "adamh-scaling-ladder-nemotron-optimal-1e+22-v5-025b0e",
+   "display_name": "adamh-scaling-ladder-nemotron-optimal-1e+22-v5-025b0e",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin/runs/adamh-scaling-ladder-nemotron-optimal-1e+22-v5-025b0e",
+   "created": "2026-03-04T04:17:22Z",
+   "last_heartbeat": "2026-03-07T15:37:33Z",
+   "final_step": 38234,
+   "summary": {
+    "train/loss": 2.2297754287719727,
+    "eval/paloma/c4_en/loss": 2.5181772708892822,
+    "eval/loss": 2.274888515472412,
+    "eval/macro_loss": 2.3929169178009033
+   },
+   "rows": 1538
+  }
+ ],
+ "rows": 1538,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

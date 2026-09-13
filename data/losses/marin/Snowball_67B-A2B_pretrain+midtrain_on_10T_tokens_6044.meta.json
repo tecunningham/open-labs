@@ -1,0 +1,89 @@
+{
+ "run_id": "Snowball 67B-A2B pretrain+midtrain on 10T tokens (#6044)",
+ "aliases": [],
+ "project": "marin-community/marin_moe",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 156999.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 1.1596156358718872,
+  "eval/paloma/c4_en/loss": 2.2675607204437256,
+  "eval/loss": 1.8692972660064697,
+  "eval/macro_loss": 1.854432225227356
+ },
+ "note": "steps 0-15,288 at 4096x8192, then 67.1M tokens/step to step 156,999 (10.5T); W&B total_tokens 8.96e12 at step 141k",
+ "segments": [
+  {
+   "run": "moe_67b_a2b_d2560_ep1_rep16_bs4096_seq8192_sw2k_v4_2048_muon_10T",
+   "display_name": "moe_67b_a2b_d2560_ep1_rep16_bs4096_seq8192_sw2k_v4_2048_muon_10T",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin_moe/runs/moe_67b_a2b_d2560_ep1_rep16_bs4096_seq8192_sw2k_v4_2048_muon_10T",
+   "created": "2026-06-27T15:20:20Z",
+   "last_heartbeat": "2026-07-01T02:35:28Z",
+   "final_step": 15288,
+   "summary": {
+    "train/loss": 1.4971848726272583,
+    "eval/paloma/c4_en/loss": 2.5681748390197754,
+    "eval/loss": 2.1781749725341797,
+    "eval/macro_loss": 2.3258216381073
+   },
+   "rows": 1505
+  },
+  {
+   "run": "moe_67b_a2b_d2560_ep1_rep8_bs8192_seq8192_sw2k_v4_2048_muon_resume15k_v2_10T",
+   "display_name": "moe_67b_a2b_d2560_ep1_rep8_bs8192_seq8192_sw2k_v4_2048_muon_resume15k_v2_10T",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin_moe/runs/moe_67b_a2b_d2560_ep1_rep8_bs8192_seq8192_sw2k_v4_2048_muon_resume15k_v2_10T",
+   "created": "2026-07-01T03:33:54Z",
+   "last_heartbeat": "2026-08-15T21:19:15Z",
+   "final_step": 141004,
+   "summary": {
+    "train/loss": 1.3126600980758667,
+    "eval/paloma/c4_en/loss": 2.297323942184448,
+    "eval/loss": 1.929596781730652,
+    "eval/macro_loss": 2.066572427749634
+   },
+   "rows": 1543
+  },
+  {
+   "run": "moe_67b_a2b_d2560_ep1_rep8_bs1024_seq65536_sw2k_v4_2048_muon_cooldown_step141k",
+   "display_name": "moe_67b_a2b_d2560_ep1_rep8_bs1024_seq65536_sw2k_v4_2048_muon_cooldown_step141k",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin_moe/runs/moe_67b_a2b_d2560_ep1_rep8_bs1024_seq65536_sw2k_v4_2048_muon_cooldown_step141k",
+   "created": "2026-08-15T21:32:35Z",
+   "last_heartbeat": "2026-08-22T09:27:22Z",
+   "final_step": 155999,
+   "summary": {
+    "train/loss": 1.3251996040344238,
+    "eval/paloma/c4_en/loss": 2.2608909606933594,
+    "eval/loss": 1.877445101737976,
+    "eval/macro_loss": 2.0259978771209717
+   },
+   "rows": 1510
+  },
+  {
+   "run": "moe_67b_a2b_d2560_ep1_rep1_ctx4_bs256_seq262144_ctxext_step156k_qk157",
+   "display_name": "moe_67b_a2b_d2560_ep1_rep1_ctx4_bs256_seq262144_ctxext_step156k_qk157",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin_moe/runs/moe_67b_a2b_d2560_ep1_rep1_ctx4_bs256_seq262144_ctxext_step156k_qk157",
+   "created": "2026-08-24T06:32:32Z",
+   "last_heartbeat": "2026-08-25T10:10:18Z",
+   "final_step": 156999,
+   "summary": {
+    "train/loss": 1.1596156358718872,
+    "eval/paloma/c4_en/loss": 2.2675607204437256,
+    "eval/loss": 1.8692972660064695,
+    "eval/macro_loss": 1.854432225227356
+   },
+   "rows": 1000
+  }
+ ],
+ "rows": 5558,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

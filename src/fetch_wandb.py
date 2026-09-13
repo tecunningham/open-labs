@@ -162,6 +162,32 @@ TARGETS: dict[str, list[Target]] = {
                "hidden 1536, 16 layers, 50k steps; one of five ladder widths"),
         Target("tootsie-scaling-2048 (Dec 2024 ladder, 16L, 210B tokens)", "marin-community/marin", ["tootsie-scaling-2048-1ed392"], MARIN_KEYS, 4194304,
                "hidden 2048, 16 layers, 50k steps; one of five ladder widths"),
+        # Delphi held-out targets (seed 0 runs; the seed-42 and seed-62746 replicates differ by ~0.1%).
+        # tokens_per_step = card tokens / W&B final step: 46.26B/22,056 = 512 x 4096, 160.4B/38,234 =
+        # 1024 x 4096, 628.2B/74,883 = 2048 x 4096.
+        Target("Delphi optimal 1e21 (3 seeds: 0, 42, 62746)", "marin-community/marin", ["adamh-scaling-ladder-nemotron-optimal-1e+21-v5-019021"], MARIN_KEYS, 2_097_152,
+               "3.38B params, 46.3B tokens; seed-0 run of three"),
+        Target("delphi-1e22-9.7Bparams-160Btokens (3 seeds)", "marin-community/marin", ["adamh-scaling-ladder-nemotron-optimal-1e+22-v5-025b0e"], MARIN_KEYS, 4_194_304,
+               "9.71B params, 160.4B tokens; seed-0 run of three"),
+        Target("Delphi optimal 1e23 (25B params, 600B tokens)", "marin-community/marin", ["adamh-scaling-ladder-nemotron-optimal-1e+23-v5-27f2fb"], MARIN_KEYS, 8_388_608,
+               "24.96B params, 628.2B tokens, 74,883 steps; the 300x-extrapolation target"),
+        # 2026 MoE runs live in the `marin_moe` project. Snowball trunk: 4096 x 8192 tokens per step to
+        # step 15,288, then 8192 x 8192 (67.1M) through the cooldown (1024 x 65,536) and context
+        # extension (256 x 262,144), which keep the same tokens per step. Side cooldowns at 39k and
+        # 102k are not pulled.
+        Target("Snowball 67B-A2B pretrain+midtrain on 10T tokens (#6044)", "marin-community/marin_moe",
+               ["moe_67b_a2b_d2560_ep1_rep16_bs4096_seq8192_sw2k_v4_2048_muon_10T",
+                "moe_67b_a2b_d2560_ep1_rep8_bs8192_seq8192_sw2k_v4_2048_muon_resume15k_v2_10T",
+                "moe_67b_a2b_d2560_ep1_rep8_bs1024_seq65536_sw2k_v4_2048_muon_cooldown_step141k",
+                "moe_67b_a2b_d2560_ep1_rep1_ctx4_bs256_seq262144_ctxext_step156k_qk157"], MARIN_KEYS, None,
+               "steps 0-15,288 at 4096x8192, then 67.1M tokens/step to step 156,999 (10.5T); W&B total_tokens 8.96e12 at step 141k"),
+        # Hero run: 46.1M tokens/step (2.677e12 tokens at step 58,020). The eval key gained an
+        # `eval_dropless/` prefix from the second segment on; both are pulled.
+        Target("[Hero Run] 535B-A23B on 18.75T tokens (#8435)", "marin-community/marin_moe",
+               ["hero-12d8b6f0-dee637", "hero-wd-gate-router-p02-step58k", "hero-ragged_a2a-nccl2307-ep-step81k"],
+               ["train/loss", "eval/paloma/c4_en-llama3/loss", "eval_dropless/paloma/c4_en-llama3/loss",
+                "eval/macro_loss", "eval_dropless/macro_loss"], 46_137_344,
+               "in progress; segments to step 58,020, 81,919 and running from 81k (99k on 2026-09-13)"),
     ],
 }
 
@@ -325,7 +351,9 @@ LOSS_COLUMN = {
     "ai2-olmo": (["train/CE loss", "train/CrossEntropyLoss"], True,
                  "train CE loss, nats/token (W&B; median of last 20 sampled points)"),
     "eleutherai": (["validation/lm_loss"], False, "Pile validation loss, nats/token (W&B validation/lm_loss)"),
-    "marin": (["eval/paloma/c4_en/loss"], False, "Paloma c4_en eval loss, nats/token (W&B eval/paloma/c4_en/loss)"),
+    # The 2026 MoE runs (marin_moe project) log the same Paloma c4_en eval under an `eval_dropless/...-llama3` key.
+    "marin": (["eval/paloma/c4_en/loss", "eval_dropless/paloma/c4_en-llama3/loss"], False,
+              "Paloma c4_en eval loss, nats/token (W&B eval/paloma/c4_en/loss)"),
 }
 
 
