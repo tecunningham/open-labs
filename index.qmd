@@ -73,6 +73,37 @@ Evidence behind the grades, one line per lab (sources in the notes files):
   Seven compute-optimal sizes with the lab's own fitted law, validated out of sample on the 13B,
   plus a muP arm; figures and model-card losses only, no logs. Single release, no post-training.
 
+## Releases on one compute scale {.unnumbered}
+
+Every released model in the book on one timeline, one row per lab, circle area proportional to
+training compute. Filled circles are models pretrained from scratch, sized by pretraining
+compute; hollow orange circles are post-training-only releases on an existing base, sized by the
+post-training compute; models a lab released on the same day sit as concentric circles. Compute is
+in FLOPs: the lab's stated figure where there is one, otherwise 6ND from stated parameters and
+tokens, and for post-training-only releases GPU-hours converted at 40 percent utilisation of an
+H100-class chip. The dollar figures in the key assume $2 per H100-hour and cover accelerator
+time only. The rows are in `data/releases.csv`, with the basis and confidence of every number.
+
+```{python}
+#| echo: false
+#| column: page
+#| fig-width: 11
+#| fig-height: 8.5
+from src.chapter import *  # noqa
+rel = load.releases()
+fig, ax = plt.subplots(figsize=(11, 8.5))
+plots.release_timeline(rel, ax=ax)
+plt.show()
+```
+
+The picture is the scale problem in one image. Llama 3.1 405B alone is about twenty times the
+compute of every model Marin, Pythia and Cerebras have released put together, and the reference
+suites are dots at this scale. It also shows two release rhythms: Meta and DeepSeek ship a
+generation every six to twelve months at rising compute, while the open labs ship more often,
+at one to two orders of magnitude less, and change recipe between releases. The circles do not
+include experiments, which for Olmo 3 were over four times the final runs by GPU-hours, nor
+people.
+
 **Reading the figures.** Every chapter opens with a scaling curve: training compute on a log
 x-axis, loss or a benchmark on the y-axis, experimental runs as dots, the released model(s) as
 stars, and a power law fitted to the experiments only, extrapolated out to where the final run

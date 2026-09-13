@@ -270,6 +270,110 @@ def loss_trajectory(segs, ax=None, title: str | None = None, ylabel: str = "Loss
     return ax
 
 
+LAB_LABELS = {"meta": "Meta Llama", "deepseek": "DeepSeek", "ai2-olmo": "Ai2 OLMo", "marin": "Marin",
+              "prime-intellect": "Prime Intellect", "eleutherai": "EleutherAI Pythia", "cerebras": "Cerebras-GPT"}
+LAB_ORDER = ["meta", "deepseek", "ai2-olmo", "marin", "prime-intellect", "eleutherai", "cerebras"]
+
+# One H100-hour at 40% of 1e15 FLOP/s = 1.44e18 FLOPs; at $2/hour that is $1.4M per 1e24 FLOPs.
+FLOPS_PER_GPU_HOUR = 1.44e18
+USD_PER_GPU_HOUR = 2.0
+
+
+def release_timeline(df: pd.DataFrame, ax=None, title: str | None = None, max_radius_pt: float = 30.0,
+                     min_radius_pt: float = 1.6, ref_flops=(1e23, 1e24, 1e25)):
+    """Every released model as a circle on a lab row against release date, area proportional to
+    training compute. Filled = pretrained from scratch (pretraining compute); hollow orange =
+    post-training-only release (post-training compute); dashed grey = planned; x = compute not
+    stated. Models a lab released on the same day are drawn as concentric circles with one label."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(10, 7))
+    labs = [l for l in LAB_ORDER if l in set(df["lab"])] + sorted(set(df["lab"]) - set(LAB_ORDER))
+    y_of = {lab: len(labs) - 1 - i for i, lab in enumerate(labs)}
+    fmax = float(df["flops"].max())
+    s_of = lambda f: max(np.pi * max_radius_pt ** 2 * f / fmax, np.pi * min_radius_pt ** 2)   # points^2
+    r_of = lambda f: np.sqrt(s_of(f) / np.pi)
+
+    x_lo = pd.Timestamp("2022-11-01")
+    x_hi = max(pd.Timestamp("2027-03-01"), df["release_date"].max() + pd.Timedelta(days=120))
+    ax.set_xlim(x_lo, x_hi)
+    for y in y_of.values():
+        ax.axhline(y, color=GRID, lw=1, zorder=0)
+
+    # Label placement: alternate above/below the row; within a side, step outward to the first
+    # level whose already-placed labels do not overlap this one. Widths are estimated from the
+    # character count and the axes width in points.
+    fontsize = 7.5
+    ax_w_pt = ax.figure.get_figwidth() * 72 * ax.get_position().width
+    days_per_pt = (x_hi - x_lo).days / ax_w_pt
+    placed: dict[tuple[str, int, int], list[tuple[float, float]]] = {}   # (lab, side, level) -> [(x0, x1)] in day numbers
+    import matplotlib.dates as mdates
+    flip = {lab: 0 for lab in labs}
+    for (lab, date), g in df.sort_values("release_date").groupby(["lab", "release_date"], sort=False):
+        y = y_of[lab]
+        g = g.sort_values("flops", ascending=False, na_position="last")
+        kinds = set(g["kind"])
+        for _, r in g.iterrows():
+            if pd.isna(r["flops"]):
+                ax.scatter([date], [y], s=40, marker="x", c=MUTED, linewidths=1.5, zorder=4)
+                continue
+            s = s_of(r["flops"])
+            if r["kind"] == "posttrain":
+                ax.scatter([date], [y], s=s, facecolors="none", edgecolors=RUN_COLORS["ladder"], linewidths=1.6, zorder=3)
+            elif r["kind"] == "planned":
+                ax.scatter([date], [y], s=s, facecolors="none", edgecolors=MUTED, linewidths=1.4, linestyle=(0, (3, 2)), zorder=3)
+            else:
+                ax.scatter([date], [y], s=s, c=RUN_COLORS["final"], alpha=0.55, edgecolors=SURFACE, linewidths=0.8, zorder=3)
+        fam = g["family"].iloc[0]
+        variants = [v for v in g["variant"] if v][::-1]          # smallest first reads better
+        label = (fam + " " + " / ".join(variants)).strip()
+        if g["flops"].isna().all():
+            label += " (compute not stated)"
+        rmax = r_of(g["flops"].max()) if g["flops"].notna().any() else 4
+        side = 1 if flip[lab] % 2 == 0 else -1; flip[lab] += 1
+        if g["flops"].notna().any() and g["flops"].max() >= fmax:
+            side = 1        # the largest circle spills into the row below; keep its label above
+        half_w_days = 0.5 * len(label) * 0.52 * fontsize * days_per_pt
+        xc = mdates.date2num(date); span = (xc - half_w_days, xc + half_w_days)
+        level = 0
+        while any(not (span[1] < a or span[0] > b) for a, b in placed.get((lab, side, level), [])):
+            level += 1
+        placed.setdefault((lab, side, level), []).append(span)
+        dy = side * (rmax + 3 + level * (fontsize + 2))
+        ax.annotate(label, (date, y), xytext=(0, dy), textcoords="offset points", ha="center",
+                    va="bottom" if side > 0 else "top", fontsize=fontsize,
+                    color=INK2 if "pretrain" in kinds or "planned" in kinds else RUN_COLORS["ladder"], zorder=5)
+
+    ax.set_yticks(list(y_of.values())); ax.set_yticklabels([LAB_LABELS.get(l, l) for l in labs], fontsize=9)
+    ax.set_ylim(-0.55, len(labs) + 0.05)
+    loc = mdates.YearLocator(); ax.xaxis.set_major_locator(loc); ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    ax.xaxis.set_minor_locator(mdates.MonthLocator(bymonth=[4, 7, 10]))
+    ax.grid(axis="y", visible=False); ax.grid(axis="x", which="major", color=GRID)
+    ax.set_title(title or "Releases by lab, circle area proportional to training compute")
+
+    # Marker legend (below left) and size key (below right, an inset outside the axes), so neither
+    # covers a lab row. Key circles use the same point scale as the main axes.
+    from matplotlib.lines import Line2D
+    handles = [Line2D([], [], marker="o", ls="", ms=8, color=RUN_COLORS["final"], alpha=0.55, label="Pretrained from scratch (pretraining compute)"),
+               Line2D([], [], marker="o", ls="", ms=8, markerfacecolor="none", markeredgecolor=RUN_COLORS["ladder"], markeredgewidth=1.6, label="Post-training-only release (post-training compute)"),
+               Line2D([], [], marker="o", ls="", ms=8, markerfacecolor="none", markeredgecolor=MUTED, label="Planned / in progress"),
+               Line2D([], [], marker="x", ls="", ms=6, color=MUTED, label="Compute not stated")]
+    ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.0, -0.06), fontsize=7.5, ncol=1)
+    key = ax.inset_axes([0.50, -0.30, 0.50, 0.26])
+    key.set_axis_off(); key.set_xlim(0, 1); key.set_ylim(0, 1)
+    key.text(0.02, 0.97, f"Circle area = training compute. Dollars: accelerator time at \\${USD_PER_GPU_HOUR:.0f} per H100-hour, 40% MFU.",
+             fontsize=7, color=MUTED, va="top")
+    yk = 0.10
+    for f in ref_flops:
+        r = r_of(f)
+        yk += r / 300
+        key.scatter([0.14], [yk], s=s_of(f), c=RUN_COLORS["final"], alpha=0.55, edgecolors=SURFACE, linewidths=0.8, clip_on=False)
+        usd = f / FLOPS_PER_GPU_HOUR * USD_PER_GPU_HOUR
+        key.text(0.28, yk, f"{f:.0e} FLOPs   (about \\${usd / 1e6:,.1f}M)", fontsize=7, color=MUTED, va="center")
+        yk += r / 300 + 0.10
+    return ax
+
+
 def stated_split(parts: dict[str, float], ax=None, title: str | None = None, unit: str = "GPU-hours"):
     """The lab's own stated split (e.g. development vs final GPU-hours) as one stacked bar."""
     style()

@@ -24,6 +24,12 @@ level with `main`):
   `data/notes/*.md` on 2026-09-13. ECI (Epoch Capabilities Index) membership was checked only for
   Llama 3.1 405B and DeepSeek V2/V3/R1 via Epoch's own write-ups; epoch.ai itself was blocked.
   `styles.css` (wired in `_quarto.yml`) holds the `.availability` table style.
+- **Release timeline.** The preface also has a lab-by-row timeline of every released model with
+  circle area proportional to training compute (`plots.release_timeline`, data in
+  `data/releases.csv`: one row per release with `flops`, `flops_basis`, `kind` = pretrain /
+  posttrain / planned, and confidence). Post-training-only releases are converted from GPU-hours
+  at 1.44e18 FLOPs per H100-hour (40% MFU); dollars in the key assume $2 per H100-hour. Add a
+  row there when a lab ships something.
 - **Rendered.** `quarto render` passes for all chapters (Quarto 1.7.32, pandas 3.0, scipy 1.17).
 
 Environment setup: `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`) installs

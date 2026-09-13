@@ -53,6 +53,16 @@ def claims(lab: str | None = None) -> pd.DataFrame:
     return df[df["lab"] == lab].reset_index(drop=True) if lab else df
 
 
+def releases(lab: str | None = None) -> pd.DataFrame:
+    """One row per released model (or model group) with a release date and a training-compute
+    estimate on one FLOPs scale; `flops_basis` says how each number was obtained. Used for the
+    cross-lab release timeline in the preface."""
+    df = pd.read_csv(DATA / "releases.csv", dtype=str, keep_default_na=False)
+    df["flops"] = pd.to_numeric(df["flops"].replace("", np.nan), errors="coerce")
+    df["release_date"] = pd.to_datetime(df["release_date"], errors="coerce")
+    return df[df["lab"] == lab].reset_index(drop=True) if lab else df
+
+
 def compute_split(df: pd.DataFrame) -> pd.DataFrame:
     """FLOPs, GPU-hours and run counts by run_type. Experiments = everything not final."""
     g = (df.groupby("run_type", observed=True)
