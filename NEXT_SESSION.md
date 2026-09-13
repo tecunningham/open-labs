@@ -19,7 +19,7 @@ environment PyPI was denied by the network policy, so the pip step printed a war
 `pypi.org` and `files.pythonhosted.org` (and keep `github.com`) in the environment's network
 settings and the next session will have a working `quarto render`.
 
-Publishing: the book is deployed to GitHub Pages (https://elasticity-ai.github.io/open-labs/) by
+Publishing: the book is deployed to GitHub Pages (https://tecunningham.github.io/open-labs/) by
 `.github/workflows/publish.yml` on each push to the default branch; the one-time repo setting is
 Settings -> Pages -> Source = "GitHub Actions". Check the Actions tab if the site is stale.
 
