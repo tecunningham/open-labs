@@ -339,6 +339,6 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
     handles = [plt.Line2D([], [], color=CATEGORY_COLORS[k], lw=2, label=CATEGORY_LABELS[k])
                for k in CATEGORY_COLORS if k in set(allb["category"])]
     ax.legend(handles=handles, loc="lower left", fontsize=8, title=None)
-    ax.set_title(title or f"{LABS.get(lab, lab)}: every bounded evaluation, as percent of its ceiling")
+    ax.set_title(title or f"{LABS.get(lab, lab)}: every bounded AI R&D evaluation, as percent of its ceiling")
     fig.tight_layout(rect=(0, 0, 0.8, 1))
     return fig
