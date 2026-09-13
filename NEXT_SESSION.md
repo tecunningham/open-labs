@@ -18,6 +18,12 @@ level with `main`):
   phases and side branches as one curve; the Marin chapter has the figure, a per-phase table and
   a matched-token comparison of the abandoned 13B/24B/70B trials against the 8B trunk. The Dec
   2024 `tootsie-scaling-*` ladder is in `runs.csv` with losses and fitted in the chapter.
+- **Data-availability table.** The preface (`index.qmd`) grades every lab on five things (total
+  spend incl. people, pretraining curves, post-training curves, multiple generations, broad
+  benchmarks, pre- vs post-training attribution) with evidence bullets; grades were compiled from
+  `data/notes/*.md` on 2026-09-13. ECI (Epoch Capabilities Index) membership was checked only for
+  Llama 3.1 405B and DeepSeek V2/V3/R1 via Epoch's own write-ups; epoch.ai itself was blocked.
+  `styles.css` (wired in `_quarto.yml`) holds the `.availability` table style.
 - **Rendered.** `quarto render` passes for all chapters (Quarto 1.7.32, pandas 3.0, scipy 1.17).
 
 Environment setup: `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`) installs
