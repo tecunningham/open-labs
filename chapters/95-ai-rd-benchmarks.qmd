@@ -33,6 +33,10 @@ def show(lab, families=None, caption=""):
     t = benchmarks.wide(df)
     display(Markdown(benchmarks.to_markdown(t) + (f"\n\n: {caption}" if caption else "")))
 
+def show_series(lab):
+    fig = benchmarks.timeseries(benchmarks.load(lab, frontier_only=True))
+    plt.show()
+
 def show_cards(lab):
     t = benchmarks.cards(benchmarks.load(lab, frontier_only=True))
     t["card"] = t.apply(lambda r: f"[{r['card_title']}]({r['card_url']})" if r["card_url"] else r["card_title"], axis=1)
@@ -57,6 +61,11 @@ show("gdm", caption="Google DeepMind: AI R&D and agentic-coding scores by model 
 show_cards("gdm")
 ```
 
+```{python}
+#| fig-cap: "Google DeepMind: numeric scores over card date. Filled points are read from the card; light-filled points are unverified; hollow points are the same model under a different condition (more attempts, another mode)."
+show_series("gdm")
+```
+
 ## OpenAI
 
 OpenAI's Preparedness Framework tracks "AI Self-improvement" (earlier "Model autonomy") with a
@@ -75,6 +84,11 @@ show("openai", caption="OpenAI: AI self-improvement and agentic-coding scores by
 show_cards("openai")
 ```
 
+```{python}
+#| fig-cap: "OpenAI: numeric scores over card date. Same marks as above. MLE-bench appears twice because the o1-era cards used the full competition set and pass@10, later cards a 30-competition subset."
+show_series("openai")
+```
+
 ## Anthropic
 
 Anthropic's Responsible Scaling Policy defines AI R&D capability thresholds and reports SWE-bench
@@ -91,6 +105,11 @@ show("anthropic", caption="Anthropic: AI R&D and agentic-coding scores by system
 
 ```{python}
 show_cards("anthropic")
+```
+
+```{python}
+#| fig-cap: "Anthropic: numeric scores over card date. Same marks as above. Terminal-Bench is split by version; the Suite 1 speedups use a log axis."
+show_series("anthropic")
 ```
 
 ## Reading across the three
