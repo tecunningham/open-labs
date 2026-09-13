@@ -276,7 +276,11 @@ def series_meta() -> pd.DataFrame:
 def _retire_mark(ax, m, last_x, last_y, latest_card):
     """Black cross on the last reported value when later cards stop reporting the series: either the
     series metadata records a retirement, or the last value predates the lab's newest card."""
-    documented = m is not None and pd.notna(m.get("deprecated_date", pd.NaT))
+    # A documented retirement counts only if it comes at or after the last value: a version split
+    # (Terminal-Bench v4.0) inherits the base series' metadata, whose retirement date is the
+    # earlier version's.
+    dep = m.get("deprecated_date", pd.NaT) if m is not None else pd.NaT
+    documented = pd.notna(dep) and pd.Timestamp(dep) >= pd.Timestamp(last_x)
     if not documented and not (latest_card is not None and last_x < latest_card):
         return False
     ax.scatter([last_x], [last_y], marker="x", s=46, c=plots.INK, linewidths=1.5, zorder=5)
@@ -328,7 +332,7 @@ def _card_labels(ax, df, x0, x1):
         ax.axvline(xd, color=plots.GRID, lw=0.8, zorder=0)
         ax.plot([xd, xp], [100, 104], color=plots.AXIS, lw=0.5, zorder=1, clip_on=False)
         ax.annotate(name, (xp, 104), xytext=(0, 2), textcoords="offset points", rotation=90, ha="center",
-                    va="bottom", fontsize=6.3, color=plots.INK2, annotation_clip=False).set_in_layout(False)
+                    va="bottom", fontsize=6.3, color=plots.INK2, annotation_clip=False)
 
 
 def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: int = 2):
@@ -383,7 +387,7 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
     for (xd, y, name, c), yl in zip(ends, ys):
         ax.plot([xd, xlab], [y, yl], color=c, lw=0.6, alpha=0.6, zorder=1, clip_on=False)
         ax.annotate(name, (xlab, yl), xytext=(3, 0), textcoords="offset points", va="center", fontsize=6.8,
-                    color=plots.INK2, annotation_clip=False).set_in_layout(False)
+                    color=plots.INK2, annotation_clip=False)
     ax.set_ylim(0, 108)
     ax.set_xlim(x0 - pd.Timedelta(days=30), xend)
     ax.set_ylabel("Score as percent of the benchmark ceiling")
@@ -396,7 +400,7 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
                                   label="last reported value; later cards drop it"))
     _card_labels(ax, df, x0, x1)
     ax.legend(handles=handles, loc="lower left", fontsize=8, title=None)
-    ax.set_title(title or f"{LABS.get(lab, lab)}: every bounded AI R&D evaluation, as percent of its ceiling", pad=78)
+    ax.set_title(title or f"{LABS.get(lab, lab)}: every bounded AI R&D evaluation, as percent of its ceiling", pad=84)
     fig.subplots_adjust(left=0.07, right=0.66, top=0.8, bottom=0.08)
     return fig
 
@@ -472,7 +476,7 @@ def unbounded_overview(df: pd.DataFrame, lab: str, title: str | None = None):
     for (xd, y, name, c), yl in zip(ends, ys):
         ax.plot([xd, xlab], [y, 10 ** yl], color=c, lw=0.6, alpha=0.6, zorder=1, clip_on=False)
         ax.annotate(name, (xlab, 10 ** yl), xytext=(3, 0), textcoords="offset points", va="center", fontsize=6.8,
-                    color=plots.INK2, annotation_clip=False).set_in_layout(False)
+                    color=plots.INK2, annotation_clip=False)
     ax.set_xlim(x0 - pd.Timedelta(days=30), x1 + pd.Timedelta(days=45))
     ax.set_ylabel("Score as a multiple (log)")
     ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator(bymonth=[1, 7]))
@@ -488,7 +492,7 @@ def unbounded_overview(df: pd.DataFrame, lab: str, title: str | None = None):
     ax.legend(handles=handles, loc="lower left", fontsize=7.5)
     # Card names above the plot, as in the bounded overview (anchored just above the top of the axis).
     _card_labels_log(ax, df, x0, x1, hi)
-    ax.set_title(title or f"{LABS.get(lab, lab)}: every unbounded AI R&D evaluation, as a multiple", pad=78)
+    ax.set_title(title or f"{LABS.get(lab, lab)}: every unbounded AI R&D evaluation, as a multiple", pad=84)
     fig.subplots_adjust(left=0.07, right=0.66, top=0.8, bottom=0.08)
     return fig
 
@@ -508,7 +512,7 @@ def _card_labels_log(ax, df, x0, x1, ytop):
         ax.axvline(xd, color=plots.GRID, lw=0.8, zorder=0)
         ax.plot([xd, xp], [ytop, ytop * 1.15], color=plots.AXIS, lw=0.5, zorder=1, clip_on=False)
         ax.annotate(name, (xp, ytop * 1.15), xytext=(0, 2), textcoords="offset points", rotation=90, ha="center",
-                    va="bottom", fontsize=6.3, color=plots.INK2, annotation_clip=False).set_in_layout(False)
+                    va="bottom", fontsize=6.3, color=plots.INK2, annotation_clip=False)
 
 
 # ----------------------------------------------------------------------------- evaluation frontier
