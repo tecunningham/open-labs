@@ -6,35 +6,103 @@ from src.chapter import *  # noqa
 import numpy as np
 ```
 
-## All final runs and ladders
+## Development share: what labs state versus what their public runs show
+
+Two numbers per lab. The **stated** share is a lab's own accounting of all compute, where one
+exists. The **logged** share is what this report can reconstruct run by run from public records,
+and is always a floor because small ablations and failed runs are missing. The gap between the
+two columns is the survivorship problem measured.
 
 ```{python}
-all_runs = load.runs()
-groups = {f"{r.lab}/{r.project}": load.runs(r.lab, r.project) for r in all_runs[["lab","project"]].drop_duplicates().itertuples()}
-fit_map = {k: fits.fit_experiments(v) for k, v in groups.items()}
-fig, ax = plt.subplots(figsize=(9, 6)); plots.overlay_projects(groups, fit_map, ax=ax, title="All projects: loss vs compute"); plt.show()
+stated = pd.DataFrame([
+    ("Ai2 Olmo 3 (whole pipeline)", 0.822, "Morrison et al. 2026: 6.85M of 8.34M H100-hours", "reported"),
+    ("Ai2 OLMo 2 era", 0.50, "Morrison et al. 2025: development ~50% of training footprint", "reported"),
+    ("Meta LLaMA 1", 1 - 1.77e6 / 6.0e6, "2048 A100 x ~5 months vs 1.77M A100-hours released", "derived"),
+    ("EleutherAI Pythia", 1 - 136070 * 2 / 544280, "discarded v0 suite: 544,280 total vs 272,140 released A100-hours", "reported"),
+    ("Marin (535B ladder only)", 0.01, "issue #8435: ladder 'only costs 1% of total compute'", "reported"),
+    ("Ai2 model ladder (OLMo 2 targets)", 0.01, "Bhagia et al. 2024: ladder ~1% of the two targets' compute", "reported"),
+], columns=["lab / programme", "non-final share", "basis", "confidence"])
+logged = []
+for lab, name in [("marin", "Marin (logged runs)"), ("ai2-olmo", "Ai2 OLMo (logged runs)"), ("meta", "Meta Llama (logged runs)"), ("prime-intellect", "Prime Intellect (logged runs)")]:
+    d = load.runs(lab); d = d[~d["run_id"].str.contains("aggregate|total-development")]
+    logged.append((name, load.experiment_share(d), f"{int((~d['is_final']).sum())} non-final rows with FLOPs summed", "floor"))
+logged = pd.DataFrame(logged, columns=stated.columns)
+tab = pd.concat([stated, logged], ignore_index=True)
+display(tab.assign(**{"non-final share": tab["non-final share"].map(lambda x: f"{x:.0%}" if pd.notna(x) else "")}))
 ```
 
-## Experiment share, terminal slope, prediction residual by project
+```{python}
+fig, ax = plt.subplots(figsize=(8, 4.5))
+t = tab.dropna(subset=["non-final share"]).sort_values("non-final share")
+colors = [plots.RUN_COLORS["ladder"] if c in ("reported", "derived") else plots.MUTED for c in t["confidence"]]
+ax.barh(t["lab / programme"], t["non-final share"], color=colors, height=0.55)
+for y, v in enumerate(t["non-final share"]):
+    ax.text(v + 0.01, y, f"{v:.0%}", va="center", fontsize=9, color=plots.INK2)
+ax.set_xlim(0, 1); ax.set_xlabel("Share of compute not in the released final runs")
+ax.set_title("Non-final compute share: lab-stated whole-programme figures (orange) vs public-run floors (grey)")
+ax.scatter([], [], c=plots.RUN_COLORS["ladder"], label="Stated or derived from a stated total"); ax.scatter([], [], c=plots.MUTED, label="Floor from logged public runs")
+ax.legend(loc="lower right"); plt.show()
+```
+
+Whole-programme figures cluster far above anything reconstructable from public runs. Where a
+lab has accounted for everything (Ai2 twice, Meta once, EleutherAI once) the non-final share is
+50 to 82 percent; where we can only sum public runs it is 0 to 15 percent. The two 1 percent
+rows are a different object: the cost of a *predictive ladder* alone, which is small by design
+and is not the development budget.
+
+## How well experiments predicted the final run
+
+```{python}
+pred = pd.DataFrame([
+    ("Cerebras-GPT 13B", "loss", "111M to 6.7B fit, 3.7x extrapolation", "within 0.5% (lab); see chapter for our refit residual", "reported"),
+    ("Marin MoE 1e21 test", "loss", "1e18 to 1e20 IsoFLOP fit, 10x extrapolation", f"{np.log(2.599/2.606):+.4f} log units (2.599 measured vs 2.606 predicted)", "reported"),
+    ("Marin Delphi 1e23", "loss", "7 IsoFLOP optima 3e18 to 3e20, 300x extrapolation", "within 0.2% (pre-registered)", "snippet"),
+    ("Ai2 OLMo 2 7B-4T and 13B-5T", "task accuracy", "16 ladder runs 190M to 1.3B, ~1% of target compute", "within ~2 points on 4 tasks, ~4 points averaged over 8", "reported"),
+    ("Meta Llama 3 405B", "compute-optimal size", "40M to 16B at 6e18 to 1e22, 3,800x extrapolation", "predicted 402B / 16.55T; trained 405B / 15.6T", "reported"),
+    ("Prime Intellect INTELLECT-2/3", "RL reward", "1.5B, 4B, 7B proxies for 32B and 106B", "qualitative transfer only; no fitted relation", "reported"),
+], columns=["final run", "predicted quantity", "experiments used", "outcome", "confidence"])
+display(pred)
+```
+
+Every pretraining lab that published a ladder also reports that it worked, at extrapolations
+from 4x to 3,800x. That is consistent with ladders being cheap and reliable for loss and for
+compute-optimal sizing, and it is also what a lab would choose to publish. Task-accuracy
+prediction (Ai2) is noticeably worse than loss prediction, and RL has no quantitative version yet.
+
+## Marginal return to compute at the final run
+
+Elasticity of loss with respect to compute, d log L / d log C, evaluated on each lab's own law
+at its final run. These are small numbers because the fitted irreducible terms are large, and
+they shrink with scale.
 
 ```{python}
 rows = []
-for k, v in groups.items():
-    f = fit_map[k]; res = fits.final_residuals(v, f)
-    rows.append({"project": k, "runs": len(v), "finals": int(v["is_final"].sum()),
-                 "experiment_share_flops": load.experiment_share(v),
-                 "fit_alpha": f.alpha if f else np.nan,
-                 "median_log_residual_final": res["log_residual"].median() if not res.empty else np.nan,
-                 "elasticity_at_final": res["elasticity_at_final"].median() if not res.empty else np.nan})
-tab = pd.DataFrame(rows)
-display(tab.round(3)) if not tab.empty else display(Markdown("_No data yet._"))
+cer = fits.stated_fit(E=0.5066, A=5.984e22 ** 0.0737, alpha=0.0737)
+rows.append(("Cerebras-GPT law at 13B (2.3e22 reported FLOPs)", cer.elasticity(2.3e22), "lab law"))
+moe = fits.stated_fit(E=1.6, A=95.18, alpha=0.0941)
+rows.append(("Marin MoE law at the 1e21 test", moe.elasticity(1e21), "lab law"))
+rows.append(("Marin MoE law at the 2.7e24 hero run", moe.elasticity(2.7e24), "lab law, far extrapolation"))
+df_c = load.runs("cerebras", "cerebras-gpt"); df_c = df_c[~df_c["run_id"].str.contains("mup")].drop_duplicates("run_id").copy()
+df_c["is_final"] = df_c["run_id"] == "cerebras-gpt-13b"
+f = fits.fit_experiments(df_c, irreducible=True)
+if f: rows.append(("Our refit of Cerebras-GPT at 13B", f.elasticity(2.3e22), "our fit, n=6"))
+display(pd.DataFrame(rows, columns=["curve and point", "d log L / d log C", "source"]).round(4))
 ```
 
 ## Mapping back to the elasticity paper
 
-| Paper primitive | Column above | Notes |
+| Paper primitive | What this report gives | Status |
 |---|---|---|
-| Experimental compute share S_E | `experiment_share_flops` | lower bound; compare with each lab's stated share in `claims.csv` |
-| Algorithmic efficiency growth g_A | compute multiplier between successive projects of one lab (see lab chapters) | check scale-bias by evaluating at two or three fixed compute levels |
-| Marginal return to compute at the frontier | `elasticity_at_final` | d log L / d log C at the final run |
-| Informativeness of experiments | `median_log_residual_final` | 0 means experiments predicted the final run exactly |
+| Experimental compute share S_E | Stated whole-programme shares of 50 to 82 percent (Ai2, Meta, EleutherAI); public-run floors of 0 to 15 percent | Four labs with a stated figure; more needed |
+| Algorithmic efficiency growth g_A and scale bias | Cross-release overlays exist for Llama 1 to 3 (MMLU vs compute) and are pending losses for OLMo 2 to 3 | Needs loss values from W&B and a common benchmark |
+| Marginal return to compute at the frontier | Elasticities from lab laws, about -0.03 to -0.06 at the largest fitted points | Two labs; DeepSeek's law pending |
+| Informativeness of experiments | Residuals from 0.2 to 0.5 percent in loss at 4x to 300x extrapolation; 2 to 4 points on tasks | Five labs |
+
+## What would move these numbers most
+
+1. Loss values for OLMo, Marin and Pythia from their public W&B dashboards (blocked from this
+   environment), which would turn four run-size maps into scaling curves.
+2. The Morrison et al. (2026) split of Olmo 3's 6.85M development hours across pretraining,
+   midtraining, post-training and synthetic data.
+3. Any second lab publishing a whole-programme accounting like Ai2's; Marin is the obvious ask
+   because its issue tracker already contains the runs.
