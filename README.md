@@ -1,6 +1,16 @@
 # Open Labs: scaling curves, experiments, and final runs
 
-**Status: scoping document (v0). Nothing below has been built yet.**
+**Status (2026-09-13):** scope agreed; Quarto book scaffolded and rendering; data and chapters in
+for Marin, Ai2 OLMo, Meta Llama, Prime Intellect (RL pilot), and the Pythia / Cerebras-GPT
+reference suites; DeepSeek in progress. Render with `quarto render`; merge new data with
+`python -m src.merge <dir>`. Agent working notes with per-claim verification lists are in
+`data/notes/`.
+
+**Environment caveat.** The collection environment's network policy blocked arxiv.org,
+huggingface.co, most lab blogs, W&B and Semantic Scholar. Paper numbers were taken from GitHub
+mirrors, tech-report PDFs on other hosts, and search snippets, and every such row is flagged in
+its `notes`. Loss values that live only in W&B dashboards (OLMo, Marin, Pythia) are the main gap;
+a session with those hosts allowed would fill it quickly.
 
 ## 1. What this is
 

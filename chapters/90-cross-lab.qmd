@@ -32,14 +32,14 @@ display(tab.assign(**{"non-final share": tab["non-final share"].map(lambda x: f"
 ```
 
 ```{python}
-fig, ax = plt.subplots(figsize=(8, 4.5))
+plots.style(); fig, ax = plt.subplots(figsize=(8, 4.5))
 t = tab.dropna(subset=["non-final share"]).sort_values("non-final share")
 colors = [plots.RUN_COLORS["ladder"] if c in ("reported", "derived") else plots.MUTED for c in t["confidence"]]
 ax.barh(t["lab / programme"], t["non-final share"], color=colors, height=0.55)
 for y, v in enumerate(t["non-final share"]):
     ax.text(v + 0.01, y, f"{v:.0%}", va="center", fontsize=9, color=plots.INK2)
 ax.set_xlim(0, 1); ax.set_xlabel("Share of compute not in the released final runs")
-ax.set_title("Non-final compute share: lab-stated whole-programme figures (orange) vs public-run floors (grey)")
+ax.set_title("Non-final compute share: lab-stated programme figures vs public-run floors")
 ax.scatter([], [], c=plots.RUN_COLORS["ladder"], label="Stated or derived from a stated total"); ax.scatter([], [], c=plots.MUTED, label="Floor from logged public runs")
 ax.legend(loc="lower right"); plt.show()
 ```

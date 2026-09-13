@@ -63,7 +63,13 @@ def compute_split(df: pd.DataFrame) -> pd.DataFrame:
     return g
 
 
+EXPERIMENT_TYPES = ["ladder", "ablation", "aborted", "midtrain"]
+
+
 def experiment_share(df: pd.DataFrame) -> float:
-    """Share of known FLOPs that went to non-final runs. Lower bound: unlogged runs are missing."""
-    total = df["flops"].sum()
-    return float(df.loc[~df["is_final"], "flops"].sum() / total) if total else float("nan")
+    """Share of known FLOPs in ladder/ablation/aborted/midtrain runs. Rows typed `unknown` (e.g. an
+    unreleased run still training) are excluded from both numerator and denominator.
+    Lower bound: unlogged runs are missing."""
+    d = df[df["run_type"] != "unknown"]
+    total = d["flops"].sum()
+    return float(d.loc[d["run_type"].isin(EXPERIMENT_TYPES), "flops"].sum() / total) if total else float("nan")
