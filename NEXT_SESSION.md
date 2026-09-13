@@ -14,6 +14,12 @@ State as of 2026-09-13 (branch `claude/wandb-accessibility-check-kfemxy`):
   `12-olmo.qmd`) are unrun. Do this first: `quarto render`, and check that the Pythia panel shows
   a fitted curve and that the OLMo and Marin panels show final-run points without a law.
 
+Environment setup: `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`) installs
+Quarto from GitHub and `requirements.txt` from PyPI at session start. In the 2026-09-13
+environment PyPI was denied by the network policy, so the pip step printed a warning; allow
+`pypi.org` and `files.pythonhosted.org` (and keep `github.com`) in the environment's network
+settings and the next session will have a working `quarto render`.
+
 Remaining steps, in order:
 
 1. `quarto render` and fix anything the new chapter code breaks.
