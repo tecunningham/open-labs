@@ -30,6 +30,16 @@ level with `main`):
   posttrain / planned, and confidence). Post-training-only releases are converted from GPU-hours
   at 1.44e18 FLOPs per H100-hour (40% MFU); dollars in the key assume $2 per H100-hour. Add a
   row there when a lab ships something.
+- **Marin post-training, cost, efficiency, experiment timeline.** The chapter now has: a
+  returns-to-SFT figure from Marin issue 3956 (`data/posttraining/marin_sft_scaling.csv`, 1,014
+  averaged evalchemy results; rebuild with `python -m src.fetch_evalchemy`; SFT compute is
+  assumed at 1e4 tokens per example); a compute-and-cost table on the book's H100-hour yardstick
+  (Marin publishes no dollars; the Huang Foundation's ~$108M CoreWeave purchase is the only
+  money figure and is not Marin-specific); a generation-frontier figure (final loss vs total
+  compute of finished runs, `plots.generation_frontier`; use endpoints, not curve crossings,
+  because WSD cooldowns make crossing points meaningless); and an all-experiments timeline with
+  per-family insets (`plots.experiment_timeline`; Delphi plot data in
+  `data/experiments_data/marin_delphi_ladder.csv` from the HF datasets server).
 - **Marin 2026 curves.** Delphi's held-out 1e21/1e22/1e23 runs, Snowball 67B-A2B (four segments)
   and the 535B hero run (three segments, still running; re-fetch it with
   `python -m src.fetch_wandb marin` to extend the curve) are now in `data/losses/marin/` and

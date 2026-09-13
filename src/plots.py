@@ -364,6 +364,156 @@ def capability_timeline(points: pd.DataFrame, ax=None, title: str | None = None,
     return ax
 
 
+def sft_scaling(df: pd.DataFrame, benchmark: str, ax=None, title: str | None = None, teachers: list[str] | None = None,
+                x: str = "flops", tokens_per_example: float = 1.0e4, base_styles: dict[str, str] | None = None,
+                annotate_n: bool = True):
+    """Returns to supervised fine-tuning: benchmark accuracy at the final checkpoint against SFT
+    compute (`x="flops"`, 6 * params * examples * tokens_per_example) or SFT examples
+    (`x="examples"`), log x. Colour follows the teacher model whose reasoning traces were used;
+    line style follows the base model (solid, dashed, ...). Points average the training repeats,
+    error bars are the spread across repeats. `df` is data/posttraining/*_sft_scaling.csv."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 5))
+    d = df[df["benchmark"] == benchmark]
+    d = d.loc[d.groupby(["base", "teacher", "n_examples", "repeat"])["step"].idxmax()]     # final checkpoint of each run
+    g = d.groupby(["base", "teacher", "n_examples", "params"])["mean"].agg(["mean", "std", "count"]).reset_index()
+    g["flops"] = 6 * g["params"] * g["n_examples"] * tokens_per_example
+    xcol = "flops" if x == "flops" else "n_examples"
+    order = teachers or list(g.groupby("teacher")["mean"].max().sort_values(ascending=False).index)
+    bases = list(dict.fromkeys(sorted(g["base"], key=lambda b: float(g.loc[g["base"] == b, "params"].iloc[0]))))
+    styles = base_styles or dict(zip(bases, ["-", (0, (4, 2)), (0, (1, 1.5))]))
+    for i, t in enumerate(order):
+        c = PROJECT_SLOTS[i % len(PROJECT_SLOTS)]
+        for b in bases:
+            s = g[(g["teacher"] == t) & (g["base"] == b)].sort_values(xcol)
+            if s.empty:
+                continue
+            ax.errorbar(s[xcol], 100 * s["mean"], yerr=100 * s["std"].fillna(0), color=c, lw=2, ls=styles[b], marker="o", ms=4.5,
+                        capsize=2, elinewidth=1, label=t if b == bases[0] or (g["teacher"] == t).sum() == len(s) else None, zorder=3)
+    if annotate_n and x == "flops":     # label the example counts along the largest base's best line
+        b = bases[-1]; t = order[0]
+        s = g[(g["teacher"] == t) & (g["base"] == b)].sort_values(xcol)
+        for _, r in s.iterrows():
+            ax.annotate(f"{r['n_examples']:,.0f}", (r["flops"], 100 * r["mean"]), xytext=(0, 9), textcoords="offset points",
+                        fontsize=7, color=MUTED, ha="center")
+    from matplotlib.lines import Line2D
+    handles, labels = ax.get_legend_handles_labels()
+    handles = [h[0] if hasattr(h, "__len__") else h for h in handles]
+    base_handles = [Line2D([], [], color=INK2, lw=2, ls=styles[b], label=b) for b in bases]
+    ax.legend(handles + base_handles, labels + bases, title="colour: teacher (trace source); line: base", fontsize=7.5,
+              title_fontsize=8, loc="upper left", ncol=2)
+    ax.set_xscale("log")
+    ax.set_xlabel(f"SFT compute (FLOPs, 6ND at {tokens_per_example:,.0f} tokens per example)" if x == "flops"
+                  else "SFT examples (OpenThoughts-4 math, with teacher reasoning traces)")
+    ax.set_ylabel(f"{benchmark} accuracy (%)")
+    ax.set_title(title or f"Returns to SFT compute: {benchmark}")
+    return ax
+
+
+def generation_frontier(points: pd.DataFrame, ax=None, title: str | None = None, guides: list[float] | None = None,
+                        ylabel: str = "Final loss", guide_tol: float = 0.06):
+    """Algorithmic efficiency across recipe generations: the final (loss, total compute) of every
+    finished run, one colour per generation, with a power-law line through each generation's
+    points (dashed where extrapolated). Horizontal guides at fixed losses show how much less
+    compute each generation needs for the same loss. `points` columns: generation, name, flops,
+    loss, kind ('dense' or 'moe'). Generations are drawn in the order they first appear."""
+    style()
+    from .fits import fit_power_law
+    if ax is None:
+        _, ax = plt.subplots(figsize=(9, 5.5))
+    gens = list(dict.fromkeys(points["generation"]))
+    xlo, xhi = points["flops"].min() / 3, points["flops"].max() * 3
+    xs = np.geomspace(xlo, xhi, 200)
+    fits = {}
+    for i, gname in enumerate(gens):
+        g = points[points["generation"] == gname].sort_values("flops")
+        c = PROJECT_SLOTS[i % len(PROJECT_SLOTS)]
+        for _, p in g.iterrows():
+            hollow = p["kind"] == "moe"
+            ax.scatter([p["flops"]], [p["loss"]], s=80, facecolors="none" if hollow else c, edgecolors=c, linewidths=1.8, zorder=4)
+            ax.annotate(p["name"], (p["flops"], p["loss"]), xytext=(6, 4), textcoords="offset points", fontsize=7.5, color=INK2)
+        if len(g) >= 2:
+            f = fit_power_law(g["flops"], g["loss"]); fits[gname] = f
+            inside = (xs >= g["flops"].min()) & (xs <= g["flops"].max())
+            ax.plot(xs[inside], f.predict(xs[inside]), color=c, lw=2, zorder=3, label=gname)
+            ax.plot(xs, f.predict(xs), color=c, lw=1.2, ls=(0, (3, 3)), alpha=0.7, zorder=2)
+        else:
+            ax.plot([], [], color=c, lw=2, label=gname)
+    for L in guides or []:
+        ax.axhline(L, color=GRID, lw=1.2, zorder=1)
+        note, prev = [], None
+        for gname, f in fits.items():
+            g = points[points["generation"] == gname]
+            if f.alpha <= 0 or not (g["loss"].min() - guide_tol <= L <= g["loss"].max() + guide_tol):
+                continue        # only quote generations whose finished runs bracket this loss (a small extrapolation allowed)
+            C = (f.A / (L - f.E)) ** (1 / f.alpha) if L > f.E else np.nan
+            if np.isfinite(C):
+                short = gname.split(" (")[0]
+                note.append(f"{short}: {C:.1e}" + (f" ({prev / C:.1f}x less)" if prev else ""))
+                prev = C
+        ax.annotate(f"loss {L:.2f}:  " + "   ".join(note), (xlo, L), xytext=(6, 4), textcoords="offset points",
+                    fontsize=7.5, color=INK2, ha="left")
+    ax.set_xscale("log"); ax.set_xlim(xlo, xhi)
+    ax.set_ylim(points["loss"].min() - 0.2, points["loss"].max() + 0.25)
+    ax.set_xlabel("Total training compute of the finished run (FLOPs, 6ND; active parameters for MoEs)")
+    ax.set_ylabel(ylabel); ax.set_title(title or "Finished runs by recipe generation: loss against total compute")
+    ax.legend(fontsize=8, loc="upper right")
+    return ax, fits
+
+
+def experiment_timeline(families: list[dict], ticks: pd.DataFrame | None = None, fig=None, xlim=(1e17, 1e25),
+                        ylim=(2.0, 3.7), title: str | None = None, inset_w: float = 0.16):
+    """All of a lab's scaling experiments on one time axis. Each family (a ladder, an IsoFLOP suite,
+    a fitted law) is a small inset with its own loss-vs-compute curve, drawn by `family["draw"](ax)`
+    on shared axis limits so shapes are comparable, placed above its date on a timeline that also
+    carries every other experiment as a tick. families: dicts with date, title, metric, draw.
+    ticks: DataFrame with date, label, stage."""
+    style()
+    import matplotlib.dates as mdates
+    fig = fig or plt.figure(figsize=(12, 7))
+    tl = fig.add_axes([0.05, 0.08, 0.92, 0.30])            # timeline
+    dates = [pd.Timestamp(f["date"]) for f in families]
+    all_dates = dates + ([pd.Timestamp(d) for d in ticks["date"]] if ticks is not None else [])
+    lo, hi = min(all_dates) - pd.Timedelta(days=45), max(all_dates) + pd.Timedelta(days=45)
+    tl.set_xlim(lo, hi); tl.set_ylim(0, 1)
+    tl.set_yticks([]); tl.grid(False); tl.spines["left"].set_visible(False)
+    loc = mdates.MonthLocator(bymonth=[1, 4, 7, 10]); tl.xaxis.set_major_locator(loc); tl.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
+    stage_c = {"pretraining": RUN_COLORS["ladder"], "midtraining": RUN_COLORS["midtrain"], "post-training/RL": RUN_COLORS["ablation"]}
+    if ticks is not None:
+        # every dated experiment as a tick, jittered in height when several share a month
+        month_count: dict = {}
+        for _, t in ticks.sort_values("date").iterrows():
+            d = pd.Timestamp(t["date"]); c = stage_c.get(t.get("stage", "pretraining"), MUTED)
+            k = (d.year, d.month); j = month_count.get(k, 0); month_count[k] = j + 1
+            y0 = 0.25 + 0.12 * j
+            tl.plot([d, d], [y0, y0 + 0.09], color=c, lw=2.2, solid_capstyle="butt", zorder=3)
+        from matplotlib.lines import Line2D
+        tl.legend(handles=[Line2D([], [], color=c, lw=2.2, label=f"{s} experiment") for s, c in stage_c.items()],
+                  loc="lower left", fontsize=7, ncol=3, frameon=False, bbox_to_anchor=(0, -0.02))
+    # insets on an even grid in date order (never overlapping), each connected to its date
+    n = len(families); span = (hi - lo).total_seconds()
+    xs = [(d - lo).total_seconds() / span for d in dates]
+    w = min(inset_w, (0.92 - 0.02 * (n - 1)) / n)
+    pos = [i * (w + 0.02) for i in range(n)]
+    import textwrap
+    from matplotlib.patches import ConnectionPatch
+    for f, x, x0 in zip(families, xs, pos):
+        ax = fig.add_axes([0.05 + x0, 0.52, w, 0.33])
+        f["draw"](ax)
+        ax.set_xscale("log"); ax.set_xlim(*xlim); ax.set_ylim(*ylim)
+        ax.set_title("\n".join(textwrap.wrap(f["title"], 24)), fontsize=7.5, loc="left"); ax.tick_params(labelsize=6)
+        ax.set_xlabel("FLOPs", fontsize=6.5); ax.set_ylabel(f.get("metric", "loss"), fontsize=6.5)
+        ax.xaxis.set_major_locator(mpl.ticker.LogLocator(numticks=5))
+        cx = 0.05 + x0 + w / 2; dx = 0.05 + x * 0.92
+        fig.add_artist(ConnectionPatch((cx, 0.52), (dx, 0.08 + 0.30 * 0.88), "figure fraction", "figure fraction",
+                                       color=AXIS, lw=1, zorder=1))
+        tl.scatter([dates[families.index(f)]], [0.88], s=40, c=INK2, zorder=4)
+    fig.suptitle(title or "Scaling experiments over time (insets on shared axes; metric per panel)", x=0.05, ha="left",
+                 fontsize=12, fontweight="bold", y=0.97)
+    return fig
+
+
 LAB_LABELS = {"meta": "Meta Llama", "deepseek": "DeepSeek", "ai2-olmo": "Ai2 OLMo", "marin": "Marin",
               "prime-intellect": "Prime Intellect", "eleutherai": "EleutherAI Pythia", "cerebras": "Cerebras-GPT"}
 LAB_ORDER = ["meta", "deepseek", "ai2-olmo", "marin", "prime-intellect", "eleutherai", "cerebras"]

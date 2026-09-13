@@ -223,6 +223,29 @@ MARIN_PRETRAINING = [
 MARIN_CURVE_KEYS = {"535B-A23B hero (running)": ["eval_dropless/paloma/c4_en-llama3/loss"]}
 
 
+# Start dates of the runs above (W&B run creation), for efficiency-over-time views.
+MARIN_START = {"ladder d512": "2024-12-16", "ladder d768": "2024-12-16", "ladder d1024": "2024-12-16", "ladder d1536": "2024-12-16",
+               "ladder d2048": "2024-12-16", "Marin 8B (Tootsie)": "2024-11-28", "13B trial": "2025-02-14", "24B trial": "2025-02-14",
+               "70B trial": "2025-01-31", "Marin 32B (Mantis)": "2025-04-24", "Delphi 1e21 (3.4B)": "2026-03-04",
+               "Delphi 1e22 (9.7B)": "2026-03-04", "Delphi 1e23 (25B)": "2026-03-04", "Snowball 67B-A2B": "2026-06-27",
+               "535B-A23B hero (running)": "2026-08-20"}
+
+
+def compute_to_reach(c: Curve, target: float, min_tokens: float = 2e10) -> float:
+    """Cumulative 6ND compute at which a run's loss first falls to `target`, interpolated; NaN if
+    it never does. Points before `min_tokens` are ignored so warm-up noise does not count."""
+    k = c.tokens >= min_tokens
+    x, y = c.flops[k], c.loss[k]
+    below = np.where(y <= target)[0]
+    if len(below) == 0:
+        return float("nan")
+    i = below[0]
+    if i == 0:
+        return float(x[0])
+    f = (y[i - 1] - target) / (y[i - 1] - y[i])
+    return float(np.exp(np.log(x[i - 1]) + f * (np.log(x[i]) - np.log(x[i - 1]))))
+
+
 def marin_pretraining_curves(include_2026: bool = True) -> list[Curve]:
     """Every Marin pretraining run with a public c4_en curve, as one curve each. The 32B trunk
     stops at the cooldown branch point (phase 3 ran 10k steps past it); the 13B curve starts at

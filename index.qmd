@@ -17,7 +17,7 @@ compute both exist for one model.
 
 | Lab | Total spend, incl. people | Pretraining scaling curves | Post-training / RL curves | Multiple generations | Broad capability benchmarks | Attribution: pre- vs post-training |
 |---|---|---|---|---|---|---|
-| **Marin** | ◐ FTEs and funders named; no dollars, no compute total | ● Delphi IsoFLOP grid with per-run data; MoE and LR laws; every run on public W&B | ○ SFT only | ● 8B, 32B, Snowball 67B-A2B, 535B-A23B | ◐ 19-task base suite; not on ECI | ◐ SFT compute separable; base and instruct scored on different suites |
+| **Marin** | ◐ FTEs and funders named; no dollars, no compute total | ● Delphi IsoFLOP grid with per-run data; MoE and LR laws; every run on public W&B | ◐ No RL; one public SFT data-scaling sweep (256 to 50k examples, 2026) | ● 8B, 32B, Snowball 67B-A2B, 535B-A23B | ◐ 19-task base suite; not on ECI | ◐ SFT compute separable; base and instruct scored on different suites |
 | **Ai2 OLMo** | ◐ Audited GPU-hours, 82% development; no dollars or staff count | ● OLMo ladder with fitted laws; W&B logs and checkpoints for finals | ○ RLVR hours reported, no curve | ● OLMo 1, 2, 3, 3.1, Hybrid | ● Broad suite; ECI not checked | ● Scores and GPU-hours per stage for one model |
 | **Meta Llama** | ◐ GPU-hours per release; whole-project hours for Llama 1 only | ◐ Llama 3 IsoFLOP ladder, figure-only | ○ Described, no curves or compute | ● Llama 1 to 4; base MMLU comparable 1 to 3 | ● Full suite; 3.1 405B on ECI | ◐ Base and instruct scores; no post-training compute |
 | **DeepSeek** | ◐ Dollar cost of the V3 and R1 final runs; experiments excluded | ◐ IsoFLOP suite and laws for DeepSeek LLM only; loss law figure-only | ◐ R1 step curves, figure-only | ● Seven releases, LLM to V4 | ● Broad suite; V2, V3, R1 on ECI | ● Base vs chat scores; post-training hours for V3 and R1 |
@@ -43,7 +43,9 @@ Evidence behind the grades, one line per lab (sources in the notes files):
   grid with per-run losses released; MoE and learning-rate laws are given in closed form; every
   8B and 32B phase and discarded run is on public W&B. The 8B instruct model is SFT-only (5.3B
   tokens against 12.7T), and base and instruct are scored on different suites, so there is no
-  clean post-training delta.
+  clean post-training delta. Post-training's one public curve is a 2026 SFT sweep (issue 3956):
+  the 8B and 32B bases fine-tuned on 256 to 50k OpenThoughts-4 math examples from eight teacher
+  models, every fine-tune scored on AIME, AMC, HMMT and MATH500 as W&B runs; no RL curve.
 - **Ai2 OLMo.** Morrison et al. 2026 audit the Olmo 3 pipeline at 8.34M GPU-hours with 82 percent
   in development, broken down by stage; no dollars, staff count or salaries. The OLMo ladder (16
   runs) publishes a fitted law per task; Olmo Hybrid adds a 7-size, 3-architecture ladder; the
