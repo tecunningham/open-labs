@@ -19,6 +19,10 @@ environment PyPI was denied by the network policy, so the pip step printed a war
 `pypi.org` and `files.pythonhosted.org` (and keep `github.com`) in the environment's network
 settings and the next session will have a working `quarto render`.
 
+Publishing: the book is deployed to GitHub Pages (https://tecunningham.github.io/open-labs/) by
+`.github/workflows/publish.yml` on each push to the default branch; the one-time repo setting is
+Settings -> Pages -> Source = "GitHub Actions". Check the Actions tab if the site is stale.
+
 Rendering note: `_quarto.yml` sets `freeze: auto`, which re-executes a chapter only when its
 `.qmd` changes. After editing the CSVs, delete `_freeze/` (or the chapter's subfolder) before
 `quarto render`, or the figures will show stale data.
