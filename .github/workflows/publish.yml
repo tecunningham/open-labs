@@ -4,7 +4,9 @@ name: Publish book
 
 on:
   push:
-    branches: [claude/elegant-mccarthy-zijd0e]   # the repo's default branch
+    # The default branch. The old name stays listed so the workflow still fires if
+    # this change lands before the branch is renamed to main.
+    branches: [main, claude/elegant-mccarthy-zijd0e]
   workflow_dispatch:
 
 permissions:
