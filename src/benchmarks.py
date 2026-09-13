@@ -18,6 +18,13 @@ LABS = {"gdm": "Google DeepMind", "openai": "OpenAI", "anthropic": "Anthropic"}
 # source check. Marks are appended to the cell.
 CONFIDENCE_MARK = {"reported": "", "snippet": "†", "memory": "‡"}
 
+# Row order in the wide tables: AI R&D suites, then research-replication and competition suites,
+# then agentic-coding benchmarks, then the lab's own threshold determination.
+FAMILY_ORDER = ["re_bench", "ai_rd_suite1", "ai_rd_suite2", "ml_rd_internal", "ai_rd_uplift",
+                "mle_bench", "paperbench", "openai_prs", "swe_lancer", "re_interviews", "agentic_tasks",
+                "openai_proof_qa", "swe_bench_verified", "swe_bench_pro", "terminal_bench",
+                "agentic_coding_internal", "other", "ml_rd_determination"]
+
 
 def load(lab: str | None = None) -> pd.DataFrame:
     df = pd.read_csv(DATA / "ai_rd_benchmarks.csv", dtype=str, keep_default_na=False)
@@ -55,8 +62,12 @@ def wide(df: pd.DataFrame, families: list[str] | None = None) -> pd.DataFrame:
         df = df[df["family"].isin(families)]
     df = df.copy()
     df["row"] = df.apply(lambda r: f"{r['benchmark']}: {r['subtask']}" if r["subtask"] else r["benchmark"], axis=1)
-    # Keep the benchmark order of first appearance in the file (the CSV is written in card order).
-    row_order = list(dict.fromkeys(df["row"]))
+    # Rows grouped by family (AI R&D suites first, coding benchmarks after, the lab's threshold
+    # determination last), then by first appearance in the file (the CSV is written in card order).
+    rank = {f: i for i, f in enumerate(FAMILY_ORDER)}
+    df["_fam"] = df["family"].map(lambda f: rank.get(f, len(FAMILY_ORDER) - 1))
+    df["_pos"] = range(len(df))
+    row_order = list(df.sort_values(["_fam", "_pos"]).drop_duplicates("row")["row"])
     cols = models(df)
     out = pd.DataFrame("", index=row_order, columns=cols)
     for (row, model), g in df.groupby(["row", "model"], sort=False):
