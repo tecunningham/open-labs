@@ -382,3 +382,79 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
     ax.set_title(title or f"{LABS.get(lab, lab)}: every bounded AI R&D evaluation, as percent of its ceiling", pad=78)
     fig.tight_layout(rect=(0, 0, 0.8, 1))
     return fig
+
+
+# ----------------------------------------------------------------------------- unbounded metrics vs human reference
+# Colour = how much human time the card says the reference point represents (ordered, so a ramp).
+HUMAN_TIME_ORDER = ["4 h", "4 to 8 h", "8 h", "40 h", "48 h", "not stated"]
+HUMAN_TIME_COLORS = {"4 h": "#9ac6ea", "4 to 8 h": "#5f9fdc", "8 h": "#2a78d6", "40 h": "#123f8c", "48 h": "#0b2a63",
+                     "not stated": "#898781"}
+
+
+def unbounded_overview(df: pd.DataFrame, title: str | None = None):
+    """Every unbounded metric with a card-stated human reference, across labs, on one log axis.
+
+    Each score is divided by its human reference (reference divided by score when lower is better),
+    so 1.0 is 'human reference reached' for every series. Colour is the human time the reference
+    represents; a black cross marks the last value of a series its lab's later cards drop."""
+    plots.style()
+    meta = series_meta()
+    fig, ax = plt.subplots(figsize=(10, 6.2))
+    rows = []
+    for lab, dl in df.groupby("lab"):
+        d = numeric_series(dl)
+        latest = dl["card_date"].max()
+        for s, g in d.groupby("series"):
+            m = meta_for(meta, lab, s)
+            if m is None or pd.notna(m["ceiling"]) or pd.isna(m["human_ref"]):
+                continue
+            pick = "idxmax" if m["direction"] == "lower" else "idxmin"
+            base = g.loc[getattr(g.groupby("model")["score_num"], pick)()].sort_values("card_date")
+            ratio = (m["human_ref"] / base["score_num"]) if m["direction"] == "lower" else (base["score_num"] / m["human_ref"])
+            rows.append((lab, s, base.assign(ratio=ratio.values), m, latest))
+    if not rows:
+        plots._empty(ax, "No unbounded series with a human reference"); return fig
+    ax.axhline(1, color=HUMAN_REF_COLOR, ls=(0, (1.5, 2.5)), lw=1.4, zorder=1)
+    ends = []
+    for lab, s, b, m, latest in sorted(rows, key=lambda r: r[2]["card_date"].min()):
+        c = HUMAN_TIME_COLORS.get(m["human_time"] or "not stated", HUMAN_TIME_COLORS["not stated"])
+        ax.plot(b["card_date"], b["ratio"], color=c, lw=1.6, zorder=2)
+        ax.scatter(b["card_date"], b["ratio"], s=18, c=c, edgecolors=plots.SURFACE, linewidths=0.8, zorder=3)
+        last = b.iloc[-1]
+        _retire_mark(ax, m, last["card_date"], last["ratio"], latest)
+        name = f"{LABS.get(lab, lab)}: {short_name(s)}" if len(df['lab'].unique()) > 1 else short_name(s)
+        ends.append((last["card_date"], float(last["ratio"]), name, c))
+    x0, x1 = min(e[0] for e in ends), max(b["card_date"].max() for _, _, b, _, _ in rows)
+    allr = pd.concat([b["ratio"] for _, _, b, _, _ in rows])
+    lo, hi = max(allr.min() / 1.8, 1e-3), allr.max() * 2.5
+    ax.set_yscale("log"); ax.set_ylim(lo, hi)
+    ax.annotate("human reference reached (1.0)", (x0, 1), xytext=(2, 3), textcoords="offset points", fontsize=7,
+                color=HUMAN_REF_COLOR)
+    # Right-hand labels in log space, nudged apart.
+    ends.sort(key=lambda e: e[1])
+    ys = [np.log10(e[1]) for e in ends]
+    gap = (np.log10(hi) - np.log10(lo)) * 0.032
+    for i in range(1, len(ys)):
+        if ys[i] - ys[i - 1] < gap:
+            ys[i] = ys[i - 1] + gap
+    over = ys[-1] - (np.log10(hi) - gap) if ys[-1] > np.log10(hi) - gap else 0
+    ys = [y - over for y in ys]
+    span = (x1 - x0).days or 1
+    xlab = x1 + pd.Timedelta(days=int(span * 0.07))
+    for (xd, y, name, c), yl in zip(ends, ys):
+        ax.plot([xd, xlab], [y, 10 ** yl], color=c, lw=0.6, alpha=0.6, zorder=1, clip_on=False)
+        ax.annotate(name, (xlab, 10 ** yl), xytext=(3, 0), textcoords="offset points", va="center", fontsize=6.8,
+                    color=plots.INK2, annotation_clip=False)
+    ax.set_xlim(x0 - pd.Timedelta(days=30), x1 + pd.Timedelta(days=45))
+    ax.set_ylabel("Score as a multiple of the card's human reference (log)")
+    ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator(bymonth=[1, 7]))
+    ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%b %Y"))
+    present = {m["human_time"] or "not stated" for _, _, _, m, _ in rows}
+    handles = [plt.Line2D([], [], color=HUMAN_TIME_COLORS[k], lw=2, label=f"reference = {k} of human effort" if k != "not stated" else "reference time not stated")
+               for k in HUMAN_TIME_ORDER if k in present]
+    handles.append(plt.Line2D([], [], color=plots.INK, marker="x", ls="none", markersize=7, markeredgewidth=1.4,
+                              label="last reported value; later cards drop it"))
+    ax.legend(handles=handles, loc="upper left", fontsize=8)
+    ax.set_title(title or "Unbounded AI R&D evaluations, as a multiple of the human reference the card states")
+    fig.tight_layout(rect=(0, 0, 0.78, 1))
+    return fig
