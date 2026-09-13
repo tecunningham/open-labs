@@ -12,7 +12,7 @@ ROOT = next(p for p in [Path.cwd(), *Path.cwd().parents] if (p / "_quarto.yml").
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src import fits, load, plots  # noqa: E402
+from src import fits, load, losses, plots  # noqa: E402
 
 
 def fmt_flops(x):

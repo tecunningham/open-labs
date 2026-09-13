@@ -10,6 +10,11 @@ tokens per step where the batch size was fixed, and the final-step value of ever
 `python -m src.fetch_wandb --apply` writes the final losses into `data/runs.csv` (`loss`,
 `loss_eval_set`, and a "Loss from W&B" tag in `notes`). `--summary` prints them.
 
+`src/losses.py` reads the CSVs back and converts W&B steps to cumulative training tokens with a
+per-run batch-size schedule (`MARIN_8B`, `MARIN_32B`), so a multi-phase run can be drawn as one
+trajectory (`plots.loss_trajectory`, used in the Marin chapter). Add a schedule and a phase spec
+there for any other lab whose phases are separate `runs.csv` rows.
+
 ## Access
 
 W&B's GraphQL endpoint serves public projects **anonymously**. In the 2026-09-13 session a

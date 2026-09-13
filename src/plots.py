@@ -226,6 +226,50 @@ def ladder_map(df: pd.DataFrame, ax=None, title: str | None = None):
     return ax
 
 
+def loss_trajectory(segs, ax=None, title: str | None = None, ylabel: str = "Loss",
+                    min_tokens: float = 0.0, label_ends: bool = True):
+    """A long run drawn as one trajectory: eval loss against cumulative training tokens, one line
+    per phase or side branch, coloured by run_type. `segs` are src.losses.Segment objects. Points
+    before `min_tokens` are dropped so the warm-up spike does not set the y-range."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 5))
+    seen = set(); drawn = False; xmax = 0.0
+    for s in segs:
+        keep = s.tokens >= min_tokens
+        if keep.sum() == 0:
+            continue
+        drawn = True
+        x, y = s.tokens[keep], s.loss[keep]
+        trunk = s.run_type in ("final", "midtrain")
+        ax.plot(x, y, color=RUN_COLORS[s.run_type], lw=2.2 if trunk else 1.6, alpha=1 if trunk else 0.9,
+                label=RUN_LABELS[s.run_type] if s.run_type not in seen else None, zorder=3 if trunk else 2,
+                solid_capstyle="round")
+        seen.add(s.run_type)
+        if s.released:
+            ax.scatter([x[-1]], [y[-1]], s=240, marker="*", c=RUN_COLORS["final"], edgecolors=SURFACE,
+                       linewidths=2, zorder=5, label="Released checkpoint")
+        if label_ends and s.label:
+            box = dict(boxstyle="round,pad=0.15", facecolor=SURFACE, edgecolor="none", alpha=0.85)
+            if trunk:   # phase name above the middle of the phase, on the median loss so spikes do not move it
+                mid = np.searchsorted(x, (x[0] + x[-1]) / 2)
+                ax.annotate(s.label, (x[min(mid, len(x) - 1)], float(np.median(y))), xytext=(0, 9),
+                            textcoords="offset points", fontsize=8, color=INK2, ha="center", va="bottom", bbox=box)
+            else:       # side branch: name just past its last point, above the line
+                ax.annotate(s.label, (x[-1], y[-1]), xytext=(5, 6), textcoords="offset points", fontsize=8,
+                            color=MUTED, ha="left", va="bottom", bbox=box)
+        xmax = max(xmax, float(x[-1]))
+    if not drawn:
+        _empty(ax); return ax
+    import matplotlib.ticker as mtick
+    ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda v, _: f"{v / 1e12:g}T"))
+    ax.set_xlabel("Cumulative training tokens"); ax.set_ylabel(ylabel)
+    ax.set_title(title or "Loss over the whole run (phases and side branches)")
+    ax.set_xlim(0, xmax * 1.12)
+    ax.legend(loc="upper right")
+    return ax
+
+
 def stated_split(parts: dict[str, float], ax=None, title: str | None = None, unit: str = "GPU-hours"):
     """The lab's own stated split (e.g. development vs final GPU-hours) as one stacked bar."""
     style()

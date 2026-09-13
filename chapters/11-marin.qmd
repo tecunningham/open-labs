@@ -40,6 +40,74 @@ display(Markdown(f"Non-final share of logged FLOPs: **{load.experiment_share(df)
                  f"**{df.loc[df['run_type']=='aborted','flops'].sum()/df['flops'].sum():.0%}**."))
 ```
 
+## The final runs as trajectories
+
+`runs.csv` gives each phase of the 8B and 32B runs its own tokens and FLOPs. That is right for
+the compute split and wrong for the loss: the loss at the end of Phoenix reflects every token
+since step 0, not the 6.3T on that row. The figure below puts the W&B curves on the honest axis,
+cumulative training tokens (the trainer's global step times the batch schedule, which reproduces
+the model card's phase totals to within 0.03T), and draws each phase, cooldown and abandoned side
+branch as one piece of one trajectory. The metric is the Paloma c4_en eval loss throughout;
+train loss moves with the data mix and is not comparable across phases. The first 0.3T tokens
+are cut so the warm-up does not set the scale.
+
+```{python}
+s8, s32 = losses.marin_8b(), losses.marin_32b()
+fig, axes = plt.subplots(2, 1, figsize=(8, 9))
+plots.loss_trajectory(s8, ax=axes[0], title="Marin 8B: c4_en eval loss over 12.7T tokens",
+                      ylabel="Paloma c4_en eval loss (nats/token)", min_tokens=3e11)
+plots.loss_trajectory(s32, ax=axes[1], title="Marin 32B: c4_en eval loss over 6.4T tokens",
+                      ylabel="Paloma c4_en eval loss (nats/token)", min_tokens=2e11)
+fig.tight_layout(); plt.show()
+display(Markdown("Start and end of every drawn segment (start = first eval point after the cut):"))
+display(pd.concat([losses.phase_table(s8, 3e11), losses.phase_table(s32, 2e11)], ignore_index=True).round(3))
+```
+
+Four things are visible here that no per-row number shows.
+
+**Stable phases are nearly flat on this metric.** Kestrel's constant-learning-rate stretch from
+2T to 2.77T moved the loss by under 0.01. Phoenix spent 5.5T tokens, 43 percent of the whole
+run, between 2.52 and 2.50. Phase 3 of the 32B bought 0.02 over 3T tokens. Under a
+warmup-stable-decay schedule the stable phase is banking capability that only shows up in the
+decay, so most of the tokens in both runs look wasted on a loss-versus-tokens plot and are not.
+
+**The cooldowns do the visible work.** Starling, the second 8B cooldown, is 1.3T tokens or 10
+percent of the run, and took the loss from 2.49 to 2.35: a larger drop than the entire 9T
+between 2T and 11T (0.06). The 32B's Mantis cooldown bought 0.07 in 1.07T tokens against
+phase 3's 0.02 in 3T. A final-run loss is therefore as much a measurement of cooldown depth as
+of scale, which matters when the cross-lab chapter compares final losses across labs.
+
+**The first cooldown bought nothing on c4_en.** Jellyfish ended at 2.605, above the 2.585 where
+Ocelot started, while its benchmark gains were real (MMLU 65.3, the reason it was kept). The
+70/30 high-quality mix moves the model away from web text, and c4_en is web text. The three
+short cooldown branches off Jellyfish (dessert, Raccoon, Spoonbill) all land within 0.02 of it.
+Their value was diagnostic: Raccoon and Spoonbill isolated the `lm_head` norm explosion that
+led to z-loss in Starling.
+
+**Restarts and rescues leave marks.** Every phase boundary shows a transient: the batch and
+learning-rate change into Ocelot, the rewarm into Phoenix, a spike at 5.4T. The 32B's phase 1
+spikes are visible even in the sparse eval curve, and its two rescue attempts sit on top of the
+trunk and go nowhere (the Muon swap ends 0.045 above where it began). Bison and Mantis ran the
+same 1.07T tokens; Mantis sits 0.02 below Bison at matched tokens, so the permutation fix and
+MegaMath moved the loss, not only the contaminated GSM8K score.
+
+The trajectory also corrects a comparison made in earlier drafts of this chapter, which read the
+abandoned 13B, 24B and 70B trials' final losses against the finished 8B's 2.35. Those trials
+never had a cooldown, so that reading is unfair to them. At matched tokens, with no cooldown on
+either side, the size advantage was real and grew with size:
+
+```{python}
+dm = load.runs("marin")
+trials = dm[dm["run_id"].isin(["exp860 Tootsie 13B", "exp861 Tootsie 24B", "exp750 Tootsie 70B"])].copy()
+trials["8B trunk loss at same tokens"] = losses.loss_at(s8, trials["tokens"])
+trials["gap"] = trials["loss"] - trials["8B trunk loss at same tokens"]
+trials["tokens_T"] = trials["tokens"] / 1e12
+trials["params"] = trials["params_total"].map(lambda p: f"{p / 1e9:.0f}B")
+display(trials[["run_id", "params", "tokens_T", "loss", "8B trunk loss at same tokens", "gap"]].round(3))
+```
+
+What Marin gave up in April 2025 was that gap; the losses on the rows understate it.
+
 ## The mixture-of-experts law and its held-out point
 
 Marin fitted `loss = 1.6 + 95.18 · C^-0.0941` on a 1e18 to 1e20 IsoFLOP sweep and then trained a
@@ -66,13 +134,13 @@ display(Markdown(f"Log residual at 1e21: **{np.log(2.599/2.606):+.4f}**. Elastic
 Losses come from the public `marin-community/marin` W&B project (`data/losses/marin/`; the
 metric is the Paloma c4_en eval loss, the one the retrospectives plot, in nats per token with
 the Llama 3 tokenizer). Eighteen runs are covered: every 8B phase and cooldown, the 13B, 24B and
-70B trials, and the 32B phases, rescues and cooldowns. The panel draws them without a fitted law:
-most rows with a loss are continuation phases whose `flops` is that phase's compute, not the
-cumulative compute the loss reflects, and the cooldown losses are on a different learning-rate
-footing from the pretraining phases. Read the stars (released 8B and 32B) against the abandoned
-trials: the 70B trial at 277k steps sat at 2.42 and the 13B at 2.50, against 2.35 for the
-finished 8B and 2.20 for the finished 32B. Delphi's 81-run grid is one row here; its
-per-run sizes are in the repository's hard-coded suite and can be expanded later.
+70B trials, and the 32B phases, rescues and cooldowns. The standard panel below draws them
+without a fitted law, for the reason the trajectory figure makes visible: most rows with a loss
+are continuation phases whose `flops` is that phase's compute, not the cumulative compute the
+loss reflects, and the cooldown losses are on a different learning-rate footing from the
+pretraining phases. Read the abandoned trials against the 8B at matched tokens (table above),
+not against the finished stars. Delphi's 81-run grid is one row here; its per-run sizes are in
+the repository's hard-coded suite and can be expanded later.
 
 One clean experiment series does exist: a five-width ladder from December 2024
 (`tootsie-scaling-*`, hidden 512 to 2048 at 16 layers, each 210B tokens of DCLM-baseline, so 90
@@ -150,5 +218,5 @@ daily canary. Ideas for the MoE are screened at d512 to d1280 against the fitted
 
 **Not reconstructable from here.** Delphi's fitted exponent and the 535B
 ladder forecast (both in blocked pages or reports), the compute of the long tail of small
-ablations, any dollar figure (compute was donated by Google TRC and the Huang Foundation), and the
+ablations, any dollar figure (compute was donated by Google TRC and the Huang Foundation), and
 the reasons the 13B, 24B and 70B trials were abandoned (their W&B runs simply stop in April 2025 at 2.3T, 2.4T and 1.5T tokens).

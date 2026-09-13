@@ -1,50 +1,52 @@
 # Next session
 
-State as of 2026-09-13 (branch `claude/wandb-accessibility-check-kfemxy`):
+State as of 2026-09-13 (default branch `main`; work branch `claude/festive-dirac-j624jg`, kept
+level with `main`):
 
-- **Done:** final-run loss curves for OLMo 2/3, Pythia and Marin pulled from W&B into
-  `data/losses/` and written into `data/runs.csv` (41 curves, 43 rows). `src/fetch_wandb.py`
-  talks to W&B's GraphQL API **anonymously** with `requests`; a personal `WANDB_API_KEY` was
-  refused for every public project, and PyPI was blocked, so neither the key nor the `wandb`
-  package is needed. Chapters 10, 11, 12 and 90 were updated for the new numbers; `data/losses/README.md`
-  has the metric choices and run mapping.
-- **Rendered:** after the environment was switched to full network access, `quarto render`
-  completed for all nine chapters (Quarto 1.7.32, pandas 3.0, scipy 1.17). The Pythia panel shows
-  a fitted curve, the Marin ladder panel shows the five ladder points and the two released models,
-  and the OLMo and Marin standard panels show final points without a law.
+- **Published.** The book is live at https://tecunningham.github.io/open-labs/. The default
+  branch was renamed to `main`; `.github/workflows/publish.yml` renders and deploys on every push
+  to it, and Settings -> Pages -> Source is "GitHub Actions" (the first deploy 404'd because it was
+  still "Deploy from a branch"). Check the Actions tab if the site looks stale; a run takes about
+  two minutes.
+- **Losses.** Final-run loss curves for OLMo 2/3, Pythia and Marin are in `data/losses/` and
+  `data/runs.csv` (see `data/losses/README.md`). `src/fetch_wandb.py` talks to W&B's GraphQL API
+  anonymously with `requests`; no key or `wandb` package is needed, and a personal key is refused
+  for public projects.
+- **Marin trajectories.** `src/losses.py` converts W&B steps to cumulative tokens with the batch
+  schedule (8B: 1024 -> 3072 -> 4096 sequences of 4096 at steps 0 / 660,600 / 1,320,000; 32B:
+  8192 throughout), reproducing the model cards' phase totals. `plots.loss_trajectory` draws the
+  phases and side branches as one curve; the Marin chapter has the figure, a per-phase table and
+  a matched-token comparison of the abandoned 13B/24B/70B trials against the 8B trunk. The Dec
+  2024 `tootsie-scaling-*` ladder is in `runs.csv` with losses and fitted in the chapter.
+- **Rendered.** `quarto render` passes for all chapters (Quarto 1.7.32, pandas 3.0, scipy 1.17).
 
 Environment setup: `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`) installs
-Quarto from GitHub and `requirements.txt` from PyPI at session start. In the 2026-09-13
-environment PyPI was denied by the network policy, so the pip step printed a warning; allow
-`pypi.org` and `files.pythonhosted.org` (and keep `github.com`) in the environment's network
-settings and the next session will have a working `quarto render`.
-
-Publishing: the book is deployed to GitHub Pages (https://tecunningham.github.io/open-labs/) by
-`.github/workflows/publish.yml` on each push to the default branch; the one-time repo setting is
-Settings -> Pages -> Source = "GitHub Actions". Check the Actions tab if the site is stale.
+Quarto from GitHub and `requirements.txt` from PyPI at session start; both worked in the
+2026-09-13 environment.
 
 Rendering note: `_quarto.yml` sets `freeze: auto`, which re-executes a chapter only when its
 `.qmd` changes. After editing the CSVs, delete `_freeze/` (or the chapter's subfolder) before
-`quarto render`, or the figures will show stale data.
+`quarto render`, or the figures will show stale data. The CI render starts clean every time.
 
-Remaining steps, in order:
+Remaining steps, in rough order:
 
-1. (done) `quarto render` passes; eyeball `_book/` after any data change.
-2. Still-missing losses: OLMo 2 32B is on comet.ml (`ai2/olmo-2-0325-32b`, REST API needs a
-   free Comet key); the OLMo ladder W&B project is private, so ladder losses would need the
-   `allenai/OLMo-ladder` checkpoints evaluated directly; Marin's Dec 2024 `tootsie-scaling-*`
-   ladder (five sizes, in `marin-community/marin`) is public and could be added as ladder rows.
-3. Marin phase rows carry per-phase `tokens`/`flops`; a loss-vs-cumulative-tokens figure built
-   from the CSVs in `data/losses/marin/` would be more honest than the compute axis for them.
-4. Verification pass done 2026-09-13 for all six notes files (item-by-item outcomes with
-   sources are in each file). Refuted and corrected: DeepSeek V3/V3.2 author counts (199, 263),
-   Olmo 3 base MMLU (66.9 / 76.2) and Think-32B MATH/MMLU (96.1 / 85.4), Delphi grid size (81),
-   Snowball hardware (TPU v4-2048), 535B device count (704 GB200), OpenDiLoCo 1.1B run (44k
-   steps), INTELLECT-3.1 (public model exists). Still open: Cerebras paper-vs-model-card Pile
-   loss discrepancy (card returns 401 via proxy); OLMo 2 7B/13B GPU-hours; Prime Intellect
-   headcount and funding; Marin 8B phase dates (private W&B project); the INTELLECT-3 SFT token
-   conflict (217B in Table 1 vs ~50B from steps x tokens/step).
-5. Hosts still blocked from this environment: raw.githubusercontent.com, api.github.com, PyPI,
-   ai.meta.com, primeintellect.ai, cerebras.ai, x.com, web.archive.org, marin.readthedocs.io,
-   storage.googleapis.com. `git clone` from github.com and huggingface.co API/raw work.
-6. Never commit a key; none is needed for the fetcher.
+1. **DeepSeek** is still "in progress" in the README; check what chapter 14 lacks and close it out.
+2. **Next lab chapter.** The README's proposed order had SmolLM3 and LLM360 K2 before DeepSeek and
+   Llama; LLM360 K2 (W&B logs, 140 checkpoints, training-incident record) fits the fetcher and
+   the new trajectory figure directly.
+3. **Still-missing losses:** OLMo 2 32B is on comet.ml (`ai2/olmo-2-0325-32b`; the REST API needs
+   a free Comet key); the OLMo ladder W&B project is private, so ladder losses would need the
+   `allenai/OLMo-ladder` checkpoints evaluated directly.
+4. **Trajectories for OLMo.** The OLMo 2/3 stage rows have the same per-phase problem as Marin;
+   a schedule in `src/losses.py` (tokens per step are in the `.meta.json` files) would give the
+   OLMo chapter the same figure.
+5. Open verification items (details in `data/notes/*.md`): Cerebras paper-vs-model-card Pile loss
+   discrepancy; OLMo 2 7B/13B GPU-hours; Prime Intellect headcount and funding; Marin 8B phase
+   dates (private W&B project); the INTELLECT-3 SFT token conflict (217B in Table 1 vs ~50B from
+   steps x tokens/step).
+6. Hosts that were blocked from the collection environment: raw.githubusercontent.com,
+   api.github.com, ai.meta.com, primeintellect.ai, cerebras.ai, x.com, web.archive.org,
+   marin.readthedocs.io, storage.googleapis.com, and github.io (so the published site cannot be
+   fetched from inside a session). `git clone` from github.com, PyPI, W&B and the huggingface.co
+   API/raw work.
+7. Never commit a key; none is needed for the fetcher.

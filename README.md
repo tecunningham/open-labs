@@ -1,14 +1,17 @@
 # Open Labs: scaling curves, experiments, and final runs
 
-**Status (2026-09-13):** scope agreed; Quarto book scaffolded and rendering; data and chapters in
-for Marin, Ai2 OLMo, Meta Llama, Prime Intellect (RL pilot), and the Pythia / Cerebras-GPT
-reference suites; DeepSeek in progress. Render with `quarto render`; merge new data with
-`python -m src.merge <dir>`. Agent working notes with per-claim verification lists are in
-`data/notes/`.
+**Status (2026-09-13):** scope agreed; Quarto book scaffolded, rendering and published; data and
+chapters in for Marin, Ai2 OLMo, Meta Llama, Prime Intellect (RL pilot), and the Pythia /
+Cerebras-GPT reference suites; DeepSeek in progress. The Marin chapter now draws the 8B and 32B
+runs as loss-versus-cumulative-token trajectories from the W&B curves (`src/losses.py`). Render
+with `quarto render`; merge new data with `python -m src.merge <dir>`. Agent working notes with
+per-claim verification lists are in `data/notes/`.
 
 **Published book.** https://tecunningham.github.io/open-labs/ , rebuilt by
-`.github/workflows/publish.yml` on every push to the default branch (renders with Quarto 1.7.32 and
-`requirements.txt`, then deploys to GitHub Pages). The repo lives under github.com/tecunningham; Pages on a private personal repo needs GitHub Pro, and the URL is public regardless of repo visibility.
+`.github/workflows/publish.yml` on every push to `main` (renders with Quarto 1.7.32 and
+`requirements.txt`, then deploys to GitHub Pages; Settings -> Pages -> Source is "GitHub Actions").
+The repo lives under github.com/tecunningham; Pages on a private personal repo needs GitHub Pro,
+and the URL is public regardless of repo visibility.
 
 **Environment caveat.** The collection environment's network policy blocked arxiv.org,
 huggingface.co, most lab blogs, W&B and Semantic Scholar. Paper numbers were taken from GitHub
