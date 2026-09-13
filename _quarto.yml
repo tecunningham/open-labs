@@ -15,6 +15,7 @@ book:
         - chapters/10-reference-suites.qmd
         - chapters/11-marin.qmd
         - chapters/12-olmo.qmd
+        - chapters/13-llama.qmd
     - part: "Part II: Post-training and RL scaling"
       chapters:
         - chapters/20-prime-intellect.qmd

@@ -1,0 +1,113 @@
+# Meta Llama
+
+Meta is the closed-weights-process, open-weights-model case: the Llama 3 paper describes a
+scaling ladder, data-mix experiments and annealing ablations in detail but never counts them,
+and only Llama 1 discloses total development compute. Working notes with sources are in
+`data/notes/llama.md`; 39 verbatim quantitative statements are in the claims table.
+
+```{python}
+#| echo: false
+from src.chapter import *  # noqa
+import numpy as np
+```
+
+## The one disclosed development budget: Llama 1
+
+The LLaMA 1 paper estimates the whole project at 2,048 A100s for about five months (2,638 MWh).
+At the paper's own throughput that is roughly 6.0M A100-hours, against 1.77M for the four
+released models. Around 70 percent of Llama 1's compute went to runs that did not ship. Llama 2,
+3 and 4 say nothing comparable.
+
+```{python}
+fin = load.runs("meta", "llama-1"); fin = fin[fin["is_final"]]["gpu_hours"].sum()
+fig, ax = plt.subplots(figsize=(8, 1.8))
+plots.stated_split({"Four released models": fin, "Everything else (derived)": 6.0e6 - fin}, ax=ax, unit="A100-hours",
+                   title="LLaMA 1: released models vs the rest of the stated 2048 A100 x 5 months")
+plt.show()
+```
+
+## Llama 3's ladder, as far as it is published
+
+Models of 40M to 16B parameters at budgets from 6e18 to 1e22 FLOPs gave the compute-optimal
+relation `N_opt(C) = A · C^α` with α = 0.53 and A = 0.29, which predicted 402B parameters and
+16.55T tokens at the 3.8e25 budget; Meta chose 405B and 15.6T. The run count is never stated.
+The two-stage benchmark prediction (normalised log-likelihood from compute, then a sigmoid to
+ARC Challenge accuracy) is figure-only.
+
+```{python}
+A, alpha = 0.29, 0.53
+C = np.geomspace(6e18, 5e25, 200); D = A * C ** alpha
+fig, ax = plt.subplots(figsize=(8, 4.5))
+ax.plot(C[C <= 1e22], D[C <= 1e22], color=plots.INK2, lw=2, label="Fit range (6e18 to 1e22 FLOPs)")
+ax.plot(C[C >= 1e22], D[C >= 1e22], color=plots.INK2, lw=2, ls=(0, (4, 3)), label="Extrapolation")
+ax.scatter([3.8e25], [16.55e12], s=90, c=plots.MUTED, edgecolors=plots.SURFACE, linewidths=1.5, zorder=3, label="Predicted optimum: 402B / 16.55T")
+ax.scatter([3.8e25], [15.6e12], s=220, marker="*", c=plots.RUN_COLORS["final"], edgecolors=plots.SURFACE, linewidths=2, zorder=4, label="Llama 3 405B as trained: 15.6T")
+ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlabel("Training compute (FLOPs)"); ax.set_ylabel("Compute-optimal training tokens")
+ax.set_title("Llama 3 IsoFLOP law: optimal tokens vs compute, extrapolated 3,800x"); ax.legend(loc="lower right"); plt.show()
+```
+
+## Across releases: released models, one benchmark
+
+With no experiment runs sized, the cross-release picture is the released models only.
+Five-shot MMLU on the pre-trained base against 6ND compute, Llama 1 to Llama 3.
+
+```{python}
+d = load.runs("meta"); d = d[d["is_final"] & d["benchmark_name"].str.contains("MMLU", na=False)].copy()
+groups = {p: d[d["project"] == p] for p in ["llama-1", "llama-2", "llama-3"] if (d["project"] == p).any()}
+fig, ax = plt.subplots(figsize=(8, 5))
+plots.overlay_projects(groups, {k: None for k in groups}, y="benchmark_value", ax=ax, title="Llama 1 to 3: MMLU (5-shot, base) vs compute")
+ax.set_ylabel("MMLU 5-shot (pre-trained)")
+for _, r in d.iterrows():
+    ax.annotate(r["run_id"].replace("-pretrain", ""), (r["flops"], r["benchmark_value"]), xytext=(6, -10), textcoords="offset points", fontsize=8, color=plots.INK2)
+plt.show()
+```
+
+## Run sizes, compute split, timeline
+
+```{python}
+df = load.runs("meta")
+df = df[~df["run_id"].str.contains("total-development")].copy()
+df, fit, res = standard_figures("meta") if False else (df, None, None)
+fig, ax = plt.subplots(figsize=(8, 5)); plots.ladder_map(df, ax=ax); plt.show()
+fig, ax = plt.subplots(figsize=(8, 1.8)); plots.compute_split(df, ax=ax, value="gpu_hours", title="Meta: reported GPU-hours by run type (finals only are reported)"); plt.show()
+```
+
+## Published scaling experiments
+
+```{python}
+experiments_table("meta");
+```
+
+## What the lab says about itself
+
+```{python}
+claims_table("meta");
+```
+
+## Key numbers
+
+```{python}
+display(key_numbers(df))
+```
+
+## Narrative
+
+**Llama 3 (2024).** 405B on 15.6T tokens, 3.8e25 FLOPs, 30.84M H100-hours for the flagship and
+39.3M for the herd (from the model card, not the paper). MFU 38 to 43 percent; a 54-day snapshot
+logged 466 interruptions with over 90 percent effective training time. Development work the paper
+describes without counting: the IsoFLOP ladder, "several small models" per candidate data mix,
+annealing 40B tokens on a half-trained 8B as a data-quality probe, and code and multilingual
+expert branches continued from the main run. The ladder's share of the flagship budget is a
+guess in the data (about 0.2 percent) and is flagged as such.
+
+**Llama 2 (2023).** Four sizes on 2T tokens, 3.31M A100-hours including the unreleased 34B,
+trained January to July 2023. No ladder or pretraining ablation is described.
+
+**Llama 4 (2025).** Scout and Maverick (17B active) at 5.0M and 2.38M H100-hours; Behemoth
+(288B active, about 2T total) on 32K GPUs at 390 TFLOPs per GPU in FP8, unreleased.
+
+**Not reconstructable.** Any experiment run count or compute for Llama 2 to 4; the two-stage
+prediction's coefficients; the ladder's per-run sizes (read off a figure). Primary sources
+(arXiv, Meta AI, Hugging Face) were blocked from this environment; text was checked against
+GitHub-hosted conversions of the papers, and post-trained benchmark tables were omitted where
+the conversion garbled them.
