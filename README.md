@@ -6,6 +6,10 @@ reference suites; DeepSeek in progress. Render with `quarto render`; merge new d
 `python -m src.merge <dir>`. Agent working notes with per-claim verification lists are in
 `data/notes/`.
 
+**Published book.** https://elasticity-ai.github.io/open-labs/ , rebuilt by
+`.github/workflows/publish.yml` on every push to the default branch (renders with Quarto 1.7.32 and
+`requirements.txt`, then deploys to GitHub Pages). The URL is public even though the repo is private.
+
 **Environment caveat.** The collection environment's network policy blocked arxiv.org,
 huggingface.co, most lab blogs, W&B and Semantic Scholar. Paper numbers were taken from GitHub
 mirrors, tech-report PDFs on other hosts, and search snippets, and every such row is flagged in
