@@ -270,6 +270,84 @@ def loss_trajectory(segs, ax=None, title: str | None = None, ylabel: str = "Loss
     return ax
 
 
+def loss_curves(curves, x: str = "flops", ax=None, title: str | None = None, ylabel: str = "Loss",
+                min_tokens: float = 0.0, label_ends: bool = True):
+    """Several whole pretraining runs on one axis: eval loss against cumulative tokens (`x="tokens"`)
+    or cumulative compute 6ND (`x="flops"`), log x. `curves` are src.losses.Curve objects. Final
+    runs solid in project colours, abandoned trials dashed, ladder runs thin and grey."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 5))
+    slot = 0
+    for c in curves:
+        keep = c.tokens >= min_tokens
+        if keep.sum() < 2:
+            continue
+        xv = (c.flops if x == "flops" else c.tokens)[keep]; yv = c.loss[keep]
+        if c.kind == "ladder":
+            color, lw, ls, z = MUTED, 1.2, "-", 2
+        elif c.kind == "aborted":
+            color, lw, ls, z = RUN_COLORS["aborted"], 1.6, (0, (4, 2)), 3
+            color = PROJECT_SLOTS[(slot := slot + 1) % len(PROJECT_SLOTS)]
+        else:
+            color, lw, ls, z = PROJECT_SLOTS[(slot := slot + 1) % len(PROJECT_SLOTS)], 2.2, "-", 4
+        ax.plot(xv, yv, color=color, lw=lw, ls=ls, zorder=z, solid_capstyle="round")
+        if label_ends:
+            ax.annotate(c.name, (xv[-1], yv[-1]), xytext=(5, 0), textcoords="offset points", fontsize=8,
+                        color=color if c.kind != "ladder" else INK2, ha="left", va="center")
+    ax.set_xscale("log")
+    ax.set_xlabel("Cumulative training compute (FLOPs, 6ND)" if x == "flops" else "Cumulative training tokens")
+    ax.set_ylabel(ylabel)
+    ax.set_title(title or ("Pretraining runs on one compute axis" if x == "flops" else "Pretraining runs by tokens"))
+    ax.margins(x=0.18)
+    from matplotlib.lines import Line2D
+    handles = [Line2D([], [], color=INK2, lw=2.2, label="Released run (phases stitched)"),
+               Line2D([], [], color=INK2, lw=1.6, ls=(0, (4, 2)), label="Abandoned trial"),
+               Line2D([], [], color=MUTED, lw=1.2, label="Ladder run (210B tokens each)")]
+    ax.legend(handles=handles, loc="upper right", fontsize=8)
+    return ax
+
+
+def capability_timeline(points: pd.DataFrame, ax=None, title: str | None = None, ylabel: str = "Score",
+                        ref_lines: dict[str, float] | None = None, max_radius_pt: float = 22.0,
+                        min_radius_pt: float = 3.0, fmax: float | None = None, notes: str | None = None):
+    """Released or evaluated checkpoints over time: x = date, y = a benchmark score, circle area
+    proportional to cumulative pretraining compute (`flops`), with a ring for post-training compute
+    (`post_flops`) where known. Columns: date, label, value, flops, post_flops (optional),
+    kind ('final', 'midtrain', 'aborted', ...). Reference lines mark other labs' models."""
+    style()
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 4.5))
+    d = points.dropna(subset=["date", "value"]).copy()
+    fmax = fmax or float(d["flops"].max())
+    s_of = lambda f: max(np.pi * max_radius_pt ** 2 * f / fmax, np.pi * min_radius_pt ** 2)
+    r_of = lambda f: np.sqrt(s_of(f) / np.pi)
+    for _, r in d.iterrows():
+        kind = r.get("kind", "final")
+        ax.scatter([r["date"]], [r["value"]], s=s_of(r["flops"]), c=RUN_COLORS.get(kind, RUN_COLORS["final"]),
+                   alpha=0.6, edgecolors=SURFACE, linewidths=1, zorder=3)
+        post = r.get("post_flops", np.nan)
+        if pd.notna(post) and post > 0:
+            # Ring whose extra area is the post-training compute, at the same scale as the disk. It is
+            # drawn only when it would be distinguishable from the disk (at least 2% wider).
+            disk = s_of(r["flops"]); outer = disk + np.pi * max_radius_pt ** 2 * post / fmax
+            if outer / disk >= 1.04:
+                ax.scatter([r["date"]], [r["value"]], s=outer, facecolors="none",
+                           edgecolors=RUN_COLORS["ladder"], linewidths=1.5, zorder=2)
+        ax.annotate(r["label"], (r["date"], r["value"]), xytext=(r_of(r["flops"]) + 4, 0), textcoords="offset points",
+                    fontsize=8, color=INK2, ha="left", va="center")
+    for name, v in (ref_lines or {}).items():
+        ax.axhline(v, color=GRID, lw=1.5, zorder=1)
+        ax.annotate(name, (ax.get_xlim()[0], v), xytext=(4, 3), textcoords="offset points", fontsize=7.5, color=MUTED)
+    import matplotlib.dates as mdates
+    loc = mdates.AutoDateLocator(); ax.xaxis.set_major_locator(loc); ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
+    ax.set_ylabel(ylabel); ax.set_title(title or "Capability over time (circle area = pretraining compute)")
+    ax.margins(x=0.25, y=0.3)
+    if notes:
+        ax.text(0.99, 0.02, notes, transform=ax.transAxes, fontsize=7.5, color=MUTED, ha="right", va="bottom")
+    return ax
+
+
 LAB_LABELS = {"meta": "Meta Llama", "deepseek": "DeepSeek", "ai2-olmo": "Ai2 OLMo", "marin": "Marin",
               "prime-intellect": "Prime Intellect", "eleutherai": "EleutherAI Pythia", "cerebras": "Cerebras-GPT"}
 LAB_ORDER = ["meta", "deepseek", "ai2-olmo", "marin", "prime-intellect", "eleutherai", "cerebras"]

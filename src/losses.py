@@ -153,3 +153,66 @@ def marin_8b() -> list[Segment]:
 
 def marin_32b() -> list[Segment]:
     return segments("marin", MARIN_32B_SPEC, MARIN_32B, MARIN_KEY, released=MARIN_32B_RELEASED)
+
+
+# --------------------------------------------------------------------------- whole runs on one axis
+
+@dataclass
+class Curve:
+    """One pretraining run (possibly several phases stitched together) as a single loss curve,
+    with the parameter count needed to put it on a compute axis (6 * params * tokens)."""
+    name: str
+    kind: str          # 'ladder', 'final', 'aborted'
+    params: float
+    tokens: np.ndarray
+    loss: np.ndarray
+
+    @property
+    def flops(self) -> np.ndarray:
+        return 6.0 * self.params * self.tokens
+
+
+def stitch(lab: str, run_ids: list[str], schedule: Schedule, key: str) -> tuple[np.ndarray, np.ndarray]:
+    """Concatenate several runs.csv rows (phases of one run) into one token-sorted curve."""
+    xs, ys = [], []
+    for rid in run_ids:
+        c = curve(lab, rid).dropna(subset=[key]).sort_values("_step")
+        xs.append(cumulative_tokens(c["_step"], schedule)); ys.append(c[key].to_numpy())
+    x = np.concatenate(xs); y = np.concatenate(ys)
+    o = np.argsort(x, kind="stable")
+    return x[o], y[o]
+
+
+# The abandoned Tootsie trials ramped their batch size and the exact switch steps are not
+# public, so their step -> token conversion uses the average tokens per step implied by the W&B
+# `throughput/total_tokens` counter at the last logged step (data/notes/marin.md, item 9).
+_AVG_TPS = {"13B": 2.271e12 / 367_148, "24B": 2.431e12 / 326_496, "70B": 1.542e12 / 277_173}
+
+MARIN_PRETRAINING = [
+    # (name, kind, params, run_ids in trunk order, schedule)
+    *[(f"ladder d{w}", "ladder", p, [f"tootsie-scaling-{w} (Dec 2024 ladder, 16L, 210B tokens)"], [(0, 4_194_304)])
+      for w, p in [(512, 2.49e8), (768, 4.61e8), (1024, 7.32e8), (1536, 1.45e9), (2048, 2.34e9)]],
+    ("Marin 8B (Tootsie)", "final", 8.03e9,
+     [s[0] for s in MARIN_8B_SPEC if s[2] in ("final", "midtrain")], MARIN_8B),
+    ("13B trial", "aborted", 1.3e10, ["exp860 Tootsie 13B"], [(0, _AVG_TPS["13B"])]),
+    ("24B trial", "aborted", 2.4e10, ["exp861 Tootsie 24B"], [(0, _AVG_TPS["24B"])]),
+    ("70B trial", "aborted", 7.0e10, ["exp750 Tootsie 70B"], [(0, _AVG_TPS["70B"])]),
+    ("Marin 32B (Mantis)", "final", 3.2e10,
+     ["exp1295_32b phase1 (Llama-3-style 32B, spiky)", "exp1395_qwen3_32b phase3 (QK-Norm switch, warm-start from 80k)",
+      "marin-32b-base Mantis (aggregate final artifact)"], MARIN_32B),
+]
+
+
+def marin_pretraining_curves() -> list[Curve]:
+    """Every Marin dense pretraining run with a public c4_en curve, as one curve each. The 32B
+    trunk stops at the cooldown branch point (phase 3 ran 10k steps past it); the 13B curve
+    starts at step 280k because only its longest restart segment was fetched."""
+    out = []
+    for name, kind, params, run_ids, schedule in MARIN_PRETRAINING:
+        x, y = stitch("marin", run_ids, schedule, MARIN_KEY)
+        if name.startswith("Marin 32B"):
+            cut = cumulative_tokens(160_000, schedule)   # drop phase-3 points past the cooldown fork
+            keep = (x <= cut) | (x >= cumulative_tokens(160_002, schedule) - 1)
+            x, y = x[keep], y[keep]
+        out.append(Curve(name, kind, params, x, y))
+    return out

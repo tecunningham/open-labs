@@ -12,6 +12,76 @@ from src.chapter import *  # noqa
 import numpy as np
 ```
 
+## Marin at a glance
+
+Two figures before the detail. First, the released and evaluated checkpoints over time, scored
+on Marin's own 19-task base-model average and on MMLU, with circle area proportional to the
+cumulative pretraining compute behind each checkpoint. Post-training compute would be drawn as
+a ring around the disk, but the 8B instruct model's SFT used 2.6e20 FLOPs, four ten-thousandths
+of the base's 6.1e23, so the ring would be indistinguishable from the disk and is omitted; the
+32B has no post-trained release. Snowball (67B-A2B, pretraining finished August 2026) has no
+published evaluations yet.
+
+```{python}
+#| column: page
+#| fig-width: 10
+#| fig-height: 4.5
+N8 = 6 * 8.03e9   # FLOPs per token for the 8B
+pts = pd.DataFrame([
+    # date, label, metric, value, cumulative pretraining FLOPs, post-training FLOPs, kind
+    ("2025-03-01", "Jellyfish (8B at 4.78T)", "MMLU", 65.3, N8 * 4.78e12, np.nan, "midtrain"),
+    ("2025-05-15", "Marin 8B", "MMLU", 67.6, 6.1e23, 2.6e20, "final"),
+    ("2025-10-29", "Marin 32B", "MMLU", 74.7, 1.24e24, np.nan, "final"),
+    ("2025-05-15", "Marin 8B", "19-task", 66.6, 6.1e23, 2.6e20, "final"),
+    ("2025-10-01", "Bison cooldown (discarded)", "19-task", 63.0, 1.24e24, np.nan, "aborted"),
+    ("2025-10-29", "Marin 32B", "19-task", 65.2, 1.24e24, np.nan, "final"),
+], columns=["date", "label", "metric", "value", "flops", "post_flops", "kind"])
+pts["date"] = pd.to_datetime(pts["date"])
+fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
+plots.capability_timeline(pts[pts["metric"] == "19-task"], ax=axes[0], ylabel="19-task base average",
+                          title="Marin's own 19-task average", ref_lines={"Llama 3.1 8B (same harness): 65.3": 65.3},
+                          fmax=1.24e24, notes="Snowball 67B-A2B (Aug 2026): no evals published")
+plots.capability_timeline(pts[pts["metric"] == "MMLU"], ax=axes[1], ylabel="MMLU 5-shot", title="MMLU 5-shot",
+                          fmax=1.24e24)
+for a in axes:
+    a.set_xlim(pd.Timestamp("2025-01-01"), pd.Timestamp("2026-01-01"))
+fig.tight_layout(); plt.show()
+```
+
+Two released dense models in five months is a short series, and the 32B's 19-task average is
+*below* the 8B's despite twice the compute: the 19-task suite saturates on easy tasks and the
+32B's gains were on MMLU (+7), MMLU-Pro (+9) and BBH. The discarded Bison cooldown sits two
+points under Mantis on the same tokens.
+
+Second, every Marin dense pretraining run with a public loss curve on one axis: the five-width
+December 2024 ladder, the 8B with all its phases stitched together, the three abandoned Tootsie
+trials, and the 32B. The right panel puts them on cumulative compute (6ND), which is what makes
+sizes comparable. Two things it shows: at equal compute the larger dense runs sit below the 8B
+while both are still at full learning rate, and the ladder's small models, trained to 90 to 900
+tokens per parameter, sit well above the big runs at equal compute, which is what over-training
+past the compute-optimal point costs. The first 50B tokens of each run are cut.
+
+```{python}
+#| column: page
+#| fig-width: 10
+#| fig-height: 5
+cur = losses.marin_pretraining_curves()
+fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+plots.loss_curves(cur, x="tokens", ax=axes[0], ylabel="Paloma c4_en eval loss (nats/token)", min_tokens=5e10,
+                  title="By tokens")
+plots.loss_curves(cur, x="flops", ax=axes[1], ylabel="", min_tokens=5e10, title="By compute (6ND)")
+fig.tight_layout(); plt.show()
+```
+
+Read the trials against the 8B on the compute axis. Where the 13B stopped (1.8e23 FLOPs) it was
+at 2.50 against the 8B's 2.60 at the same compute; the 24B at 3.5e23 was 2.45 against 2.51. The
+70B stopped at 6.5e23, just past the finished 8B's 6.1e23, at 2.42 against the 8B's final 2.35:
+on matched compute the smaller model won, because it had a cooldown and the 70B never did. That
+is the same lesson as the trajectory figure below, from the other side: without a cooldown a
+trial's loss understates the model. The 13B trial's curve starts at 1.7T tokens because only its
+longest restart segment was fetched; the trials' token axes use the average tokens per step from
+W&B, since their batch ramps are not public.
+
 ## What is unusual here
 
 Marin's flagship 2025 runs were **not** preceded by a scaling ladder. The 8B was chosen "mostly

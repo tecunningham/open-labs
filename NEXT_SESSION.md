@@ -30,6 +30,12 @@ level with `main`):
   posttrain / planned, and confidence). Post-training-only releases are converted from GPU-hours
   at 1.44e18 FLOPs per H100-hour (40% MFU); dollars in the key assume $2 per H100-hour. Add a
   row there when a lab ships something.
+- **Marin at a glance.** The Marin chapter opens with two figures: a capability timeline
+  (`plots.capability_timeline`; points are a small table in the chapter, 19-task average and
+  MMLU, circle area = cumulative pretraining compute, optional post-training ring) and every dense
+  pretraining run on one axis by tokens and by 6ND compute (`losses.marin_pretraining_curves`,
+  `plots.loss_curves`). The 13B/24B/70B trials use average tokens per step from W&B; the 13B curve
+  starts at step 280k because only its longest restart segment was fetched (fetch `mk1` to fix).
 - **Rendered.** `quarto render` passes for all chapters (Quarto 1.7.32, pandas 3.0, scipy 1.17).
 
 Environment setup: `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`) installs
