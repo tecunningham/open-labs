@@ -16,6 +16,7 @@ book:
         - chapters/11-marin.qmd
         - chapters/12-olmo.qmd
         - chapters/13-llama.qmd
+        - chapters/14-deepseek.qmd
     - part: "Part II: Post-training and RL scaling"
       chapters:
         - chapters/20-prime-intellect.qmd

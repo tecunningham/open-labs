@@ -1,0 +1,121 @@
+# DeepSeek
+
+DeepSeek is the lab with the most-quoted training cost and the most explicit statement of what
+that cost leaves out. The V3 report's 2.788M H800-hours ($5.576M at $2 per hour) covers "only
+the official training of DeepSeek-V3, excluding the costs associated with prior research and
+ablation experiments on architectures, algorithms, or data." This chapter asks how much of the
+excluded part the reports themselves let us reconstruct. Working notes with sources are in
+`data/notes/deepseek.md`; 51 verbatim statements are in the claims table.
+
+```{python}
+#| echo: false
+from src.chapter import *  # noqa
+import numpy as np
+```
+
+## What the reports disclose of the excluded compute
+
+The V3 report describes its ablations by size and tokens: multi-token prediction and
+auxiliary-loss-free balancing each tested on a 15.7B mixture-of-experts model at 1.33T tokens and
+a 228.7B model at 540 to 578B tokens, and FP8 against BF16 on models "similar to DeepSeek-V2-Lite
+and DeepSeek-V2" for about 1T tokens each. Summed at 6ND those disclosed ablations are about
+5e23 FLOPs, roughly 15 percent of the 3.3e24 final run. Nothing about the many runs behind the
+architecture and data choices is counted, so this is a floor, and a low one.
+
+```{python}
+v3 = load.runs("deepseek", "deepseek-v3"); v3 = v3[~v3["run_id"].str.contains("total-official")]
+fig, ax = plt.subplots(figsize=(8, 1.8)); plots.compute_split(v3, ax=ax, title="DeepSeek-V3: disclosed ablations vs the official run (6ND FLOPs)"); plt.show()
+display(Markdown(f"Disclosed non-final share for V3: **{load.experiment_share(v3):.0%}** of logged FLOPs."))
+```
+
+Two contrasts with the labs that count everything. Ai2 reports 82 percent development for Olmo
+3 and Meta about 70 percent for LLaMA 1. If DeepSeek's true ratio were similar, the widely quoted
+$5.6M would be a fifth to a third of the programme's compute cost.
+
+## The one real scaling-law programme: DeepSeek LLM (2024)
+
+The first report is the only one with a full ladder: eight IsoFLOP budgets from 1e17 to 3e20
+FLOPs with about ten allocations each (roughly 80 runs, derived), fitted to
+`M_opt = 0.1715 · C^0.5243` and `D_opt = 5.8316 · C^0.4757` (non-embedding FLOPs per token and
+tokens), plus hyperparameter laws for learning rate and batch size. The 7B and 67B are overlaid
+on the loss-versus-compute curve and described as "well-predicted" at about 1,000 times the
+largest ladder run, but no numerical error is printed. Later reports (V2, V3) ablate at two fixed
+scales instead of fitting laws, and R1, V3.2 and V4 mention small-scale preparation only
+qualitatively. Disclosure of the experimental process has fallen with each release even as the
+cost figure became more precise.
+
+```{python}
+C = np.geomspace(1e17, 5e24, 200)
+fig, ax = plt.subplots(figsize=(8, 4.5))
+D = 5.8316 * C ** 0.4757
+ax.plot(C[C <= 3e20], D[C <= 3e20], color=plots.INK2, lw=2, label="Fit range (1e17 to 3e20 FLOPs)")
+ax.plot(C[C >= 3e20], D[C >= 3e20], color=plots.INK2, lw=2, ls=(0, (4, 3)), label="Extrapolation")
+fin = load.runs("deepseek", "deepseek-llm"); fin = fin[fin["run_id"].isin(["dsllm-7b-final", "dsllm-67b-final"])]
+ax.scatter(fin["flops"], fin["tokens"], s=220, marker="*", c=plots.RUN_COLORS["final"], edgecolors=plots.SURFACE, linewidths=2, zorder=4, label="DeepSeek LLM 7B and 67B as trained (2T tokens)")
+for _, r in fin.iterrows():
+    ax.annotate(r["run_id"].replace("dsllm-", "").replace("-final", ""), (r["flops"], r["tokens"]), xytext=(8, -12), textcoords="offset points", fontsize=9, color=plots.INK2)
+ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlabel("Training compute (FLOPs)"); ax.set_ylabel("Compute-optimal tokens")
+ax.set_title("DeepSeek LLM data-allocation law, with the two released models"); ax.legend(loc="lower right"); plt.show()
+```
+
+Both released models sit well above the fitted optimum in tokens: they were deliberately
+over-trained for inference efficiency, as most released open models are.
+
+## Across releases: released models, one benchmark
+
+```{python}
+d = load.runs("deepseek"); d = d[d["is_final"] & d["benchmark_name"].str.contains("MMLU", na=False) & d["flops"].notna()].copy()
+groups = {p: d[d["project"] == p] for p in ["deepseek-llm", "deepseek-v2", "deepseek-v3"] if (d["project"] == p).any()}
+fig, ax = plt.subplots(figsize=(8, 5))
+plots.overlay_projects(groups, {k: None for k in groups}, y="benchmark_value", ax=ax, title="DeepSeek LLM to V3: MMLU (5-shot, base) vs compute")
+ax.set_ylabel("MMLU 5-shot (base)")
+for _, r in d.iterrows():
+    ax.annotate(r["run_id"], (r["flops"], r["benchmark_value"]), xytext=(6, -10), textcoords="offset points", fontsize=8, color=plots.INK2)
+plt.show()
+```
+
+## Post-training cost, stated
+
+R1's revised report gives the RL programme's cost directly: 512 H800s for 198 hours (R1-Zero,
+101K GPU-hours) plus 80 hours (R1, 41K) plus 5K for SFT data, 147K GPU-hours or $294K, about
+5 percent of the V3 pretraining run. A 30B preparatory model was trained on A100s first with no
+figures given. V3.2 states that post-training now exceeds 10 percent of pretraining cost.
+
+## Run sizes and timeline
+
+```{python}
+df = load.runs("deepseek"); df = df[~df["run_id"].str.contains("total-official")].copy()
+fig, ax = plt.subplots(figsize=(8, 5)); plots.ladder_map(df, ax=ax); plt.show()
+fig, ax = plt.subplots(figsize=(8, 1.8)); plots.compute_split(df, ax=ax, title="DeepSeek, all projects: logged 6ND FLOPs by run type"); plt.show()
+```
+
+## Published scaling experiments
+
+```{python}
+experiments_table("deepseek");
+```
+
+## What the lab says about itself
+
+```{python}
+claims_table("deepseek");
+```
+
+## Key numbers
+
+```{python}
+display(key_numbers(df))
+```
+
+## Narrative
+
+**Hardware and accounting.** V3 trained on 2,048 H800s; the report gives per-stage GPU-hours
+(2.664M pretraining, 119K context extension, 5K post-training). V2's report gives per-trillion-token
+rates (300.6K and 172.8K GPU-hours per T tokens for the dense 67B and the MoE V2), which this
+chapter uses to derive GPU-hours for the 67B and V2 finals; those rows are flagged `derived`.
+
+**What is not reconstructable.** The compute behind architecture and data decisions for every
+release after the first; any prediction error for the DeepSeek LLM law; active-parameter counts
+for two V3 ablation models (flagged as guesses); GPU-hours for V4 (33T and 32T tokens, no
+hours disclosed). Primary hosts were blocked from this environment; text came from DeepSeek's
+GitHub-hosted PDFs and GitHub transcriptions of the arXiv papers, marked as such in the claims.

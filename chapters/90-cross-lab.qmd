@@ -23,8 +23,8 @@ stated = pd.DataFrame([
     ("Ai2 model ladder (OLMo 2 targets)", 0.01, "Bhagia et al. 2024: ladder ~1% of the two targets' compute", "reported"),
 ], columns=["lab / programme", "non-final share", "basis", "confidence"])
 logged = []
-for lab, name in [("marin", "Marin (logged runs)"), ("ai2-olmo", "Ai2 OLMo (logged runs)"), ("meta", "Meta Llama (logged runs)"), ("prime-intellect", "Prime Intellect (logged runs)")]:
-    d = load.runs(lab); d = d[~d["run_id"].str.contains("aggregate|total-development")]
+for lab, name in [("marin", "Marin (logged runs)"), ("ai2-olmo", "Ai2 OLMo (logged runs)"), ("meta", "Meta Llama (logged runs)"), ("prime-intellect", "Prime Intellect (logged runs)"), ("deepseek", "DeepSeek (disclosed ablations)")]:
+    d = load.runs(lab); d = d[~d["run_id"].str.contains("aggregate|total-development|total-official")]
     logged.append((name, load.experiment_share(d), f"{int((~d['is_final']).sum())} non-final rows with FLOPs summed", "floor"))
 logged = pd.DataFrame(logged, columns=stated.columns)
 tab = pd.concat([stated, logged], ignore_index=True)
@@ -59,6 +59,7 @@ pred = pd.DataFrame([
     ("Marin Delphi 1e23", "loss", "7 IsoFLOP optima 3e18 to 3e20, 300x extrapolation", "within 0.2% (pre-registered)", "snippet"),
     ("Ai2 OLMo 2 7B-4T and 13B-5T", "task accuracy", "16 ladder runs 190M to 1.3B, ~1% of target compute", "within ~2 points on 4 tasks, ~4 points averaged over 8", "reported"),
     ("Meta Llama 3 405B", "compute-optimal size", "40M to 16B at 6e18 to 1e22, 3,800x extrapolation", "predicted 402B / 16.55T; trained 405B / 15.6T", "reported"),
+    ("DeepSeek LLM 7B and 67B", "loss", "~80 IsoFLOP runs at 1e17 to 3e20, ~1,000x extrapolation", "described as 'well-predicted'; no numerical error printed", "reported"),
     ("Prime Intellect INTELLECT-2/3", "RL reward", "1.5B, 4B, 7B proxies for 32B and 106B", "qualitative transfer only; no fitted relation", "reported"),
 ], columns=["final run", "predicted quantity", "experiments used", "outcome", "confidence"])
 display(pred)
