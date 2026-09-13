@@ -1,0 +1,35 @@
+{
+ "run_id": "pythia-12b",
+ "aliases": [],
+ "project": "eleutherai/pythia",
+ "keys": [
+  "validation/lm_loss",
+  "train/lm_loss"
+ ],
+ "tokens_per_step": 2097152,
+ "final_step": 143000.0,
+ "final_tokens": 299892736000.0,
+ "final_loss": {
+  "validation/lm_loss": 1.7411831617355347,
+  "train/lm_loss": 1.757043719291687
+ },
+ "note": "group 'v2-12B' (36L x 5120, Pile)",
+ "segments": [
+  {
+   "run": "kg5ni1dl",
+   "display_name": "ip-26-0-129-191-0",
+   "state": "finished",
+   "url": "https://wandb.ai/eleutherai/pythia/runs/kg5ni1dl",
+   "created": "2023-03-08T05:51:47Z",
+   "last_heartbeat": "2023-03-09T17:37:48Z",
+   "final_step": 143000,
+   "summary": {
+    "validation/lm_loss": 1.741183161735535,
+    "train/lm_loss": 1.757043719291687
+   },
+   "rows": 1500
+  }
+ ],
+ "rows": 1500,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

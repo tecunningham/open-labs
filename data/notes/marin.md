@@ -48,3 +48,10 @@ Reconstructable from open sources: full recipes (data mixes to 0.1%, LR schedule
 - Whether the May 2026 1e23 MoE hero run (~131B/16B) completed and what it scored.
 - 13B/24B/70B Tootsie trials: tokens trained and why abandoned (issues closed with empty results).
 - No cost figures anywhere; cost columns left empty (TPU compute was donated by TRC, GPUs by the Huang Foundation).
+
+
+## Update 2026-09-13: losses pulled from W&B
+
+`marin-community/marin` is public and readable anonymously through W&B's GraphQL API; the `stanford-mercury/marin` project the 8B retrospective links is private. Run mapping is pinned in `src/fetch_wandb.py`; curves in `data/losses/marin/`. `loss` in runs.csv = `eval/paloma/c4_en/loss` at the run's last step (nats/token, Llama 3 tokenizer). Final values: Kestrel (phase 1, step 660,600) 2.546; Ocelot 2.600; Jellyfish 2.605; dessert 2.609; Phoenix (step 1,321,398) 2.505; Raccoon 2.612; Spoonbill (focused-spoonbill-zloss) 2.589; Starling 2.352; Deeper Starling (released 8B, step 1,419,999) 2.346. 13B trial (`llama-13b-tootsie-ema-mk2`, 367k steps) 2.498; 24B trial (`llama-22b-tootsie-ema-mk5`, 326k steps; W&B says 22B) 2.448; 70B trial (`llama-real-70b-tootsie`, 277k steps) 2.425. 32B: phase 1 (`llama-32b-tootsie-2`, 80,654 steps) 2.292; necro rescue 2.291; Muon rescue (`marin-32b-muon-4`) 2.306; QK-Norm phase 3 (`marin-32b-qwen`, to step 169,999) 2.265; Bison cooldown 2.221; Mantis cooldown (released 32B, step 191,999) 2.199. Note the cooldown runs' train loss (1.60 for Mantis) is far below the eval loss because the cooldown mix is heavier on curated data; compare runs on the eval key only. The earlier `loss=0.015` on the Ocelot row (the EMA gap, not a loss) has been replaced.
+
+Also visible in the project and not yet in runs.csv: a Dec 2024 `tootsie-scaling-{512,768,1024,1536,2048}` ladder (16 layers, 50k steps each, finished) that would give Marin an early experiment curve.

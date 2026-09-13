@@ -1,0 +1,41 @@
+{
+ "run_id": "exp600 phase1 Kestrel (DCLM, WSD-S)",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 660536.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 2.307305097579956,
+  "eval/paloma/c4_en/loss": 2.545517683029175,
+  "eval/loss": 2.19594669342041,
+  "eval/macro_loss": 2.388184070587158
+ },
+ "note": "steps 0-660,600 at 1024x4096 = 2.77T",
+ "segments": [
+  {
+   "run": "llama-8b-tootsie-0.001-19ad63",
+   "display_name": "llama-8b-tootsie-0.001-19ad63",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin/runs/llama-8b-tootsie-0.001-19ad63",
+   "created": "2024-11-28T17:38:29Z",
+   "last_heartbeat": "2025-02-05T07:00:26Z",
+   "final_step": 660600,
+   "summary": {
+    "train/loss": 2.2813103199005127,
+    "eval/paloma/c4_en/loss": 2.545517683029175,
+    "eval/loss": 2.19594669342041,
+    "eval/macro_loss": 2.388184070587158
+   },
+   "rows": 1585
+  }
+ ],
+ "rows": 1585,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

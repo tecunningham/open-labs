@@ -1,0 +1,41 @@
+{
+ "run_id": "exp600 dessert runs (math + FLAN patches off Jellyfish)",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 836999.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 1.6613235473632812,
+  "eval/paloma/c4_en/loss": 2.609058141708374,
+  "eval/loss": 2.183795928955078,
+  "eval/macro_loss": 2.5188369750976562
+ },
+ "note": "steps 820k-837k",
+ "segments": [
+  {
+   "run": "llama-8b-tootsie-dessert",
+   "display_name": "llama-8b-tootsie-dessert",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin/runs/llama-8b-tootsie-dessert",
+   "created": "2025-03-01T08:17:53Z",
+   "last_heartbeat": "2025-03-02T22:21:22Z",
+   "final_step": 836999,
+   "summary": {
+    "train/loss": 1.6539536714553833,
+    "eval/paloma/c4_en/loss": 2.609058141708374,
+    "eval/loss": 2.183795928955078,
+    "eval/macro_loss": 2.518836975097656
+   },
+   "rows": 1517
+  }
+ ],
+ "rows": 1517,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

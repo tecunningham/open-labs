@@ -1,0 +1,41 @@
+{
+ "run_id": "exp1395_qwen3_32b phase3 (QK-Norm switch, warm-start from 80k)",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": 33554432,
+ "final_step": 169966.0,
+ "final_tokens": 5703112589312.0,
+ "final_loss": {
+  "train/loss": 1.9326804876327515,
+  "eval/paloma/c4_en/loss": 2.2648873329162598,
+  "eval/loss": 2.0615663528442383,
+  "eval/macro_loss": 2.2949154376983643
+ },
+ "note": "display name 'Marin 32B+qk-norm+warmstart'; steps 80k-170k",
+ "segments": [
+  {
+   "run": "marin-32b-qwen",
+   "display_name": "Marin 32B+qk-norm+warmstart",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin/runs/marin-32b-qwen",
+   "created": "2025-06-18T06:40:09Z",
+   "last_heartbeat": "2025-08-23T03:22:45Z",
+   "final_step": 169999,
+   "summary": {
+    "train/loss": 1.9217557907104492,
+    "eval/paloma/c4_en/loss": 2.26488733291626,
+    "eval/loss": 2.0615663528442383,
+    "eval/macro_loss": 2.2949154376983643
+   },
+   "rows": 1578
+  }
+ ],
+ "rows": 1578,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

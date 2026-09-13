@@ -44,3 +44,12 @@ Environment caveat: arxiv.org, allenai.org, huggingface.co and most mirrors were
 11. Model size used for OLMo 2 microanneals and Olmo 3 microanneals (assumed 7B) not confirmed.
 12. Dates in date_end are release dates, not training end dates; training start/end dates were not found.
 13. The 6ND FLOPs use total parameter counts (7.3e9, 1.37e10, 3.22e10, 1.5e9); Ai2 may quote non-embedding params.
+
+
+## Update 2026-09-13: losses pulled from W&B
+
+The four W&B projects linked from OLMo-core (`ai2-llm/Olmo-3-1025-7B`, `Olmo-3-1125-32B`, `OLMo-2-1124-7B`, `OLMo-2-1124-13B`) are public and readable anonymously through the GraphQL API (a personal API key was refused for them). `ai2-llm/olmo-ladder` is private; OLMo 2 32B is on comet.ml, whose REST API needs a key even for shared reports. Curves are in `data/losses/ai2-olmo/`, mapping in `src/fetch_wandb.py`.
+
+Structure of the logs: each stage-1 run is a W&B *group* of restart segments (7B: 39, 32B: 69, OLMo 2 7B: 11, 13B: 75), which is itself a record of the run's interruptions. `_step` is optimizer steps: Olmo 3 7B 4,194,304 tok/step (`data_loader.global_batch_size`), ending at 1,413,814 = 5.93T; 32B 8,388,608 tok/step, ending 678,999 = 5.70T (config `max_duration = 1 epoch`; midtraining run-2/run-4 branch at 656,000). OLMo 2 7B 1024 x 4096 tok/step to 928,646 = 3.9T (`max_duration 1ep`), 13B 2048 x 4096 to 596,057 = 5.0T (`5e12T`).
+
+Final losses (nats/token). Olmo 3 stage 1: 7B train CE 1.853, c4_en eval CE 2.469, Pile 1.776; 32B train 1.606, c4_en 2.301, Pile 1.639. Olmo 3 midtraining (anneal mix) train CE 1.212 (7B), 1.055 (32B, two ingredients); long-context 1.368 / 1.139. OLMo 2 stage 1 train CE: 7B 2.223, 13B 2.095; stage-2 soups 1.602 / 1.519. OLMo 2 logs no held-out loss to W&B, so the only cross-generation held-out comparison would need the Olmo 3 in-loop evals recomputed on OLMo 2 checkpoints (all public on Hugging Face).

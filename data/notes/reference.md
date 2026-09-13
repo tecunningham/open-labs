@@ -74,3 +74,21 @@ Fit on 111M-6.7B, 13B predicted within 0.5%; extrapolation to GPT-NeoX-20B compu
 - SEARCH-SNIPPET ONLY (source page blocked; treat as medium confidence): EleutherAI Institute funding/headcount (TechCrunch); Pythia release date 2023-02-13 (eleuther.ai/releases); Cerebras funding >$720M / Series F; Andromeda specs; "few weeks" training time; Cerebras headcount ~400.
 - NOT RETRIEVED: Cerebras-GPT per-model muP Pile test losses (paper Table 2/3); Pythia numerical Pile val/test loss (never published; wandb only, wandb blocked); training start/end dates for both suites (all dates flagged guess); any CS-2 accelerator-hours.
 - DERIVED: Pythia FLOPs (6ND), Pythia total params (formula, matches HF card); Cerebras tokens (steps x batch x seq), Cerebras total params (formula), all cost_usd_est values, Cerebras A100-equivalent hours.
+
+
+## Update 2026-09-13: Pythia losses pulled from W&B
+
+`eleutherai/pythia` is readable anonymously via W&B's GraphQL API (a personal key was refused). Final-step `validation/lm_loss` (Pile validation, nats/token) for the 143k-step run whose config matches each released model (layers, width, batch 1024 x 2048, Pile vs deduplicated Pile data path) is now in `runs.csv` and the curves in `data/losses/eleutherai/`:
+
+| model | W&B run (group) | val loss |
+|---|---|---|
+| 70m / 70m-deduped | 32t0zbcs ('v2 70M') / 2vcd53l4 ('v2-70M-deduped') | 2.888 / 3.013 |
+| 160m / 160m-deduped | 3mvtbwii ('v2 160M') / 38uk24gn ('v2 160M deduped') | 2.512 / 2.584 |
+| 410m / 410m-deduped | 12j05401 ('v2-410m') / 2pmqy4bd ('v2-410m-deduped') | 2.164 / 2.268 |
+| 1b | 2i9stqg2 ('800M Pythia', the README's mapping) | 2.044 |
+| 1.4b / 1.4b-deduped | vd5ogsc6 ('v2 1.4B') / 2dca9aar ('v2 1.4B deduped') | 1.960 / 2.030 |
+| 2.8b / 2.8b-deduped | 12vuw5ef ('2.7B New') / 4aqjesl8 ('2.7B Deduped New'), both the README's mapping | 1.871 / 1.928 |
+| 6.9b | vi7laank ('6.7B Decay', 32L x 4096, Pile) | 1.777 |
+| 12b | kg5ni1dl ('v2-12B', 36L x 5120, Pile) | 1.741 |
+
+Not mapped: 1b-deduped (the '800M Pythia deduped' run reads the non-deduplicated Pile path and has the identical loss to the 1b run, so it looks like a mislabel), 6.9b-deduped and 12b-deduped (no finished run on the deduplicated path at those sizes). The deduplicated models' validation set is the deduplicated Pile, so their higher numbers are not a quality gap. The README's mapping of 160m and 1.4b points at earlier 71k-step, batch-4M runs (the "v0" suite), not the released v1 models; the v2 groups above match the released batch size and step count.

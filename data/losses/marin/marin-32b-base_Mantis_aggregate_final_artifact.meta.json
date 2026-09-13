@@ -1,0 +1,43 @@
+{
+ "run_id": "marin-32b-base Mantis (aggregate final artifact)",
+ "aliases": [
+  "exp1529_32b_mantis_cooldown (released cooldown)"
+ ],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": 33554432,
+ "final_step": 191999.0,
+ "final_tokens": 6442417389568.0,
+ "final_loss": {
+  "train/loss": 1.6031235456466675,
+  "eval/paloma/c4_en/loss": 2.19927978515625,
+  "eval/loss": 1.9325268268585205,
+  "eval/macro_loss": 2.202507495880127
+ },
+ "note": "display name 'Marin 32B Mantis Cooldown'; released base = end of this run (step 191,999)",
+ "segments": [
+  {
+   "run": "tootsie-32b-cooldown-mantis-adamc-v2",
+   "display_name": "Marin 32B Mantis Cooldown",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin/runs/tootsie-32b-cooldown-mantis-adamc-v2",
+   "created": "2025-10-02T23:30:16Z",
+   "last_heartbeat": "2025-10-24T03:28:17Z",
+   "final_step": 191999,
+   "summary": {
+    "train/loss": 1.6021240949630735,
+    "eval/paloma/c4_en/loss": 2.19927978515625,
+    "eval/loss": 1.9325268268585205,
+    "eval/macro_loss": 2.202507495880127
+   },
+   "rows": 1530
+  }
+ ],
+ "rows": 1530,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

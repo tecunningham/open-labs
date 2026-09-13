@@ -31,10 +31,14 @@ def key_numbers(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def standard_figures(lab: str, project: str | None = None, y: str = "loss", irreducible: bool = False,
-                     split_by: str = "flops"):
-    """Emit the chapter's standard figure set and return (df, fit, residuals)."""
+                     split_by: str = "flops", fit_experiments: bool = True):
+    """Emit the chapter's standard figure set and return (df, fit, residuals).
+
+    `fit_experiments=False` draws the points without a fitted law. Use it when the rows that carry
+    a loss are continuation phases (midtraining, cooldowns) whose `flops` is per-phase compute, not
+    the cumulative compute the loss reflects; a power law through those points means nothing."""
     df = load.runs(lab, project)
-    fit = fits.fit_experiments(df, y=y, irreducible=irreducible)
+    fit = fits.fit_experiments(df, y=y, irreducible=irreducible) if fit_experiments else None
     res = fits.final_residuals(df, fit, y=y)
 
     if df[y].notna().sum() >= 2:

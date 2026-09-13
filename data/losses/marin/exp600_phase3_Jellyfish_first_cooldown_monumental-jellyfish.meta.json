@@ -1,0 +1,41 @@
+{
+ "run_id": "exp600 phase3 Jellyfish (first cooldown, 'monumental-jellyfish')",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 819999.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 1.7461881637573242,
+  "eval/paloma/c4_en/loss": 2.604881763458252,
+  "eval/loss": 2.1812057495117188,
+  "eval/macro_loss": 2.5344111919403076
+ },
+ "note": "steps 742k-820k",
+ "segments": [
+  {
+   "run": "llama-8b-tootsie-phase3",
+   "display_name": "llama-8b-tootsie-phase3",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin/runs/llama-8b-tootsie-phase3",
+   "created": "2025-02-20T07:15:15Z",
+   "last_heartbeat": "2025-02-28T11:02:33Z",
+   "final_step": 819999,
+   "summary": {
+    "train/loss": 1.731467604637146,
+    "eval/paloma/c4_en/loss": 2.604881763458252,
+    "eval/loss": 2.1812057495117188,
+    "eval/macro_loss": 2.5344111919403076
+   },
+   "rows": 1580
+  }
+ ],
+ "rows": 1580,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

@@ -1,0 +1,45 @@
+{
+ "run_id": "olmo3-32B-stage2-midtrain-ingredients-1+2",
+ "aliases": [],
+ "project": "ai2-llm/Olmo-3-1125-32B",
+ "keys": [
+  "train/CE loss"
+ ],
+ "tokens_per_step": 4194304,
+ "final_step": 23839.0,
+ "final_tokens": 99988013056.0,
+ "final_loss": {
+  "train/CE loss": 1.0552330017089844
+ },
+ "note": "two 100B midtraining ingredients (run-2, run-4), souped; stored as two segments with the same step range",
+ "segments": [
+  {
+   "run": "ufsc2yts",
+   "display_name": "stego32-midtraining-run-2-20251106T004057+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/ufsc2yts",
+   "created": "2025-11-18T02:36:42Z",
+   "last_heartbeat": "2025-11-18T02:36:57Z",
+   "final_step": 23842,
+   "summary": {
+    "train/CE loss": 1.1531182527542114
+   },
+   "rows": 1500
+  },
+  {
+   "run": "0gquyaos",
+   "display_name": "stego32-midtraining-run-4-20251106T014434+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/0gquyaos",
+   "created": "2025-11-18T02:38:11Z",
+   "last_heartbeat": "2025-11-18T02:38:26Z",
+   "final_step": 23842,
+   "summary": {
+    "train/CE loss": 1.0430676937103271
+   },
+   "rows": 1500
+  }
+ ],
+ "rows": 3000,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

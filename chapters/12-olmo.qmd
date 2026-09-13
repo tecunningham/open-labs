@@ -28,14 +28,22 @@ plots.stated_split({"Final runs": fin, "Development": dev}, ax=ax, unit="H100-ho
 plt.show()
 ```
 
-The rows below are the runs we can reconstruct individually. Losses are not yet transcribed
-(they live in public W&B and comet.ml dashboards), so the loss-vs-compute curve is pending; the
-run-size map shows the ladder and the released models on the parameters-vs-tokens plane.
+The rows below are the runs we can reconstruct individually. Final-run losses are pulled from
+Ai2's public W&B projects (`data/losses/ai2-olmo/`, stage-1 runs stitched from 11 to 75 restart
+segments each). The `loss` column is the training cross-entropy at the end of each stage (median
+of the last 20 logged points), the only loss both generations log; Olmo 3 stage 1 also logs
+in-loop held-out losses, and those are the comparable numbers: c4_en CE 2.469 (7B, 5.93T) and
+2.301 (32B, 5.70T), Pile 1.776 and 1.639. Training loss is on the training mix, so OLMo 2
+(Dolma) and Olmo 3 (Dolma 3) stage-1 values, 2.23 / 2.11 and 1.85 / 1.59, are not one curve, and
+the midtraining and long-context stages read lower still because the anneal mixes are easier.
+The panel therefore draws points without a fitted law, and the ladder rows still carry no loss
+(the `ai2-llm/olmo-ladder` project is private); the run-size map shows the ladder and the
+released models on the parameters-vs-tokens plane.
 
 ## Run sizes, compute split, timeline
 
 ```{python}
-df, fit, res = standard_figures("ai2-olmo")
+df, fit, res = standard_figures("ai2-olmo", fit_experiments=False)
 ```
 
 The logged-compute split above counts only runs we have individually, by 6ND FLOPs: the 16
@@ -81,6 +89,7 @@ on to 5.70T, so about 196B tokens of 32B pretraining were not used by the releas
 
 **Not yet reconstructable.** Per-task fitted coefficients from the ladder paper; the split of the
 6.85M development hours across pretraining, midtraining, post-training and synthetic data; OLMo 2
-7B and 13B GPU-hours; loss values (pending a pull from the public dashboards). arXiv was
+7B and 13B GPU-hours; OLMo 2 32B losses (comet.ml, key-gated) and the ladder losses (private W&B
+project). arXiv was
 unreachable from this environment, so paper numbers came via secondary summaries and Ai2's
 GitHub repositories; the notes file lists 13 items to verify against the primary sources.

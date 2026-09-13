@@ -1,0 +1,41 @@
+{
+ "run_id": "exp977 phase5 Starling (second cooldown, 'sensible-starling')",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 1399999.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 1.8569071292877197,
+  "eval/paloma/c4_en/loss": 2.352290153503418,
+  "eval/loss": 2.040311336517334,
+  "eval/macro_loss": 2.3205175399780273
+ },
+ "note": "steps 1.32M-1.40M at 4096x4096",
+ "segments": [
+  {
+   "run": "tootsie-8b-sensible-starling",
+   "display_name": "tootsie-8b-sensible-starling",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin/runs/tootsie-8b-sensible-starling",
+   "created": "2025-04-22T22:14:49Z",
+   "last_heartbeat": "2025-04-30T23:33:41Z",
+   "final_step": 1399999.0,
+   "summary": {
+    "train/loss": 1.8724080324172976,
+    "eval/paloma/c4_en/loss": 2.352290153503418,
+    "eval/loss": 2.040311336517334,
+    "eval/macro_loss": 2.3205175399780273
+   },
+   "rows": 1577
+  }
+ ],
+ "rows": 1577,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

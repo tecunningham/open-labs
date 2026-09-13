@@ -1,0 +1,32 @@
+{
+ "run_id": "olmo3-7B-stage3-longcontext",
+ "aliases": [],
+ "project": "ai2-llm/Olmo-3-1025-7B",
+ "keys": [
+  "train/CE loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 11919.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/CE loss": 1.3675456047058105
+ },
+ "note": "64k long-context stage, 50B tokens",
+ "segments": [
+  {
+   "run": "tx9cibv8",
+   "display_name": "olmo25_7b_lc_64k_6T_M100B_round5-sparkle_6634-pre_s2pdf_gzip2080_cweN-yake-all-olmo_packing_yarn-fullonly_50B-fb13a737",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1025-7B/runs/tx9cibv8",
+   "created": "2025-10-20T15:51:50Z",
+   "last_heartbeat": "2025-10-20T15:51:59Z",
+   "final_step": 10932,
+   "summary": {
+    "train/CE loss": 1.3525896072387695
+   },
+   "rows": 1500
+  }
+ ],
+ "rows": 1500,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

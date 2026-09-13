@@ -1,0 +1,41 @@
+{
+ "run_id": "exp750 Tootsie 70B",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 277005.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 1.9530353546142578,
+  "eval/paloma/c4_en/loss": 2.424711227416992,
+  "eval/loss": 2.0969176292419434,
+  "eval/macro_loss": 2.368520498275757
+ },
+ "note": "80L x 8192; 277k steps, abandoned",
+ "segments": [
+  {
+   "run": "llama-real-70b-tootsie",
+   "display_name": "llama-real-70b-tootsie",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin/runs/llama-real-70b-tootsie",
+   "created": "2025-01-31T10:07:55Z",
+   "last_heartbeat": "2025-04-21T05:53:57Z",
+   "final_step": 277173,
+   "summary": {
+    "train/loss": 1.948020339012146,
+    "eval/paloma/c4_en/loss": 2.424711227416992,
+    "eval/loss": 2.0969176292419434,
+    "eval/macro_loss": 2.368520498275757
+   },
+   "rows": 1705
+  }
+ ],
+ "rows": 1705,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

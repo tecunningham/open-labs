@@ -1,0 +1,162 @@
+{
+ "run_id": "olmo2-7B-stage1",
+ "aliases": [],
+ "project": "ai2-llm/OLMo-2-1124-7B",
+ "keys": [
+  "train/CrossEntropyLoss"
+ ],
+ "tokens_per_step": 4194304,
+ "final_step": 928344.0,
+ "final_tokens": 3893756952576.0,
+ "final_loss": {
+  "train/CrossEntropyLoss": 2.2228615283966064
+ },
+ "note": "11 restart segments; ends at step 928,646 = 3.9T tokens",
+ "segments": [
+  {
+   "run": "syfuxa45",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-01",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/syfuxa45",
+   "created": "2024-11-26T07:43:16Z",
+   "last_heartbeat": "2024-11-26T07:43:37Z",
+   "final_step": 160,
+   "summary": {
+    "train/CrossEntropyLoss": 7.083637237548828
+   },
+   "rows": 160
+  },
+  {
+   "run": "h42rnl7m",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-02",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/h42rnl7m",
+   "created": "2024-11-26T07:43:40Z",
+   "last_heartbeat": "2024-11-26T07:44:29Z",
+   "final_step": 610,
+   "summary": {
+    "train/CrossEntropyLoss": 4.918260097503662
+   },
+   "rows": 460
+  },
+  {
+   "run": "acmz6z47",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-03",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/acmz6z47",
+   "created": "2024-11-26T07:45:05Z",
+   "last_heartbeat": "2024-11-26T07:45:18Z",
+   "final_step": 710,
+   "summary": {
+    "train/CrossEntropyLoss": 4.625741958618164
+   },
+   "rows": 110
+  },
+  {
+   "run": "poh1jr99",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-04",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/poh1jr99",
+   "created": "2024-11-26T07:45:21Z",
+   "last_heartbeat": "2024-11-26T07:45:41Z",
+   "final_step": 860,
+   "summary": {
+    "train/CrossEntropyLoss": 4.323211669921875
+   },
+   "rows": 160
+  },
+  {
+   "run": "4cgzd4cu",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-05",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/4cgzd4cu",
+   "created": "2024-11-26T07:45:44Z",
+   "last_heartbeat": "2024-11-26T07:45:50Z",
+   "final_step": 910,
+   "summary": {
+    "train/CrossEntropyLoss": 4.239227294921875
+   },
+   "rows": 60
+  },
+  {
+   "run": "zxl4esoc",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-06",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/zxl4esoc",
+   "created": "2024-11-26T07:45:54Z",
+   "last_heartbeat": "2024-11-26T07:48:09Z",
+   "final_step": 2174,
+   "summary": {
+    "train/CrossEntropyLoss": 3.3318378925323486
+   },
+   "rows": 1274
+  },
+  {
+   "run": "x5hb6a3f",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-07",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/x5hb6a3f",
+   "created": "2024-11-26T07:48:12Z",
+   "last_heartbeat": "2024-11-26T07:48:45Z",
+   "final_step": 2435,
+   "summary": {
+    "train/CrossEntropyLoss": 3.2334342002868652
+   },
+   "rows": 285
+  },
+  {
+   "run": "9p3ai3he",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-08",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/9p3ai3he",
+   "created": "2024-11-26T07:48:49Z",
+   "last_heartbeat": "2024-11-26T07:50:15Z",
+   "final_step": 2885,
+   "summary": {
+    "train/CrossEntropyLoss": 3.1251611709594727
+   },
+   "rows": 735
+  },
+  {
+   "run": "y4x2f1ci",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-09",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/y4x2f1ci",
+   "created": "2024-11-26T07:50:18Z",
+   "last_heartbeat": "2024-11-26T07:53:25Z",
+   "final_step": 4305,
+   "summary": {
+    "train/CrossEntropyLoss": 2.9490702152252197
+   },
+   "rows": 1500
+  },
+  {
+   "run": "awwjyi5w",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-10",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/awwjyi5w",
+   "created": "2024-12-03T01:11:01Z",
+   "last_heartbeat": "2024-12-03T08:54:55Z",
+   "final_step": 414526,
+   "summary": {
+    "train/CrossEntropyLoss": 2.313511371612549
+   },
+   "rows": 1500
+  },
+  {
+   "run": "uwjy7cji",
+   "display_name": "OLMo-2-1124-7B-stage-1-run-11",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/uwjy7cji",
+   "created": "2024-12-03T09:06:41Z",
+   "last_heartbeat": "2024-12-03T18:35:45Z",
+   "final_step": 928646,
+   "summary": {
+    "train/CrossEntropyLoss": 2.2305197715759277
+   },
+   "rows": 1500
+  }
+ ],
+ "rows": 3873,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

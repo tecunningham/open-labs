@@ -1,0 +1,35 @@
+{
+ "run_id": "pythia-410m-deduped",
+ "aliases": [],
+ "project": "eleutherai/pythia",
+ "keys": [
+  "validation/lm_loss",
+  "train/lm_loss"
+ ],
+ "tokens_per_step": 2097152,
+ "final_step": 143000.0,
+ "final_tokens": 299892736000.0,
+ "final_loss": {
+  "validation/lm_loss": 2.2675247192382812,
+  "train/lm_loss": 2.2836475372314453
+ },
+ "note": "group 'v2-410m-deduped'",
+ "segments": [
+  {
+   "run": "2pmqy4bd",
+   "display_name": "ip-26-0-132-212-0",
+   "state": "finished",
+   "url": "https://wandb.ai/eleutherai/pythia/runs/2pmqy4bd",
+   "created": "2023-02-02T15:13:39Z",
+   "last_heartbeat": "2023-02-05T01:02:32Z",
+   "final_step": 143000,
+   "summary": {
+    "validation/lm_loss": 2.2675247192382812,
+    "train/lm_loss": 2.2684450149536133
+   },
+   "rows": 1504
+  }
+ ],
+ "rows": 1504,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}
