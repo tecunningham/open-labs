@@ -350,7 +350,9 @@ def cmd_apply() -> None:
     runs_csv = ROOT / "data" / "runs.csv"
     with runs_csv.open(newline="") as f:
         rd = csv.DictReader(f); rows = list(rd); fields = rd.fieldnames
-    by_id = {r["run_id"]: r for r in rows}
+    by_id: dict[str, list[dict]] = {}
+    for r in rows:  # a run_id can appear on several rows (one per benchmark); write the loss to all
+        by_id.setdefault(r["run_id"], []).append(r)
     n = 0
     for meta_path in sorted(OUT.glob("*/*.meta.json")):
         lab = meta_path.parent.name; m = json.loads(meta_path.read_text())
@@ -363,18 +365,19 @@ def cmd_apply() -> None:
             extra = f" c4_en eval CE {c4:.4f}."
         urls = "; ".join(seg["url"] for seg in m["segments"][-1:])
         for rid in [m["run_id"]] + m.get("aliases", []):
-            r = by_id.get(rid)
-            if r is None:
+            hits = by_id.get(rid)
+            if not hits:
                 print(f"  ! {lab}/{rid}: not in runs.csv"); continue
-            r["loss"] = f"{v:.4f}"; r["loss_eval_set"] = label  # row `confidence` is left alone: it
-            # describes the whole row; the loss's own provenance is the W&B tag in `notes`.
-            tag = f"Loss from W&B ({key}, final step {m['final_step']:.0f}, {urls}).{extra}"
-            if "Loss from W&B" in r["notes"]:
-                import re
-                r["notes"] = re.sub(r"Loss from W&B \([^)]*\)\)?\.( c4_en eval CE [0-9.]+\.)?", tag, r["notes"])
-            else:
-                r["notes"] = (r["notes"] + " " if r["notes"] else "") + tag
-            n += 1
+            for r in hits:
+                r["loss"] = f"{v:.4f}"; r["loss_eval_set"] = label  # row `confidence` is left alone: it
+                # describes the whole row; the loss's own provenance is the W&B tag in `notes`.
+                tag = f"Loss from W&B ({key}, final step {m['final_step']:.0f}, {urls}).{extra}"
+                if "Loss from W&B" in r["notes"]:
+                    import re
+                    r["notes"] = re.sub(r"Loss from W&B \([^)]*\)\)?\.( c4_en eval CE [0-9.]+\.)?", tag, r["notes"])
+                else:
+                    r["notes"] = (r["notes"] + " " if r["notes"] else "") + tag
+                n += 1
     with runs_csv.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields); w.writeheader(); w.writerows(rows)
     print(f"updated loss on {n} rows of data/runs.csv")

@@ -8,11 +8,10 @@ State as of 2026-09-13 (branch `claude/wandb-accessibility-check-kfemxy`):
   refused for every public project, and PyPI was blocked, so neither the key nor the `wandb`
   package is needed. Chapters 10, 11, 12 and 90 were updated for the new numbers; `data/losses/README.md`
   has the metric choices and run mapping.
-- **Not verified here:** the Quarto render. This container had no `quarto`, `pandas` or `scipy`,
-  so the edited chapters (a new Pythia loss figure and overlay in `10-reference-suites.qmd`; the
-  `fit_experiments=False` switch added to `src/chapter.py` and used in `11-marin.qmd` and
-  `12-olmo.qmd`) are unrun. Do this first: `quarto render`, and check that the Pythia panel shows
-  a fitted curve and that the OLMo and Marin panels show final-run points without a law.
+- **Rendered:** after the environment was switched to full network access, `quarto render`
+  completed for all nine chapters (Quarto 1.7.32, pandas 3.0, scipy 1.17). The Pythia panel shows
+  a fitted curve, the Marin ladder panel shows the five ladder points and the two released models,
+  and the OLMo and Marin standard panels show final points without a law.
 
 Environment setup: `.claude/hooks/session-start.sh` (registered in `.claude/settings.json`) installs
 Quarto from GitHub and `requirements.txt` from PyPI at session start. In the 2026-09-13
@@ -20,9 +19,13 @@ environment PyPI was denied by the network policy, so the pip step printed a war
 `pypi.org` and `files.pythonhosted.org` (and keep `github.com`) in the environment's network
 settings and the next session will have a working `quarto render`.
 
+Rendering note: `_quarto.yml` sets `freeze: auto`, which re-executes a chapter only when its
+`.qmd` changes. After editing the CSVs, delete `_freeze/` (or the chapter's subfolder) before
+`quarto render`, or the figures will show stale data.
+
 Remaining steps, in order:
 
-1. `quarto render` and fix anything the new chapter code breaks.
+1. (done) `quarto render` passes; eyeball `_book/` after any data change.
 2. Still-missing losses: OLMo 2 32B is on comet.ml (`ai2/olmo-2-0325-32b`, REST API needs a
    free Comet key); the OLMo ladder W&B project is private, so ladder losses would need the
    `allenai/OLMo-ladder` checkpoints evaluated directly; Marin's Dec 2024 `tootsie-scaling-*`
