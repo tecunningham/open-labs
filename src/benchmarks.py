@@ -7,6 +7,8 @@ provenance mark.
 """
 from __future__ import annotations
 
+import re
+
 import pandas as pd
 
 from src.load import DATA
@@ -27,12 +29,24 @@ FAMILY_ORDER = ["re_bench", "ai_rd_suite1", "ai_rd_suite2", "ml_rd_internal", "i
                 "terminal_bench", "agentic_coding_internal", "other", "ml_rd_determination"]
 
 
+def _hours(text: str):
+    """'1h30m' -> 1.5, '6.6h' -> 6.6, '0h30m' -> 0.5; None when the text is not a duration."""
+    m = re.fullmatch(r"\s*(\d+)h(\d+)m\s*", text)
+    if m:
+        return int(m.group(1)) + int(m.group(2)) / 60
+    m = re.fullmatch(r"\s*([\d.]+)h\s*", text)
+    return float(m.group(1)) if m else None
+
+
 def load(lab: str | None = None, frontier_only: bool = False) -> pd.DataFrame:
     """`frontier_only` keeps the cards flagged `frontier == yes`: the lab's most capable released
     model at the card date, or a card that moved the lab's frontier. Smaller siblings (Sonnet 4,
-    Haiku 4.5, Codex addenda, Gemini Flash-Lite) stay in the CSV."""
+    Haiku 4.5, Codex addenda, Gemini Flash-Lite) stay in the CSV. Durations such as '2h17m' (METR
+    time horizons) are parsed into hours."""
     df = pd.read_csv(DATA / "ai_rd_benchmarks.csv", dtype=str, keep_default_na=False)
     df["score_num"] = pd.to_numeric(df["score"], errors="coerce")
+    hours = df["score"].map(_hours)
+    df.loc[df["score_num"].isna() & hours.notna(), "score_num"] = hours
     df["card_date"] = pd.to_datetime(df["card_date"], errors="coerce")
     if lab:
         df = df[df["lab"] == lab]
@@ -103,7 +117,6 @@ def to_markdown(t: pd.DataFrame) -> str:
 
 
 # ----------------------------------------------------------------------------- time series
-import re
 import textwrap
 
 import matplotlib.pyplot as plt
@@ -234,9 +247,9 @@ def timeseries(df: pd.DataFrame, title: str | None = None, ncols: int = 3, min_p
 
 
 # ----------------------------------------------------------------------------- ceilings and overview
-CATEGORY_COLORS = {"research": "#2a78d6", "swe": "#eb6834", "terminal": "#1baf7a", "knowledge": "#eda100"}
+CATEGORY_COLORS = {"research": "#2a78d6", "swe": "#eb6834", "terminal": "#1baf7a", "knowledge": "#eda100", "external": "#4a3aa7"}
 CATEGORY_LABELS = {"research": "AI research tasks", "swe": "Software engineering", "terminal": "Terminal and agentic",
-                   "knowledge": "Knowledge"}
+                   "knowledge": "Knowledge", "external": "External (METR)"}
 HUMAN_REF_COLOR = "#c8322b"
 _SHORT = [("Internal AI Research Evaluation Suite 1: ", "Suite 1 "), ("Internal AI Research Evaluation Suite 2", "Suite 2"),
           ("OpenAI Research Engineer interviews: ", "RE interview "), ("MLE-bench: ", ""), ("PaperBench: ", ""),
@@ -244,7 +257,12 @@ _SHORT = [("Internal AI Research Evaluation Suite 1: ", "Suite 1 "), ("Internal 
           ("GRB (GDM internal research engineering benchmark)", "GRB (internal)"), ("SWE-Lancer IC SWE Diamond", "SWE-Lancer Diamond"),
           ("Agentic tasks (autonomy suite)", "Agentic tasks"), ("Internal agentic coding evaluation", "Internal agentic coding"),
           ("FrontierBench v0.1 (Terminal-Bench successor)", "FrontierBench v0.1"), ("Internal Research Debugging Eval", "Research debugging"),
-          (" (75 competitions, AIDE)", " full (pass@10)"), ("MLE-Bench Revised", "MLE-bench revised")]
+          (" (75 competitions, AIDE)", " full (pass@10)"), ("MLE-Bench Revised", "MLE-bench revised"),
+          ("RE-Bench (METR): 4-task modified subset run by Anthropic", "RE-Bench 4-task subset (Anthropic run)"),
+          ("METR external evaluation: 50% time horizon", "METR 50% time horizon"),
+          ("Internal AI R&D productivity survey", "Staff productivity survey"),
+          ("METR data deduplication (RSP checkpoint)", "METR data dedup"),
+          ("METR general autonomy time horizon", "METR autonomy time horizon")]
 
 
 def series_meta() -> pd.DataFrame:
@@ -310,7 +328,7 @@ def _card_labels(ax, df, x0, x1):
         ax.axvline(xd, color=plots.GRID, lw=0.8, zorder=0)
         ax.plot([xd, xp], [100, 104], color=plots.AXIS, lw=0.5, zorder=1, clip_on=False)
         ax.annotate(name, (xp, 104), xytext=(0, 2), textcoords="offset points", rotation=90, ha="center",
-                    va="bottom", fontsize=6.3, color=plots.INK2, annotation_clip=False)
+                    va="bottom", fontsize=6.3, color=plots.INK2, annotation_clip=False).set_in_layout(False)
 
 
 def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: int = 2):
@@ -365,10 +383,9 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
     for (xd, y, name, c), yl in zip(ends, ys):
         ax.plot([xd, xlab], [y, yl], color=c, lw=0.6, alpha=0.6, zorder=1, clip_on=False)
         ax.annotate(name, (xlab, yl), xytext=(3, 0), textcoords="offset points", va="center", fontsize=6.8,
-                    color=plots.INK2, annotation_clip=False)
+                    color=plots.INK2, annotation_clip=False).set_in_layout(False)
     ax.set_ylim(0, 108)
     ax.set_xlim(x0 - pd.Timedelta(days=30), xend)
-    fig.subplots_adjust(right=0.78)
     ax.set_ylabel("Score as percent of the benchmark ceiling")
     ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator(bymonth=[1, 7]))
     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%b %Y"))
@@ -380,84 +397,118 @@ def overview(df: pd.DataFrame, lab: str, title: str | None = None, min_points: i
     _card_labels(ax, df, x0, x1)
     ax.legend(handles=handles, loc="lower left", fontsize=8, title=None)
     ax.set_title(title or f"{LABS.get(lab, lab)}: every bounded AI R&D evaluation, as percent of its ceiling", pad=78)
-    fig.tight_layout(rect=(0, 0, 0.8, 1))
+    fig.subplots_adjust(left=0.07, right=0.66, top=0.8, bottom=0.08)
     return fig
 
 
-# ----------------------------------------------------------------------------- unbounded metrics vs human reference
-# Colour = how much human time the card says the reference point represents (ordered, so a ramp).
-HUMAN_TIME_ORDER = ["4 h", "4 to 8 h", "8 h", "40 h", "48 h", "not stated"]
-HUMAN_TIME_COLORS = {"4 h": "#9ac6ea", "4 to 8 h": "#5f9fdc", "8 h": "#2a78d6", "40 h": "#123f8c", "48 h": "#0b2a63",
-                     "not stated": "#898781"}
+# ----------------------------------------------------------------------------- unbounded metrics, per lab
+def _multiple(y, _pos=None):
+    return f"{y:g}\u00d7"
 
 
-def unbounded_overview(df: pd.DataFrame, title: str | None = None):
-    """Every unbounded metric with a card-stated human reference, across labs, on one log axis.
-
-    Each score is divided by its human reference (reference divided by score when lower is better),
-    so 1.0 is 'human reference reached' for every series. Colour is the human time the reference
-    represents; a black cross marks the last value of a series its lab's later cards drop."""
+def unbounded_overview(df: pd.DataFrame, lab: str, title: str | None = None):
+    """One lab's unbounded metrics (no ceiling) on a log axis of multiples, in the bounded
+    overview's style. A series with a card-stated human reference is divided by it (reference
+    divided by score when lower is better), so 1x is the reference reached; a series without one is
+    indexed to its first reported value and drawn dashed. Colour is the benchmark category; the
+    label at each line's end names the series and what 1x means for it."""
     plots.style()
     meta = series_meta()
-    fig, ax = plt.subplots(figsize=(10, 6.2))
+    d = numeric_series(df)
+    latest_card = df["card_date"].max()
     rows = []
-    for lab, dl in df.groupby("lab"):
-        d = numeric_series(dl)
-        latest = dl["card_date"].max()
-        for s, g in d.groupby("series"):
-            m = meta_for(meta, lab, s)
-            if m is None or pd.notna(m["ceiling"]) or pd.isna(m["human_ref"]):
+    for s, g in d.groupby("series"):
+        m = meta_for(meta, lab, s)
+        if m is None or pd.notna(m["ceiling"]):
+            continue
+        lower = m["direction"] == "lower"
+        pick = "idxmax" if lower else "idxmin"
+        base = g.loc[getattr(g.groupby("model")["score_num"], pick)()].sort_values("card_date")
+        if pd.notna(m["human_ref"]):
+            ratio = (m["human_ref"] / base["score_num"]) if lower else (base["score_num"] / m["human_ref"])
+            what = f"1\u00d7 = {m['human_ref']:g}" + (f", {m['human_time']}" if m["human_time"] else "")
+            indexed = False
+        else:
+            first = base["score_num"].iloc[0]
+            if first <= 0:
                 continue
-            pick = "idxmax" if m["direction"] == "lower" else "idxmin"
-            base = g.loc[getattr(g.groupby("model")["score_num"], pick)()].sort_values("card_date")
-            ratio = (m["human_ref"] / base["score_num"]) if m["direction"] == "lower" else (base["score_num"] / m["human_ref"])
-            rows.append((lab, s, base.assign(ratio=ratio.values), m, latest))
+            ratio = (first / base["score_num"]) if lower else (base["score_num"] / first)
+            what = f"indexed to {_short(base['model'].iloc[0])} = {first:g}"
+            indexed = True
+        rows.append((s, base.assign(ratio=ratio.values), m, what, indexed))
+    fig, ax = plt.subplots(figsize=(10, 6.6))
     if not rows:
-        plots._empty(ax, "No unbounded series with a human reference"); return fig
+        plots._empty(ax, "No unbounded series recorded"); return fig
     ax.axhline(1, color=HUMAN_REF_COLOR, ls=(0, (1.5, 2.5)), lw=1.4, zorder=1)
     ends = []
-    for lab, s, b, m, latest in sorted(rows, key=lambda r: r[2]["card_date"].min()):
-        c = HUMAN_TIME_COLORS.get(m["human_time"] or "not stated", HUMAN_TIME_COLORS["not stated"])
-        ax.plot(b["card_date"], b["ratio"], color=c, lw=1.6, zorder=2)
-        ax.scatter(b["card_date"], b["ratio"], s=18, c=c, edgecolors=plots.SURFACE, linewidths=0.8, zorder=3)
+    retired = 0
+    for s, b, m, what, indexed in sorted(rows, key=lambda r: r[1]["card_date"].min()):
+        c = CATEGORY_COLORS.get(m["category"], plots.MUTED)
+        ax.plot(b["card_date"], b["ratio"], color=c, lw=1.6, ls=(0, (3, 2)) if indexed else "-", zorder=2)
+        ax.scatter(b["card_date"], b["ratio"], s=16, c=c, edgecolors=plots.SURFACE, linewidths=0.8, zorder=3)
         last = b.iloc[-1]
-        _retire_mark(ax, m, last["card_date"], last["ratio"], latest)
-        name = f"{LABS.get(lab, lab)}: {short_name(s)}" if len(df['lab'].unique()) > 1 else short_name(s)
-        ends.append((last["card_date"], float(last["ratio"]), name, c))
-    x0, x1 = min(e[0] for e in ends), max(b["card_date"].max() for _, _, b, _, _ in rows)
-    allr = pd.concat([b["ratio"] for _, _, b, _, _ in rows])
-    lo, hi = max(allr.min() / 1.8, 1e-3), allr.max() * 2.5
+        if _retire_mark(ax, m, last["card_date"], last["ratio"], latest_card):
+            retired += 1
+        ends.append((last["card_date"], float(last["ratio"]), f"{short_name(s)} ({what})", c))
+    allr = pd.concat([b["ratio"] for _, b, _, _, _ in rows])
+    x0, x1 = d["card_date"].min(), d["card_date"].max()
+    lo, hi = min(allr.min() / 1.8, 0.5), max(allr.max() * 2.5, 2)
     ax.set_yscale("log"); ax.set_ylim(lo, hi)
-    ax.annotate("human reference reached (1.0)", (x0, 1), xytext=(2, 3), textcoords="offset points", fontsize=7,
+    ax.yaxis.set_major_formatter(plt.matplotlib.ticker.FuncFormatter(_multiple))
+    ax.yaxis.set_minor_formatter(plt.matplotlib.ticker.NullFormatter())
+    ax.annotate("human reference reached (1\u00d7)", (x0, 1), xytext=(2, -9), textcoords="offset points", fontsize=7,
                 color=HUMAN_REF_COLOR)
-    # Right-hand labels in log space, nudged apart.
     ends.sort(key=lambda e: e[1])
     ys = [np.log10(e[1]) for e in ends]
-    gap = (np.log10(hi) - np.log10(lo)) * 0.032
+    gap = (np.log10(hi) - np.log10(lo)) * 0.036
     for i in range(1, len(ys)):
         if ys[i] - ys[i - 1] < gap:
             ys[i] = ys[i - 1] + gap
-    over = ys[-1] - (np.log10(hi) - gap) if ys[-1] > np.log10(hi) - gap else 0
+    top = np.log10(hi) - gap
+    over = ys[-1] - top if ys[-1] > top else 0
     ys = [y - over for y in ys]
     span = (x1 - x0).days or 1
     xlab = x1 + pd.Timedelta(days=int(span * 0.07))
     for (xd, y, name, c), yl in zip(ends, ys):
         ax.plot([xd, xlab], [y, 10 ** yl], color=c, lw=0.6, alpha=0.6, zorder=1, clip_on=False)
         ax.annotate(name, (xlab, 10 ** yl), xytext=(3, 0), textcoords="offset points", va="center", fontsize=6.8,
-                    color=plots.INK2, annotation_clip=False)
+                    color=plots.INK2, annotation_clip=False).set_in_layout(False)
     ax.set_xlim(x0 - pd.Timedelta(days=30), x1 + pd.Timedelta(days=45))
-    ax.set_ylabel("Score as a multiple of the card's human reference (log)")
+    ax.set_ylabel("Score as a multiple (log)")
     ax.xaxis.set_major_locator(plt.matplotlib.dates.MonthLocator(bymonth=[1, 7]))
     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%b %Y"))
-    present = {m["human_time"] or "not stated" for _, _, _, m, _ in rows}
-    handles = [plt.Line2D([], [], color=HUMAN_TIME_COLORS[k], lw=2, label=f"reference = {k} of human effort" if k != "not stated" else "reference time not stated")
-               for k in HUMAN_TIME_ORDER if k in present]
-    handles.append(plt.Line2D([], [], color=plots.INK, marker="x", ls="none", markersize=7, markeredgewidth=1.4,
-                              label="last reported value; later cards drop it"))
-    ax.legend(handles=handles, loc="upper left", fontsize=8)
-    ax.set_title(title or "Unbounded AI R&D evaluations, as a multiple of the human reference the card states")
-    fig.tight_layout(rect=(0, 0, 0.78, 1))
+    present = {m["category"] for _, _, m, _, _ in rows}
+    handles = [plt.Line2D([], [], color=CATEGORY_COLORS[k], lw=2, label=CATEGORY_LABELS[k])
+               for k in CATEGORY_COLORS if k in present]
+    handles.append(plt.Line2D([], [], color=plots.INK2, lw=1.6, label="solid: 1\u00d7 = card's human reference"))
+    handles.append(plt.Line2D([], [], color=plots.INK2, lw=1.6, ls=(0, (3, 2)), label="dashed: no human reference; 1\u00d7 = first card"))
+    if retired:
+        handles.append(plt.Line2D([], [], color=plots.INK, marker="x", ls="none", markersize=7, markeredgewidth=1.4,
+                                  label="last reported value; later cards drop it"))
+    ax.legend(handles=handles, loc="lower left", fontsize=7.5)
+    # Card names above the plot, as in the bounded overview (anchored just above the top of the axis).
+    _card_labels_log(ax, df, x0, x1, hi)
+    ax.set_title(title or f"{LABS.get(lab, lab)}: every unbounded AI R&D evaluation, as a multiple", pad=78)
+    fig.subplots_adjust(left=0.07, right=0.66, top=0.8, bottom=0.08)
     return fig
+
+
+def _card_labels_log(ax, df, x0, x1, ytop):
+    cards = (df[df["card_date"].notna()].groupby("model")["card_date"].min().sort_values())
+    names = [_short(m) for m in cards.index]
+    xs = [pd.Timestamp(v).value for v in cards.values]
+    lo, hi = pd.Timestamp(x0).value, pd.Timestamp(x1).value
+    gap = (hi - lo) * 0.021
+    pos = list(xs)
+    for i in range(1, len(pos)):
+        if pos[i] - pos[i - 1] < gap:
+            pos[i] = pos[i - 1] + gap
+    for xd, xp, name in zip(xs, pos, names):
+        xd, xp = pd.Timestamp(xd), pd.Timestamp(xp)
+        ax.axvline(xd, color=plots.GRID, lw=0.8, zorder=0)
+        ax.plot([xd, xp], [ytop, ytop * 1.15], color=plots.AXIS, lw=0.5, zorder=1, clip_on=False)
+        ax.annotate(name, (xp, ytop * 1.15), xytext=(0, 2), textcoords="offset points", rotation=90, ha="center",
+                    va="bottom", fontsize=6.3, color=plots.INK2, annotation_clip=False).set_in_layout(False)
 
 
 # ----------------------------------------------------------------------------- evaluation frontier
