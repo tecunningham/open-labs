@@ -9,8 +9,11 @@ reference suites; DeepSeek in progress. Render with `quarto render`; merge new d
 **Environment caveat.** The collection environment's network policy blocked arxiv.org,
 huggingface.co, most lab blogs, W&B and Semantic Scholar. Paper numbers were taken from GitHub
 mirrors, tech-report PDFs on other hosts, and search snippets, and every such row is flagged in
-its `notes`. Loss values that live only in W&B dashboards (OLMo, Marin, Pythia) are the main gap;
-a session with those hosts allowed would fill it quickly.
+its `notes`. A follow-up session (2026-09-13, W&B and arXiv allowed) pulled the final-run loss
+curves for OLMo, Marin and Pythia from W&B into `data/losses/` and `runs.csv` (see
+`data/losses/README.md`; the W&B API is used anonymously because a personal key was refused for
+public projects). Still missing: OLMo 2 32B (comet.ml), the OLMo ladder (private W&B project),
+and losses for the ablation rows.
 
 ## 1. What this is
 

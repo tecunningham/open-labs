@@ -1,0 +1,41 @@
+{
+ "run_id": "exp1380_muon32b (Muon optimizer swap at 80k)",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": 33554432,
+ "final_step": 86269.0,
+ "final_tokens": 2894707294208.0,
+ "final_loss": {
+  "train/loss": 1.9965331554412842,
+  "eval/paloma/c4_en/loss": 2.306417465209961,
+  "eval/loss": 2.1014420986175537,
+  "eval/macro_loss": 2.3356361389160156
+ },
+ "note": "4th Muon attempt, 86k steps",
+ "segments": [
+  {
+   "run": "marin-32b-muon-4",
+   "display_name": "marin-32b-muon-4",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin/runs/marin-32b-muon-4",
+   "created": "2025-06-12T02:33:51Z",
+   "last_heartbeat": "2025-06-19T21:20:48Z",
+   "final_step": 86271,
+   "summary": {
+    "train/loss": 1.9991263151168823,
+    "eval/paloma/c4_en/loss": 2.306417465209961,
+    "eval/loss": 2.1014420986175537,
+    "eval/macro_loss": 2.3356361389160156
+   },
+   "rows": 1506
+  }
+ ],
+ "rows": 1506,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

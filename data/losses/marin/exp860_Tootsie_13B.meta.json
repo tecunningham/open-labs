@@ -1,0 +1,41 @@
+{
+ "run_id": "exp860 Tootsie 13B",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 367120.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 2.1392667293548584,
+  "eval/paloma/c4_en/loss": 2.498345136642456,
+  "eval/loss": 2.17116641998291,
+  "eval/macro_loss": 2.4457621574401855
+ },
+ "note": "40L x 5120; longest of the mk1-mk3 attempts (367k steps); all crashed/abandoned",
+ "segments": [
+  {
+   "run": "llama-13b-tootsie-ema-mk2",
+   "display_name": "llama-13b-tootsie-ema-mk2",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin/runs/llama-13b-tootsie-ema-mk2",
+   "created": "2025-02-14T01:43:02Z",
+   "last_heartbeat": "2025-03-21T05:05:49Z",
+   "final_step": 367148,
+   "summary": {
+    "train/loss": 2.1379337310791016,
+    "eval/paloma/c4_en/loss": 2.498345136642456,
+    "eval/loss": 2.17116641998291,
+    "eval/macro_loss": 2.4457621574401855
+   },
+   "rows": 1577
+  }
+ ],
+ "rows": 1577,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

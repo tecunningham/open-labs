@@ -17,7 +17,7 @@ import numpy as np
 Marin's flagship 2025 runs were **not** preceded by a scaling ladder. The 8B was chosen "mostly
 out of pragmatism" (reserved capacity) and started "with what we had"; the 32B was "largely a
 scale-up of the 8B recipe" and needed two rescues and a discarded cooldown. In 2026 the lab
-built the machinery it had lacked: Delphi (a 78-run IsoFLOP suite whose pre-registered forecast
+built the machinery it had lacked: Delphi (an 81-run IsoFLOP suite whose pre-registered forecast
 hit the 1e23 run within 0.2 percent at a 300x extrapolation), a mixture-of-experts law validated
 at 1e21, a learning-rate law that removed per-size sweeps, and a four-rung ladder costing about
 1 percent of the 535B run. So this chapter shows both regimes in one lab: scale-up by hand, then
@@ -63,12 +63,52 @@ display(Markdown(f"Log residual at 1e21: **{np.log(2.599/2.606):+.4f}**. Elastic
 
 ## Run sizes, compute split, timeline
 
-Losses live in W&B (unreachable from this environment), so the loss-vs-compute panel is
-pending and the run-size map carries the picture. Delphi's 78-run grid is one row here; its
+Losses come from the public `marin-community/marin` W&B project (`data/losses/marin/`; the
+metric is the Paloma c4_en eval loss, the one the retrospectives plot, in nats per token with
+the Llama 3 tokenizer). Eighteen runs are covered: every 8B phase and cooldown, the 13B, 24B and
+70B trials, and the 32B phases, rescues and cooldowns. The panel draws them without a fitted law:
+most rows with a loss are continuation phases whose `flops` is that phase's compute, not the
+cumulative compute the loss reflects, and the cooldown losses are on a different learning-rate
+footing from the pretraining phases. Read the stars (released 8B and 32B) against the abandoned
+trials: the 70B trial at 277k steps sat at 2.42 and the 13B at 2.50, against 2.35 for the
+finished 8B and 2.20 for the finished 32B. Delphi's 81-run grid is one row here; its
 per-run sizes are in the repository's hard-coded suite and can be expanded later.
 
+One clean experiment series does exist: a five-width ladder from December 2024
+(`tootsie-scaling-*`, hidden 512 to 2048 at 16 layers, each 210B tokens of DCLM-baseline, so 90
+to 900 tokens per parameter rather than compute-optimal). Fitting a two-parameter power law to
+those five points and extrapolating to the released 8B and 32B is the report's basic move, shown
+here on Marin's own data; the residuals are in the table.
+
 ```{python}
-df, fit, res = standard_figures("marin")
+dm = load.runs("marin")
+lad = dm[dm["run_id"].str.startswith("tootsie-scaling-")].dropna(subset=["flops", "loss"]).sort_values("flops")
+fin = dm[dm["run_id"].isin(["marin-8b-base-deeper-starling (exp600_tootsie, aggregate)",
+                            "marin-32b-base Mantis (aggregate final artifact)"])].dropna(subset=["flops", "loss"])
+fit_m = fits.fit_power_law(lad["flops"], lad["loss"]) if len(lad) >= 2 else None
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.scatter(lad["flops"], lad["loss"], s=60, c=plots.PROJECT_SLOTS[0], edgecolors=plots.SURFACE, linewidths=1.5, label="Dec 2024 ladder (210B tokens each)", zorder=3)
+ax.scatter(fin["flops"], fin["loss"], s=240, marker="*", c=plots.PROJECT_SLOTS[1], edgecolors=plots.SURFACE, linewidths=2, label="released 8B and 32B", zorder=4)
+if fit_m is not None:
+    xs = np.geomspace(lad["flops"].min(), fin["flops"].max() * 1.5, 100)
+    ax.plot(xs, fit_m.predict(xs), color=plots.MUTED, lw=2, ls=(0, (1, 2)), label=fit_m.label(), zorder=1)
+ax.set_xscale("log"); ax.set_yscale("log")
+ax.set_xlabel("Training compute (FLOPs, 6ND)"); ax.set_ylabel("Paloma c4_en eval loss (nats/token)")
+ax.set_title("Marin: ladder law vs released models"); ax.legend(loc="upper right"); plt.show()
+if fit_m is not None and not fin.empty:
+    t = fin[["run_id", "flops", "loss"]].copy()
+    t["predicted"] = fit_m.predict(t["flops"]); t["log_residual"] = np.log(t["loss"]) - np.log(t["predicted"])
+    display(t.round(4))
+```
+
+The ladder is not a compute-optimal sweep, the law has no irreducible term (so it keeps falling
+where a real curve flattens), and the finals sit at the end of long cooldowns on a different data
+mix, so the residual mixes all three effects; a 200x to 400x extrapolation from five points is
+a demonstration of the method, not a test of Marin's forecasting. It is still the only Marin
+curve that runs from experiments to finals on one metric.
+
+```{python}
+df, fit, res = standard_figures("marin", fit_experiments=False)
 ```
 
 ## Published scaling experiments
@@ -108,7 +148,7 @@ about 130M and 2.5B tokens, define scaling rules, run an IsoFLOP sweep, run a la
 daily canary. Ideas for the MoE are screened at d512 to d1280 against the fitted law, with
 "effective speedup" computed by inverting the law and multiplying by measured throughput.
 
-**Not reconstructable from here.** Loss values (W&B), Delphi's fitted exponent and the 535B
+**Not reconstructable from here.** Delphi's fitted exponent and the 535B
 ladder forecast (both in blocked pages or reports), the compute of the long tail of small
 ablations, any dollar figure (compute was donated by Google TRC and the Huang Foundation), and the
-8B token total (12.7T in the retrospective versus 13.7T in a model-card snippet).
+the reasons the 13B, 24B and 70B trials were abandoned (their W&B runs simply stop in April 2025 at 2.3T, 2.4T and 1.5T tokens).

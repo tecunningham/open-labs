@@ -1,0 +1,35 @@
+{
+ "run_id": "pythia-160m",
+ "aliases": [],
+ "project": "eleutherai/pythia",
+ "keys": [
+  "validation/lm_loss",
+  "train/lm_loss"
+ ],
+ "tokens_per_step": 2097152,
+ "final_step": 143000.0,
+ "final_tokens": 299892736000.0,
+ "final_loss": {
+  "validation/lm_loss": 2.512269973754883,
+  "train/lm_loss": 2.49434494972229
+ },
+ "note": "group 'v2 160M'",
+ "segments": [
+  {
+   "run": "3mvtbwii",
+   "display_name": "ip-26-0-129-223-0",
+   "state": "finished",
+   "url": "https://wandb.ai/eleutherai/pythia/runs/3mvtbwii",
+   "created": "2023-01-24T15:51:20Z",
+   "last_heartbeat": "2023-01-26T00:07:57Z",
+   "final_step": 143000,
+   "summary": {
+    "validation/lm_loss": 2.512269973754883,
+    "train/lm_loss": 2.5315723419189453
+   },
+   "rows": 1501
+  }
+ ],
+ "rows": 1501,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

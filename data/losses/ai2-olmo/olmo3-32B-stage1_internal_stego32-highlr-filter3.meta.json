@@ -1,0 +1,932 @@
+{
+ "run_id": "olmo3-32B-stage1 (internal: stego32-highlr-filter3)",
+ "aliases": [],
+ "project": "ai2-llm/Olmo-3-1125-32B",
+ "keys": [
+  "train/CE loss",
+  "eval/lm/c4_en-validation/CE loss",
+  "eval/lm/pile-validation/CE loss",
+  "eval/lm/dolma_common-crawl-validation/CE loss"
+ ],
+ "tokens_per_step": 8388608,
+ "final_step": 678973.0,
+ "final_tokens": 5695638339584.0,
+ "final_loss": {
+  "train/CE loss": 1.6062856912612915,
+  "eval/lm/c4_en-validation/CE loss": 2.3012166023254395,
+  "eval/lm/pile-validation/CE loss": 1.6385549306869507,
+  "eval/lm/dolma_common-crawl-validation/CE loss": 2.414461851119995
+ },
+ "note": "69 restart segments, group Olmo-3-1125-32B-stage-1; ends at step 678,999 = 5.70T tokens (midtraining branched at 656,000 = 5.50T)",
+ "segments": [
+  {
+   "run": "d7tsy0sp",
+   "display_name": "stego32-highlr-filter3-20250922T0528+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/d7tsy0sp",
+   "created": "2025-11-17T23:16:48Z",
+   "last_heartbeat": "2025-11-17T23:17:04Z",
+   "final_step": 7949,
+   "summary": {
+    "train/CE loss": 2.126423597335815,
+    "eval/lm/c4_en-validation/CE loss": 2.7580740451812744,
+    "eval/lm/pile-validation/CE loss": 2.0450005531311035,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.8947479724884033
+   },
+   "rows": 1507
+  },
+  {
+   "run": "2le8jr80",
+   "display_name": "stego32-highlr-filter3-20250923T0049+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/2le8jr80",
+   "created": "2025-11-17T23:17:06Z",
+   "last_heartbeat": "2025-11-17T23:17:30Z",
+   "final_step": 19640,
+   "summary": {
+    "train/CE loss": 1.9860455989837649,
+    "eval/lm/c4_en-validation/CE loss": 2.596863031387329,
+    "eval/lm/pile-validation/CE loss": 1.895167589187622,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.728363513946533
+   },
+   "rows": 1511
+  },
+  {
+   "run": "1auhizku",
+   "display_name": "stego32-highlr-filter3-20250924T0410+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/1auhizku",
+   "created": "2025-11-17T23:17:32Z",
+   "last_heartbeat": "2025-11-17T23:17:43Z",
+   "final_step": 20949,
+   "summary": {
+    "train/CE loss": 1.9806753396987915,
+    "eval/lm/c4_en-validation/CE loss": 2.5902438163757324,
+    "eval/lm/pile-validation/CE loss": 1.891370177268982,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.727297782897949
+   },
+   "rows": 1309
+  },
+  {
+   "run": "aht8p3di",
+   "display_name": "stego32-highlr-filter3-20250924T0803+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/aht8p3di",
+   "created": "2025-11-17T23:17:44Z",
+   "last_heartbeat": "2025-11-17T23:20:08Z",
+   "final_step": 96320,
+   "summary": {
+    "train/CE loss": 1.8775709867477417,
+    "eval/lm/c4_en-validation/CE loss": 2.470705509185791,
+    "eval/lm/pile-validation/CE loss": 1.778862714767456,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.5938220024108887
+   },
+   "rows": 1573
+  },
+  {
+   "run": "zbsosgsq",
+   "display_name": "stego32-highlr-filter3-20251001T1832+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/zbsosgsq",
+   "created": "2025-11-17T23:20:10Z",
+   "last_heartbeat": "2025-11-17T23:20:45Z",
+   "final_step": 97949,
+   "summary": {
+    "train/CE loss": 1.8621854782104492,
+    "eval/lm/c4_en-validation/CE loss": 2.4711711406707764,
+    "eval/lm/pile-validation/CE loss": 1.7870641946792605,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.5935826301574707
+   },
+   "rows": 1500
+  },
+  {
+   "run": "o6raue03",
+   "display_name": "stego32-highlr-filter3-20251002T1805+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/o6raue03",
+   "created": "2025-11-17T23:20:47Z",
+   "last_heartbeat": "2025-11-17T23:20:48Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "6knh3brt",
+   "display_name": "stego32-highlr-filter3-20251002T1848+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/6knh3brt",
+   "created": "2025-11-17T23:20:49Z",
+   "last_heartbeat": "2025-11-17T23:21:31Z",
+   "final_step": 99949,
+   "summary": {
+    "train/CE loss": 1.8391293287277224,
+    "eval/lm/c4_en-validation/CE loss": 2.4687724113464355,
+    "eval/lm/pile-validation/CE loss": 1.7856953144073486,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.588914394378662
+   },
+   "rows": 1501
+  },
+  {
+   "run": "d47gi2lc",
+   "display_name": "stego32-highlr-filter3-20251002T2230+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/d47gi2lc",
+   "created": "2025-11-17T23:21:33Z",
+   "last_heartbeat": "2025-11-17T23:21:35Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "ezd0ael7",
+   "display_name": "stego32-highlr-filter3-20251002T2312+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/ezd0ael7",
+   "created": "2025-11-17T23:21:36Z",
+   "last_heartbeat": "2025-11-17T23:22:11Z",
+   "final_step": 99949,
+   "summary": {
+    "train/CE loss": 1.838878273963928
+   },
+   "rows": 949
+  },
+  {
+   "run": "b40n05ra",
+   "display_name": "stego32-highlr-filter3-20251003T0105+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/b40n05ra",
+   "created": "2025-11-17T23:22:12Z",
+   "last_heartbeat": "2025-11-17T23:22:47Z",
+   "final_step": 100199,
+   "summary": {
+    "train/CE loss": 1.8425486087799072,
+    "eval/lm/c4_en-validation/CE loss": 2.467045307159424,
+    "eval/lm/pile-validation/CE loss": 1.783849835395813,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.586287498474121
+   },
+   "rows": 1199
+  },
+  {
+   "run": "2ikeaw5m",
+   "display_name": "stego32-highlr-filter3-20251003T0341+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/2ikeaw5m",
+   "created": "2025-11-17T23:22:48Z",
+   "last_heartbeat": "2025-11-17T23:24:34Z",
+   "final_step": 135199,
+   "summary": {
+    "train/CE loss": 1.8388689756393433,
+    "eval/lm/c4_en-validation/CE loss": 2.464684247970581,
+    "eval/lm/pile-validation/CE loss": 1.7674179077148438,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.5698940753936768
+   },
+   "rows": 1533
+  },
+  {
+   "run": "doqdat0f",
+   "display_name": "stego32-highlr-filter3-20251004T2346+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/doqdat0f",
+   "created": "2025-11-17T23:24:36Z",
+   "last_heartbeat": "2025-11-17T23:24:37Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "9o6ojvac",
+   "display_name": "stego32-highlr-filter3-20251005T0028+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/9o6ojvac",
+   "created": "2025-11-17T23:24:39Z",
+   "last_heartbeat": "2025-11-17T23:32:53Z",
+   "final_step": 332949,
+   "summary": {
+    "train/CE loss": 1.7534606456756592,
+    "eval/lm/c4_en-validation/CE loss": 2.396430730819702,
+    "eval/lm/pile-validation/CE loss": 1.7189286947250366,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.517350196838379
+   },
+   "rows": 1696
+  },
+  {
+   "run": "qpzn5ll4",
+   "display_name": "stego32-highlr-filter3-20251014T2339+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/qpzn5ll4",
+   "created": "2025-11-17T23:32:54Z",
+   "last_heartbeat": "2025-11-17T23:34:58Z",
+   "final_step": 333949,
+   "summary": {
+    "train/CE loss": 1.7631617784500122,
+    "eval/lm/c4_en-validation/CE loss": 2.39464807510376,
+    "eval/lm/pile-validation/CE loss": 1.7142572402954102,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.5146946907043457
+   },
+   "rows": 1501
+  },
+  {
+   "run": "d6857ej7",
+   "display_name": "stego32-highlr-filter3-20251015T0251+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/d6857ej7",
+   "created": "2025-11-17T23:34:59Z",
+   "last_heartbeat": "2025-11-17T23:36:56Z",
+   "final_step": 334949,
+   "summary": {
+    "train/CE loss": 1.7647056579589844,
+    "eval/lm/c4_en-validation/CE loss": 2.3947935104370117,
+    "eval/lm/pile-validation/CE loss": 1.7161945104599,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.516218423843384
+   },
+   "rows": 1501
+  },
+  {
+   "run": "0reotjsg",
+   "display_name": "stego32-highlr-filter3-20251015T0716+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/0reotjsg",
+   "created": "2025-11-17T23:36:58Z",
+   "last_heartbeat": "2025-11-17T23:38:44Z",
+   "final_step": 335000,
+   "summary": {
+    "train/CE loss": 1.7631793022155762
+   },
+   "rows": 649
+  },
+  {
+   "run": "t722dfru",
+   "display_name": "stego32-highlr-filter3-20251015T0851+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/t722dfru",
+   "created": "2025-11-17T23:38:46Z",
+   "last_heartbeat": "2025-11-17T23:41:34Z",
+   "final_step": 365447,
+   "summary": {
+    "train/CE loss": 1.7304155826568604,
+    "eval/lm/c4_en-validation/CE loss": 2.3836190700531006,
+    "eval/lm/pile-validation/CE loss": 1.71718430519104,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.505713939666748
+   },
+   "rows": 1528
+  },
+  {
+   "run": "edml2t5f",
+   "display_name": "stego32-highlr-filter3-20251016T2128+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/edml2t5f",
+   "created": "2025-11-17T23:41:36Z",
+   "last_heartbeat": "2025-11-17T23:41:37Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "q6zpizre",
+   "display_name": "stego32-highlr-filter3-20251016T2219+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/q6zpizre",
+   "created": "2025-11-17T23:41:39Z",
+   "last_heartbeat": "2025-11-17T23:43:31Z",
+   "final_step": 365440,
+   "summary": {
+    "train/CE loss": 1.7258390188217163
+   },
+   "rows": 440
+  },
+  {
+   "run": "tk3qv8ba",
+   "display_name": "stego32-highlr-filter3-20251016T2346+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/tk3qv8ba",
+   "created": "2025-11-17T23:43:33Z",
+   "last_heartbeat": "2025-11-17T23:45:26Z",
+   "final_step": 365690,
+   "summary": {
+    "train/CE loss": 1.7384670972824097
+   },
+   "rows": 250
+  },
+  {
+   "run": "ix57el7a",
+   "display_name": "stego32-highlr-filter3-20251017T0125+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/ix57el7a",
+   "created": "2025-11-17T23:45:28Z",
+   "last_heartbeat": "2025-11-17T23:47:24Z",
+   "final_step": 368699,
+   "summary": {
+    "train/CE loss": 1.7624619007110596,
+    "eval/lm/c4_en-validation/CE loss": 2.3833136558532715,
+    "eval/lm/pile-validation/CE loss": 1.7175923585891724,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4979782104492188
+   },
+   "rows": 1502
+  },
+  {
+   "run": "ccfzupze",
+   "display_name": "stego32-highlr-filter3-20251017T0643+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/ccfzupze",
+   "created": "2025-11-17T23:47:25Z",
+   "last_heartbeat": "2025-11-17T23:50:07Z",
+   "final_step": 393649,
+   "summary": {
+    "train/CE loss": 1.7120388746261597,
+    "eval/lm/c4_en-validation/CE loss": 2.374945163726806,
+    "eval/lm/pile-validation/CE loss": 1.7060474157333374,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.494227886199951
+   },
+   "rows": 1523
+  },
+  {
+   "run": "04uct8nk",
+   "display_name": "stego32-highlr-filter3-20251018T1638+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/04uct8nk",
+   "created": "2025-11-17T23:50:08Z",
+   "last_heartbeat": "2025-11-17T23:53:31Z",
+   "final_step": 430349,
+   "summary": {
+    "train/CE loss": 1.7164534330368042,
+    "eval/lm/c4_en-validation/CE loss": 2.36856460571289,
+    "eval/lm/pile-validation/CE loss": 1.6933850049972534,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4847850799560547
+   },
+   "rows": 1534
+  },
+  {
+   "run": "tygy83c3",
+   "display_name": "stego32-highlr-filter3-20251020T1403+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/tygy83c3",
+   "created": "2025-11-17T23:53:32Z",
+   "last_heartbeat": "2025-11-17T23:56:08Z",
+   "final_step": 440949,
+   "summary": {
+    "train/CE loss": 1.7120981216430664,
+    "eval/lm/c4_en-validation/CE loss": 2.3616788387298584,
+    "eval/lm/pile-validation/CE loss": 1.6927862167358398,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.48217511177063
+   },
+   "rows": 1510
+  },
+  {
+   "run": "ui3l2hhc",
+   "display_name": "stego32-highlr-filter3-20251021T0355+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/ui3l2hhc",
+   "created": "2025-11-17T23:56:09Z",
+   "last_heartbeat": "2025-11-17T23:56:10Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "rvitwio3",
+   "display_name": "stego32-highlr-filter3-20251021T0440+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/rvitwio3",
+   "created": "2025-11-17T23:56:11Z",
+   "last_heartbeat": "2025-11-18T00:00:08Z",
+   "final_step": 481849,
+   "summary": {
+    "train/CE loss": 1.7094461917877195,
+    "eval/lm/c4_en-validation/CE loss": 2.3476030826568604,
+    "eval/lm/pile-validation/CE loss": 1.684451937675476,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4683072566986084
+   },
+   "rows": 1538
+  },
+  {
+   "run": "xu5nx0ih",
+   "display_name": "stego32-highlr-filter3-20251023T0730+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/xu5nx0ih",
+   "created": "2025-11-18T00:00:09Z",
+   "last_heartbeat": "2025-11-18T00:02:50Z",
+   "final_step": 482949,
+   "summary": {
+    "train/CE loss": 1.6805177927017212,
+    "eval/lm/c4_en-validation/CE loss": 2.348313093185425,
+    "eval/lm/pile-validation/CE loss": 1.683308720588684,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4686341285705566
+   },
+   "rows": 1501
+  },
+  {
+   "run": "r50btcbd",
+   "display_name": "stego32-highlr-filter3-20251023T1445+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/r50btcbd",
+   "created": "2025-11-18T00:02:52Z",
+   "last_heartbeat": "2025-11-18T00:02:53Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "4ncibxr6",
+   "display_name": "stego32-highlr-filter3-20251023T1509+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/4ncibxr6",
+   "created": "2025-11-18T00:02:54Z",
+   "last_heartbeat": "2025-11-18T00:05:36Z",
+   "final_step": 485949,
+   "summary": {
+    "train/CE loss": 1.670704007148743,
+    "eval/lm/c4_en-validation/CE loss": 2.344393253326416,
+    "eval/lm/pile-validation/CE loss": 1.6860076189041138,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.465562343597412
+   },
+   "rows": 1503
+  },
+  {
+   "run": "spg566z0",
+   "display_name": "stego32-highlr-filter3-20251023T2358+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/spg566z0",
+   "created": "2025-11-18T00:05:37Z",
+   "last_heartbeat": "2025-11-18T00:09:06Z",
+   "final_step": 511699,
+   "summary": {
+    "train/CE loss": 1.6449832916259766,
+    "eval/lm/c4_en-validation/CE loss": 2.3389971256256104,
+    "eval/lm/pile-validation/CE loss": 1.6761687994003296,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4565014839172363
+   },
+   "rows": 1524
+  },
+  {
+   "run": "55oplsxc",
+   "display_name": "stego32-highlr-filter3-20251025T0959+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/55oplsxc",
+   "created": "2025-11-18T00:09:08Z",
+   "last_heartbeat": "2025-11-18T00:12:19Z",
+   "final_step": 524849,
+   "summary": {
+    "train/CE loss": 1.6906782388687134,
+    "eval/lm/c4_en-validation/CE loss": 2.3368427753448486,
+    "eval/lm/pile-validation/CE loss": 1.6700012683868408,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4509201049804688
+   },
+   "rows": 1512
+  },
+  {
+   "run": "0qlfbh2t",
+   "display_name": "stego32-highlr-filter3-20251026T0342+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/0qlfbh2t",
+   "created": "2025-11-18T00:12:21Z",
+   "last_heartbeat": "2025-11-18T00:12:22Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "9s83a2lt",
+   "display_name": "stego32-highlr-filter3-20251026T0410+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/9s83a2lt",
+   "created": "2025-11-18T00:12:24Z",
+   "last_heartbeat": "2025-11-18T00:12:24Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "fl8tfmev",
+   "display_name": "stego32-highlr-filter3-20251026T0436+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/fl8tfmev",
+   "created": "2025-11-18T00:12:26Z",
+   "last_heartbeat": "2025-11-18T00:15:23Z",
+   "final_step": 531299,
+   "summary": {
+    "train/CE loss": 1.6669763326644895,
+    "eval/lm/c4_en-validation/CE loss": 2.3333630561828613,
+    "eval/lm/pile-validation/CE loss": 1.6632765531539917,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4502041339874268
+   },
+   "rows": 1507
+  },
+  {
+   "run": "1iuozz7z",
+   "display_name": "stego32-highlr-filter3-20251026T1420+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/1iuozz7z",
+   "created": "2025-11-18T00:15:24Z",
+   "last_heartbeat": "2025-11-18T00:15:25Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "d3cvcr57",
+   "display_name": "stego32-highlr-filter3-20251026T1503+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/d3cvcr57",
+   "created": "2025-11-18T00:15:27Z",
+   "last_heartbeat": "2025-11-18T00:15:28Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "vipmyyn9",
+   "display_name": "stego32-highlr-filter3-20251026T1529+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/vipmyyn9",
+   "created": "2025-11-18T00:15:29Z",
+   "last_heartbeat": "2025-11-18T00:18:47Z",
+   "final_step": 556606,
+   "summary": {
+    "train/CE loss": 1.6557836532592771,
+    "eval/lm/c4_en-validation/CE loss": 2.323777914047241,
+    "eval/lm/pile-validation/CE loss": 1.6599774360656738,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4443085193634033
+   },
+   "rows": 1523
+  },
+  {
+   "run": "zz88xce7",
+   "display_name": "stego32-highlr-filter3-20251028T0017+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/zz88xce7",
+   "created": "2025-11-18T00:18:48Z",
+   "last_heartbeat": "2025-11-18T00:21:57Z",
+   "final_step": 573360,
+   "summary": {
+    "train/CE loss": 1.66117525100708,
+    "eval/lm/c4_en-validation/CE loss": 2.3204238414764404,
+    "eval/lm/pile-validation/CE loss": 1.6607251167297363,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.43147873878479
+   },
+   "rows": 1516
+  },
+  {
+   "run": "rgij63ht",
+   "display_name": "stego32-highlr-filter3-20251029T0017+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/rgij63ht",
+   "created": "2025-11-18T00:21:58Z",
+   "last_heartbeat": "2025-11-18T00:24:39Z",
+   "final_step": 575011,
+   "summary": {
+    "train/CE loss": 1.639734387397766,
+    "eval/lm/c4_en-validation/CE loss": 2.3185784816741943,
+    "eval/lm/pile-validation/CE loss": 1.656894564628601,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.430206537246704
+   },
+   "rows": 1501
+  },
+  {
+   "run": "a2nz69tz",
+   "display_name": "stego32-highlr-filter3-20251029T0956+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/a2nz69tz",
+   "created": "2025-11-18T00:24:40Z",
+   "last_heartbeat": "2025-11-18T00:27:59Z",
+   "final_step": 576250,
+   "summary": {
+    "train/CE loss": 1.6035934686660769,
+    "eval/lm/c4_en-validation/CE loss": 2.317863702774048,
+    "eval/lm/pile-validation/CE loss": 1.6551398038864136,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.430546522140503
+   },
+   "rows": 1250
+  },
+  {
+   "run": "rx6bq94m",
+   "display_name": "stego32-highlr-filter3-20251029T1618+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/rx6bq94m",
+   "created": "2025-11-18T00:28:00Z",
+   "last_heartbeat": "2025-11-18T00:31:25Z",
+   "final_step": 578830,
+   "summary": {
+    "train/CE loss": 1.5992158651351929,
+    "eval/lm/c4_en-validation/CE loss": 2.3187594413757324,
+    "eval/lm/pile-validation/CE loss": 1.6578104496002195,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4336884021759033
+   },
+   "rows": 1501
+  },
+  {
+   "run": "eph5jd94",
+   "display_name": "stego32-highlr-filter3-20251029T2247+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/eph5jd94",
+   "created": "2025-11-18T00:31:26Z",
+   "last_heartbeat": "2025-11-18T00:34:30Z",
+   "final_step": 579120,
+   "summary": {
+    "train/CE loss": 1.6358262300491333,
+    "eval/lm/c4_en-validation/CE loss": 2.3187601566314697,
+    "eval/lm/pile-validation/CE loss": 1.655075192451477,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.432974338531494
+   },
+   "rows": 290
+  },
+  {
+   "run": "6rpbh2bi",
+   "display_name": "stego32-highlr-filter3-20251030T0022+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/6rpbh2bi",
+   "created": "2025-11-18T00:34:31Z",
+   "last_heartbeat": "2025-11-18T00:34:33Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "084m5nk2",
+   "display_name": "stego32-highlr-filter3-20251030T0100+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/084m5nk2",
+   "created": "2025-11-18T00:34:35Z",
+   "last_heartbeat": "2025-11-18T00:34:36Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "3iwfkgdk",
+   "display_name": "stego32-highlr-filter3-20251030T0151+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/3iwfkgdk",
+   "created": "2025-11-18T00:34:37Z",
+   "last_heartbeat": "2025-11-18T00:34:39Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "7jwl0zmw",
+   "display_name": "stego32-highlr-filter3-20251030T0213+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/7jwl0zmw",
+   "created": "2025-11-18T00:34:40Z",
+   "last_heartbeat": "2025-11-18T00:37:28Z",
+   "final_step": 579949,
+   "summary": {
+    "train/CE loss": 1.6259602308273315
+   },
+   "rows": 829
+  },
+  {
+   "run": "ppi2gpfn",
+   "display_name": "stego32-highlr-filter3-20251030T0458+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/ppi2gpfn",
+   "created": "2025-11-18T00:37:29Z",
+   "last_heartbeat": "2025-11-18T00:37:30Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "w5kvn30c",
+   "display_name": "stego32-highlr-filter3-20251030T0529+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/w5kvn30c",
+   "created": "2025-11-18T00:37:32Z",
+   "last_heartbeat": "2025-11-18T00:37:33Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "iwfdnfof",
+   "display_name": "stego32-highlr-filter3-20251030T0554+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/iwfdnfof",
+   "created": "2025-11-18T00:37:34Z",
+   "last_heartbeat": "2025-11-18T00:40:28Z",
+   "final_step": 580049,
+   "summary": {
+    "train/CE loss": 1.633839130401611
+   },
+   "rows": 49
+  },
+  {
+   "run": "vpsi2arp",
+   "display_name": "stego32-highlr-filter3-20251030T0625+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/vpsi2arp",
+   "created": "2025-11-18T00:40:29Z",
+   "last_heartbeat": "2025-11-18T00:40:30Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "47u9l6k0",
+   "display_name": "stego32-highlr-filter3-20251030T0708+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/47u9l6k0",
+   "created": "2025-11-18T00:40:31Z",
+   "last_heartbeat": "2025-11-18T00:44:10Z",
+   "final_step": 589199,
+   "summary": {
+    "train/CE loss": 1.607640504837036,
+    "eval/lm/c4_en-validation/CE loss": 2.321922779083252,
+    "eval/lm/pile-validation/CE loss": 1.6525466442108154,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.43310022354126
+   },
+   "rows": 1509
+  },
+  {
+   "run": "jqwt4pg7",
+   "display_name": "stego32-highlr-filter3-20251031T0928+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/jqwt4pg7",
+   "created": "2025-11-18T00:44:11Z",
+   "last_heartbeat": "2025-11-18T00:44:12Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "cq8c50dn",
+   "display_name": "stego32-highlr-filter3-20251031T1100+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/cq8c50dn",
+   "created": "2025-11-18T00:44:13Z",
+   "last_heartbeat": "2025-11-18T00:48:01Z",
+   "final_step": 589949,
+   "summary": {
+    "train/CE loss": 1.613915205001831
+   },
+   "rows": 949
+  },
+  {
+   "run": "pq8qmc1o",
+   "display_name": "stego32-highlr-filter3-20251031T1829+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/pq8qmc1o",
+   "created": "2025-11-18T00:48:03Z",
+   "last_heartbeat": "2025-11-18T00:48:04Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "wxembwpy",
+   "display_name": "stego32-highlr-filter3-20251031T1914+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/wxembwpy",
+   "created": "2025-11-18T00:48:05Z",
+   "last_heartbeat": "2025-11-18T00:48:06Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "6y3lb115",
+   "display_name": "stego32-highlr-filter3-20251031T1930+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/6y3lb115",
+   "created": "2025-11-18T00:48:07Z",
+   "last_heartbeat": "2025-11-18T00:50:47Z",
+   "final_step": 590120,
+   "summary": {
+    "train/CE loss": 1.6477761268615725
+   },
+   "rows": 120
+  },
+  {
+   "run": "iusez48f",
+   "display_name": "stego32-highlr-filter3-20251031T2006+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/iusez48f",
+   "created": "2025-11-18T00:50:48Z",
+   "last_heartbeat": "2025-11-18T00:53:35Z",
+   "final_step": 591350,
+   "summary": {
+    "train/CE loss": 1.6001026630401611,
+    "eval/lm/c4_en-validation/CE loss": 2.317237615585327,
+    "eval/lm/pile-validation/CE loss": 1.6534993648529053,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.429760217666626
+   },
+   "rows": 1230
+  },
+  {
+   "run": "zp1dnv7k",
+   "display_name": "stego32-highlr-filter3-20251031T2202+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/zp1dnv7k",
+   "created": "2025-11-18T00:53:36Z",
+   "last_heartbeat": "2025-11-18T00:56:46Z",
+   "final_step": 598649,
+   "summary": {
+    "train/CE loss": 1.6230696439743042,
+    "eval/lm/c4_en-validation/CE loss": 2.3154168128967285,
+    "eval/lm/pile-validation/CE loss": 1.6466189622879028,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4281954765319824
+   },
+   "rows": 1506
+  },
+  {
+   "run": "1x7k6g4t",
+   "display_name": "stego32-highlr-filter3-20251101T0739+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/1x7k6g4t",
+   "created": "2025-11-18T00:56:48Z",
+   "last_heartbeat": "2025-11-18T00:56:49Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "9wh16d68",
+   "display_name": "stego32-highlr-filter3-20251101T0809+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/9wh16d68",
+   "created": "2025-11-18T00:56:51Z",
+   "last_heartbeat": "2025-11-18T00:56:52Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "3xflxf59",
+   "display_name": "stego32-highlr-filter3-20251101T0843+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/3xflxf59",
+   "created": "2025-11-18T00:56:53Z",
+   "last_heartbeat": "2025-11-18T00:56:54Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "ulp4dv31",
+   "display_name": "stego32-highlr-filter3-20251101T0911+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/ulp4dv31",
+   "created": "2025-11-18T00:56:55Z",
+   "last_heartbeat": "2025-11-18T00:56:56Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "cid62f3d",
+   "display_name": "stego32-highlr-filter3-20251101T0941+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/cid62f3d",
+   "created": "2025-11-18T00:56:58Z",
+   "last_heartbeat": "2025-11-18T00:56:59Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "ron11u1m",
+   "display_name": "stego32-highlr-filter3-20251101T1027+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/ron11u1m",
+   "created": "2025-11-18T00:57:01Z",
+   "last_heartbeat": "2025-11-18T01:00:29Z",
+   "final_step": 606999,
+   "summary": {
+    "train/CE loss": 1.627259612083435,
+    "eval/lm/c4_en-validation/CE loss": 2.3115642070770264,
+    "eval/lm/pile-validation/CE loss": 1.649568796157837,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.4300856590270996
+   },
+   "rows": 1508
+  },
+  {
+   "run": "wibltt95",
+   "display_name": "stego32-highlr-filter3-20251101T2225+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/wibltt95",
+   "created": "2025-11-18T01:00:30Z",
+   "last_heartbeat": "2025-11-18T01:00:31Z",
+   "final_step": null,
+   "summary": {},
+   "rows": 0
+  },
+  {
+   "run": "0ttgnsmq",
+   "display_name": "stego32-highlr-filter3-20251101T2327+0000",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1125-32B/runs/0ttgnsmq",
+   "created": "2025-11-18T01:00:33Z",
+   "last_heartbeat": "2025-11-18T01:06:41Z",
+   "final_step": 678999,
+   "summary": {
+    "train/CE loss": 1.559720158576965,
+    "eval/lm/c4_en-validation/CE loss": 2.3012166023254395,
+    "eval/lm/pile-validation/CE loss": 1.638554930686951,
+    "eval/lm/dolma_common-crawl-validation/CE loss": 2.414461851119995
+   },
+   "rows": 1568
+  }
+ ],
+ "rows": 3698,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

@@ -1,0 +1,35 @@
+{
+ "run_id": "pythia-6.9b",
+ "aliases": [],
+ "project": "eleutherai/pythia",
+ "keys": [
+  "validation/lm_loss",
+  "train/lm_loss"
+ ],
+ "tokens_per_step": 2097152,
+ "final_step": 143000.0,
+ "final_tokens": 299892736000.0,
+ "final_loss": {
+  "validation/lm_loss": 1.776774287223816,
+  "train/lm_loss": 1.8014187812805176
+ },
+ "note": "group '6.7B Decay' (32L x 4096, Pile)",
+ "segments": [
+  {
+   "run": "vi7laank",
+   "display_name": "gpu-st-p4d-24xlarge-54-0",
+   "state": "finished",
+   "url": "https://wandb.ai/eleutherai/pythia/runs/vi7laank",
+   "created": "2022-10-30T20:22:14Z",
+   "last_heartbeat": "2022-11-01T05:22:13Z",
+   "final_step": 143000,
+   "summary": {
+    "validation/lm_loss": 1.776774287223816,
+    "train/lm_loss": 1.8043922185897827
+   },
+   "rows": 1516
+  }
+ ],
+ "rows": 1516,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

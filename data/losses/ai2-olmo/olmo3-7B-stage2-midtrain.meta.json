@@ -1,0 +1,58 @@
+{
+ "run_id": "olmo3-7B-stage2-midtrain",
+ "aliases": [],
+ "project": "ai2-llm/Olmo-3-1025-7B",
+ "keys": [
+  "train/CE loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 47670.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/CE loss": 1.2117193937301636
+ },
+ "note": "anneal-round5-100B (3 segments, step counter restarts); the released 100B midtrain",
+ "segments": [
+  {
+   "run": "j9nypgrc",
+   "display_name": "anneal-round5-100B-olmo25_7b-anneal-6T-decon-sparkle-motion-8730626c",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1025-7B/runs/j9nypgrc",
+   "created": "2025-10-20T16:00:56Z",
+   "last_heartbeat": "2025-10-20T16:00:58Z",
+   "final_step": 1489,
+   "summary": {
+    "train/CE loss": 1.4398012161254885
+   },
+   "rows": 1489
+  },
+  {
+   "run": "zxv811e1",
+   "display_name": "anneal-round5-100B-olmo25_7b-anneal-6T-decon-sparkle-motion-8730626c",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1025-7B/runs/zxv811e1",
+   "created": "2025-10-20T16:00:16Z",
+   "last_heartbeat": "2025-10-20T16:00:35Z",
+   "final_step": 32279,
+   "summary": {
+    "train/CE loss": 1.280515432357788
+   },
+   "rows": 1500
+  },
+  {
+   "run": "ycefe7k4",
+   "display_name": "anneal-round5-100B-olmo25_7b-anneal-6T-decon-sparkle-motion-8730626c",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/Olmo-3-1025-7B/runs/ycefe7k4",
+   "created": "2025-10-20T15:58:58Z",
+   "last_heartbeat": "2025-10-20T15:59:17Z",
+   "final_step": 41998,
+   "summary": {
+    "train/CE loss": 1.1779102087020874
+   },
+   "rows": 1500
+  }
+ ],
+ "rows": 4489,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

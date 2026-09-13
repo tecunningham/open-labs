@@ -1,0 +1,58 @@
+{
+ "run_id": "olmo2-7B-stage2-soup",
+ "aliases": [],
+ "project": "ai2-llm/OLMo-2-1124-7B",
+ "keys": [
+  "train/CrossEntropyLoss"
+ ],
+ "tokens_per_step": 4194304,
+ "final_step": 940577.0,
+ "final_tokens": 3945065873408.0,
+ "final_loss": {
+  "train/CrossEntropyLoss": 1.6017929315567017
+ },
+ "note": "3 x 50B anneal ingredients (souped), steps 928,646 -> 940,577",
+ "segments": [
+  {
+   "run": "7xkf4smi",
+   "display_name": "OLMo-2-1124-7B-stage-2-ingredient-1",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/7xkf4smi",
+   "created": "2024-12-03T18:58:43Z",
+   "last_heartbeat": "2024-12-03T19:13:22Z",
+   "final_step": 940577,
+   "summary": {
+    "train/CrossEntropyLoss": 1.599908709526062
+   },
+   "rows": 1500
+  },
+  {
+   "run": "m9lacg4r",
+   "display_name": "OLMo-2-1124-7B-stage-2-ingredient-2",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/m9lacg4r",
+   "created": "2024-12-03T19:13:26Z",
+   "last_heartbeat": "2024-12-03T19:32:58Z",
+   "final_step": 940577,
+   "summary": {
+    "train/CrossEntropyLoss": 1.6017929315567017
+   },
+   "rows": 1500
+  },
+  {
+   "run": "ims1w5bt",
+   "display_name": "OLMo-2-1124-7B-stage-2-ingredient-3",
+   "state": "finished",
+   "url": "https://wandb.ai/ai2-llm/OLMo-2-1124-7B/runs/ims1w5bt",
+   "created": "2024-12-03T19:33:02Z",
+   "last_heartbeat": "2024-12-03T19:52:10Z",
+   "final_step": 940577,
+   "summary": {
+    "train/CrossEntropyLoss": 1.5638402700424194
+   },
+   "rows": 1500
+  }
+ ],
+ "rows": 4500,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

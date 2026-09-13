@@ -1,0 +1,35 @@
+{
+ "run_id": "pythia-70m-deduped",
+ "aliases": [],
+ "project": "eleutherai/pythia",
+ "keys": [
+  "validation/lm_loss",
+  "train/lm_loss"
+ ],
+ "tokens_per_step": 2097152,
+ "final_step": 143000.0,
+ "final_tokens": 299892736000.0,
+ "final_loss": {
+  "validation/lm_loss": 3.0126655101776123,
+  "train/lm_loss": 2.979835033416748
+ },
+ "note": "group 'v2-70M-deduped'",
+ "segments": [
+  {
+   "run": "2vcd53l4",
+   "display_name": "ip-26-0-134-60-0",
+   "state": "finished",
+   "url": "https://wandb.ai/eleutherai/pythia/runs/2vcd53l4",
+   "created": "2023-02-04T21:09:24Z",
+   "last_heartbeat": "2023-02-05T13:04:10Z",
+   "final_step": 143000,
+   "summary": {
+    "validation/lm_loss": 3.0126655101776123,
+    "train/lm_loss": 3.0254178047180176
+   },
+   "rows": 1501
+  }
+ ],
+ "rows": 1501,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

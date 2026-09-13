@@ -1,0 +1,41 @@
+{
+ "run_id": "exp916 Spoonbill (cooldown to 3e-5 + Tulu 0.3% + FLAN 1%, z-loss 1e-4 fix)",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 829999.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 1.6544216871261597,
+  "eval/paloma/c4_en/loss": 2.5886964797973633,
+  "eval/loss": 1.212039589881897,
+  "eval/macro_loss": 2.4158990383148193
+ },
+ "note": "finished variant with the z-loss fix; 'tootsie-8b-hypnotic-spoonbill-2' is the report's run",
+ "segments": [
+  {
+   "run": "tootsie-8b-focused-spoonbill-zloss",
+   "display_name": "tootsie-8b-focused-spoonbill-zloss",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin/runs/tootsie-8b-focused-spoonbill-zloss",
+   "created": "2025-04-01T19:27:35Z",
+   "last_heartbeat": "2025-04-03T08:00:28Z",
+   "final_step": 829999,
+   "summary": {
+    "train/loss": 1.6544216871261597,
+    "eval/paloma/c4_en/loss": 2.5886964797973633,
+    "eval/loss": 1.212039589881897,
+    "eval/macro_loss": 2.4158990383148193
+   },
+   "rows": 1503
+  }
+ ],
+ "rows": 1503,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

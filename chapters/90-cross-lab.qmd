@@ -95,14 +95,16 @@ display(pd.DataFrame(rows, columns=["curve and point", "d log L / d log C", "sou
 | Paper primitive | What this report gives | Status |
 |---|---|---|
 | Experimental compute share S_E | Stated whole-programme shares of 50 to 82 percent (Ai2, Meta, EleutherAI); public-run floors of 0 to 15 percent | Four labs with a stated figure; more needed |
-| Algorithmic efficiency growth g_A and scale bias | Cross-release overlays exist for Llama 1 to 3 (MMLU vs compute) and are pending losses for OLMo 2 to 3 | Needs loss values from W&B and a common benchmark |
+| Algorithmic efficiency growth g_A and scale bias | Cross-release overlays exist for Llama 1 to 3 (MMLU vs compute); OLMo 2 and 3 final train losses are now in `runs.csv` but sit on different data mixes, so the loss overlay needs the c4_en eval loss (logged only for Olmo 3) or a common benchmark | Needs a common held-out loss or benchmark |
 | Marginal return to compute at the frontier | Elasticities from lab laws, about -0.03 to -0.06 at the largest fitted points | Two labs; DeepSeek's law pending |
 | Informativeness of experiments | Residuals from 0.2 to 0.5 percent in loss at 4x to 300x extrapolation; 2 to 4 points on tasks | Five labs |
 
 ## What would move these numbers most
 
-1. Loss values for OLMo, Marin and Pythia from their public W&B dashboards (blocked from this
-   environment), which would turn four run-size maps into scaling curves.
+1. Loss values for the *experimental* runs. The final-run losses for OLMo, Marin and Pythia are
+   now pulled from W&B (`data/losses/`), which gives Pythia a fitted curve; for OLMo and Marin
+   the ladder and ablation rows still carry no loss, because the OLMo ladder project is private
+   and Marin's ablation sizes are not yet enumerated, so their panels show final points only.
 2. The Morrison et al. (2026) split of Olmo 3's 6.85M development hours across pretraining,
    midtraining, post-training and synthetic data.
 3. Any second lab publishing a whole-programme accounting like Ai2's; Marin is the obvious ask

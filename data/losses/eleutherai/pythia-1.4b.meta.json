@@ -1,0 +1,35 @@
+{
+ "run_id": "pythia-1.4b",
+ "aliases": [],
+ "project": "eleutherai/pythia",
+ "keys": [
+  "validation/lm_loss",
+  "train/lm_loss"
+ ],
+ "tokens_per_step": 2097152,
+ "final_step": 143000.0,
+ "final_tokens": 299892736000.0,
+ "final_loss": {
+  "validation/lm_loss": 1.960450530052185,
+  "train/lm_loss": 1.9457802772521973
+ },
+ "note": "group 'v2 1.4B'",
+ "segments": [
+  {
+   "run": "vd5ogsc6",
+   "display_name": "ip-26-0-128-55-0",
+   "state": "finished",
+   "url": "https://wandb.ai/eleutherai/pythia/runs/vd5ogsc6",
+   "created": "2023-01-28T16:01:48Z",
+   "last_heartbeat": "2023-01-31T00:39:51Z",
+   "final_step": 143000,
+   "summary": {
+    "validation/lm_loss": 1.960450530052185,
+    "train/lm_loss": 1.977952241897583
+   },
+   "rows": 1501
+  }
+ ],
+ "rows": 1501,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

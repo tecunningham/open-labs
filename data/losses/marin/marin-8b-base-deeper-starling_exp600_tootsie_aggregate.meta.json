@@ -1,0 +1,43 @@
+{
+ "run_id": "marin-8b-base-deeper-starling (exp600_tootsie, aggregate)",
+ "aliases": [
+  "exp600 Deeper Starling dessert (final released base)"
+ ],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 1419999.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 1.8526374101638794,
+  "eval/paloma/c4_en/loss": 2.3460135459899902,
+  "eval/loss": 2.035020351409912,
+  "eval/macro_loss": 2.3151049613952637
+ },
+ "note": "released base = end of this run (step 1,419,999)",
+ "segments": [
+  {
+   "run": "tootsie-8b-deeper-starling",
+   "display_name": "tootsie-8b-deeper-starling",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin/runs/tootsie-8b-deeper-starling",
+   "created": "2025-05-01T07:59:40Z",
+   "last_heartbeat": "2025-05-03T12:22:23Z",
+   "final_step": 1419999.0,
+   "summary": {
+    "train/loss": 1.8531256914138792,
+    "eval/paloma/c4_en/loss": 2.3460135459899902,
+    "eval/loss": 2.035020351409912,
+    "eval/macro_loss": 2.3151049613952637
+   },
+   "rows": 1519
+  }
+ ],
+ "rows": 1519,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

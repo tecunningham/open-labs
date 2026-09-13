@@ -1,0 +1,41 @@
+{
+ "run_id": "exp1390_32b_necro (optimizer-state rebuild restart)",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": 33554432,
+ "final_step": 83054.0,
+ "final_tokens": 2786829795328.0,
+ "final_loss": {
+  "train/loss": 1.9745787382125854,
+  "eval/paloma/c4_en/loss": 2.2905197143554688,
+  "eval/loss": 2.086561918258667,
+  "eval/macro_loss": 2.3200724124908447
+ },
+ "note": "",
+ "segments": [
+  {
+   "run": "marin-32b-necro-2",
+   "display_name": "marin-32b-necro-2",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin/runs/marin-32b-necro-2",
+   "created": "2025-06-14T00:04:35Z",
+   "last_heartbeat": "2025-06-16T03:30:18Z",
+   "final_step": 83055,
+   "summary": {
+    "train/loss": 1.9678374528884888,
+    "eval/paloma/c4_en/loss": 2.2905197143554688,
+    "eval/loss": 2.086561918258667,
+    "eval/macro_loss": 2.3200724124908447
+   },
+   "rows": 1503
+  }
+ ],
+ "rows": 1503,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

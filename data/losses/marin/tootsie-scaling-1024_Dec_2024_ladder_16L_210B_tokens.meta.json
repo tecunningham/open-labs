@@ -1,0 +1,41 @@
+{
+ "run_id": "tootsie-scaling-1024 (Dec 2024 ladder, 16L, 210B tokens)",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": 4194304,
+ "final_step": 49999.0,
+ "final_tokens": 209711005696.0,
+ "final_loss": {
+  "train/loss": 2.60736346244812,
+  "eval/paloma/c4_en/loss": 2.9818780422210693,
+  "eval/loss": 2.6256649494171143,
+  "eval/macro_loss": 2.782658576965332
+ },
+ "note": "hidden 1024, 16 layers, 50k steps; one of five ladder widths",
+ "segments": [
+  {
+   "run": "tootsie-scaling-1024-b45766",
+   "display_name": "tootsie-scaling-1024-b45766",
+   "state": "finished",
+   "url": "https://wandb.ai/marin-community/marin/runs/tootsie-scaling-1024-b45766",
+   "created": "2024-12-16T19:29:54Z",
+   "last_heartbeat": "2024-12-18T02:04:39Z",
+   "final_step": 49999,
+   "summary": {
+    "train/loss": 2.6439502239227295,
+    "eval/paloma/c4_en/loss": 2.9818780422210693,
+    "eval/loss": 2.6256649494171143,
+    "eval/macro_loss": 2.782658576965332
+   },
+   "rows": 1506
+  }
+ ],
+ "rows": 1506,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

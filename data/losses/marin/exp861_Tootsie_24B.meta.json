@@ -1,0 +1,41 @@
+{
+ "run_id": "exp861 Tootsie 24B",
+ "aliases": [],
+ "project": "marin-community/marin",
+ "keys": [
+  "train/loss",
+  "eval/paloma/c4_en/loss",
+  "eval/loss",
+  "eval/macro_loss"
+ ],
+ "tokens_per_step": null,
+ "final_step": 326481.0,
+ "final_tokens": null,
+ "final_loss": {
+  "train/loss": 2.017704725265503,
+  "eval/paloma/c4_en/loss": 2.4479622840881348,
+  "eval/loss": 2.1150565147399902,
+  "eval/macro_loss": 2.390026092529297
+ },
+ "note": "W&B calls it 22b (56L x 6144); longest attempt, 326k steps",
+ "segments": [
+  {
+   "run": "llama-22b-tootsie-ema-mk5",
+   "display_name": "llama-22b-tootsie-ema-mk5",
+   "state": "crashed",
+   "url": "https://wandb.ai/marin-community/marin/runs/llama-22b-tootsie-ema-mk5",
+   "created": "2025-04-10T05:56:19Z",
+   "last_heartbeat": "2025-04-18T04:47:52Z",
+   "final_step": 326496,
+   "summary": {
+    "train/loss": 2.022294759750366,
+    "eval/paloma/c4_en/loss": 2.4479622840881348,
+    "eval/loss": 2.1150565147399902,
+    "eval/macro_loss": 2.390026092529297
+   },
+   "rows": 1525
+  }
+ ],
+ "rows": 1525,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}

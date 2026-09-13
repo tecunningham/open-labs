@@ -1,0 +1,35 @@
+{
+ "run_id": "pythia-2.8b",
+ "aliases": [],
+ "project": "eleutherai/pythia",
+ "keys": [
+  "validation/lm_loss",
+  "train/lm_loss"
+ ],
+ "tokens_per_step": 2097152,
+ "final_step": 143000.0,
+ "final_tokens": 299892736000.0,
+ "final_loss": {
+  "validation/lm_loss": 1.87144935131073,
+  "train/lm_loss": 1.8668818473815918
+ },
+ "note": "group '2.7B New' (README mapping)",
+ "segments": [
+  {
+   "run": "12vuw5ef",
+   "display_name": "gpu-st-p4d-24xlarge-420-0",
+   "state": "finished",
+   "url": "https://wandb.ai/eleutherai/pythia/runs/12vuw5ef",
+   "created": "2022-11-12T19:45:53Z",
+   "last_heartbeat": "2022-11-19T16:28:04Z",
+   "final_step": 143000,
+   "summary": {
+    "validation/lm_loss": 1.87144935131073,
+    "train/lm_loss": 1.880892276763916
+   },
+   "rows": 1503
+  }
+ ],
+ "rows": 1503,
+ "source": "W&B GraphQL, anonymous, sampledHistory"
+}
