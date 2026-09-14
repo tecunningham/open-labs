@@ -337,6 +337,148 @@ The 2025 panel is the only one whose curves are actual training trajectories rat
 laws or ladder endpoints; everything before it is five points and everything after it is a
 formula plus a validation star.
 
+## AI R&D assessment
+
+This section applies the RSI-tracking template ("Tracing the Path of RSI", the one-page
+prioritised list from Cunningham et al. 2026) to Marin as if Marin were a frontier lab being
+asked to report: internal capabilities, efficiency gains, and the inputs behind the gains. For
+each item it records what Marin actually publishes, a best-guess estimate where the record
+allows one, and how much to trust it. Marin is a useful test case precisely because nothing is
+hidden: whatever is missing here is missing because the lab never produced the number, not
+because it withheld it.
+
+```{python}
+#| column: page
+pd.set_option("display.max_colwidth", None)
+rows = [
+ ("Capabilities", "ECI of latest model", "Not listed on ECI (not checked directly; epoch.ai unreachable from this environment)",
+  "8B is at Llama 3.1 8B level (beats it on 14 of 19 tasks); 32B at Gemma 3 27B PT / OLMo 2 32B level. Read the peer's ECI as a proxy.", "guess"),
+ ("Capabilities", "Internal capability index", "19-task base average, MMLU, Paloma losses, for released bases only",
+  "19-task: 66.6 (8B, May 2025) to 65.2 (32B, Oct 2025); MMLU 67.6 to 74.7. No post-trained series. Snowball and 535B: no evals yet.", "reported"),
+ ("Capabilities", "Unsaturated benchmarks", "19-task suite is base-model and largely saturated (the 32B scores below the 8B on it)",
+  "Only the 2026 SFT sweep uses unsaturated targets (AIME, HMMT); no frontier-difficulty evals of released models.", "reported"),
+ ("Efficiency", "Overall efficiency gain, pretraining", "Not stated by the lab; derivable from finished-run endpoints",
+  "About 7x less compute for c4_en 2.35 from the 2025 recipe to Delphi (Mar 2026), plus about 2x from MoE on active-parameter compute: roughly 10x per year, of which perhaps half is compute-optimal allocation rather than algorithm.", "derived"),
+ ("Efficiency", "Efficiency gain, post-training", "One SFT data-scaling sweep (2026); no time series, no RL",
+  "Cannot be estimated: a single point in time.", "none"),
+ ("Efficiency", "Small-scale validation before big runs (leading indicator)", "Published, pre-registered, with errors: Delphi 1e23 within 0.2% at 300x; MoE 1e21 within 0.3%; 1e23 MoE within 1%; 535B forecast pending",
+  "Marin's 2026 practice matches the template exactly; the 2025 runs had no such step.", "reported"),
+ ("Inputs", "Labour headcount and compensation", "1 FTE (2025) to about 10 FTE (2026, Open Athena), stated; no compensation, function or seniority data",
+  "Fully loaded US research staff at $300k to $500k: about $0.4M (2025) and $3M to $5M a year (2026). Plus unpaid Stanford students and community contributors, uncounted.", "guess"),
+ ("Inputs", "Experimental compute, quantity", "Per run from public logs; no total stated",
+  "2025: about 1.4e24 FLOPs in abandoned trials and discarded cooldowns (around 1M H100-hours equivalent), about half of that year's logged compute. 2026: about 1.1e23 in Delphi and ladders plus under 1e22 in the 80 agent-run MoE cells and the SFT sweep, about 4% of 2026 logged compute.", "derived"),
+ ("Inputs", "Experimental compute, expenditure", "Zero cash: TPUs from Google TRC, GB200 from the Huang Foundation via CoreWeave",
+  "List-price value about $2M (2025) and $0.3M (2026) for experiments; the foundation's total CoreWeave purchase is about $108M across all grantees.", "derived"),
+ ("Inputs", "Inference compute, quantity and expenditure", "Not stated; no RL rollouts published",
+  "Evaluation only: the 6,153 evalchemy runs of the SFT sweep at up to 32k tokens per answer are of order 1e10 tokens, negligible against training. Would change if Snowball RL ships.", "guess"),
+ ("Inputs", "How AI generates efficiency gains", "80 agent-run MoE experiments (Mar to Aug 2026): 16 worked, 9 promising, 13 mixed, 32 did not work, 6 not evaluated, 4 in progress",
+  "About 20% of autonomous small-scale experiments produced a usable improvement, screened by an effective-speedup metric against the scaling-law baseline; researcher-uplift is not measured.", "reported"),
+]
+t = pd.DataFrame(rows, columns=["area", "item", "what Marin publishes", "best guess", "confidence"])
+display(t.style.hide(axis="index").set_properties(**{"text-align": "left", "vertical-align": "top", "font-size": "0.85em"}))
+```
+
+### Capabilities
+
+Marin's models are not, to our knowledge, on Epoch's Capabilities Index, and Marin runs no
+frontier-difficulty evaluation of its released bases. The lab's own index is the 19-task
+base-model average, which is saturated enough that the 32B scores below the 8B on it while
+gaining seven points of MMLU. A proxy ECI is readable from peers: Marin 8B matches Llama 3.1 8B
+on Marin's harness, and the 32B roughly ties Gemma 3 27B PT. Two data points a year apart do not
+support a growth-rate estimate, and there is no post-trained series at all. What the template
+asks for and Marin lacks is a fixed, unsaturated internal suite scored on every candidate
+checkpoint; the closest thing Marin has is the per-checkpoint Paloma loss, which is a loss, not
+a capability.
+
+### Efficiency gains
+
+Marin does not state an efficiency-gain figure, but its record supports one, worked out in the
+recipe-generation section above: at a fixed c4_en loss the compute needed fell about 7x between
+the 2025 dense recipe and Delphi (March 2026), and MoE bought about 2x more on active-parameter
+compute. Annualised that is of order 10x per year, well above the 2.5x to 3x per year that
+Epoch's Ho et al. (2024) estimate for algorithmic progress in pretraining across the field. The
+gap is expected: a small lab adopting known techniques (compute-optimal allocation, a modern
+optimizer, MoE) catches up faster than the frontier moves, and part of the 7x is allocation
+rather than algorithm. Marin's own multipliers, on its Paloma macro loss, are drawn below with
+ours.
+
+```{python}
+#| fig-width: 9
+#| fig-height: 4
+mult = pd.DataFrame([
+    ("2025-05-17", 1.4, "optimizer benchmark: best of 10 vs AdamW at 130M (1.1x at 1.2B)", "lab"),
+    ("2026-03-04", 7.3, "Delphi recipe vs 2025 dense recipe at c4_en 2.35", "ours"),
+    ("2026-04-06", 3.6, "MoE v16 recipe vs Delphi, realised on TPU v4 (6.7x theoretical)", "lab"),
+    ("2026-05-30", 2.1, "May recipe law vs April MoE law at equal loss", "lab"),
+    ("2026-08-25", 2.0, "Snowball vs Delphi line at c4_en 2.27 (active params)", "ours"),
+], columns=["date", "multiplier", "what", "who"])
+mult["date"] = pd.to_datetime(mult["date"])
+fig, ax = plt.subplots(figsize=(9, 4))
+for who, c, m in [("lab", plots.RUN_COLORS["ladder"], "s"), ("ours", plots.RUN_COLORS["final"], "o")]:
+    s = mult[mult["who"] == who]
+    ax.scatter(s["date"], s["multiplier"], s=80, c=c, marker=m, edgecolors=plots.SURFACE, linewidths=1.5, zorder=3,
+               label="stated by Marin" if who == "lab" else "our endpoint frontier")
+for _, r in mult.iterrows():
+    ax.annotate(r["what"], (r["date"], r["multiplier"]), xytext=(7, 0), textcoords="offset points", fontsize=7.5, color=plots.INK2, va="center")
+ax.set_yscale("log"); ax.set_yticks([1, 2, 3, 5, 10]); ax.set_yticklabels(["1x", "2x", "3x", "5x", "10x"])
+ax.set_ylabel("Compute multiplier at equal loss"); ax.set_title("Efficiency gains Marin has measured or stated, by date")
+ax.set_xlim(pd.Timestamp("2025-03-01"), pd.Timestamp("2027-06-01")); ax.legend(loc="upper left")
+import matplotlib.dates as mdates
+loc = mdates.AutoDateLocator(); ax.xaxis.set_major_locator(loc); ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(loc))
+plt.show()
+```
+
+Post-training efficiency cannot be tracked at all: the 2026 SFT sweep is a single time point,
+and there is no RL. The leading-indicator half of the template, small experiments that reveal a
+big run's efficiency before it is cashed in, is where Marin is strongest. Since March 2026 every
+large run has been preceded by a published, pre-registered forecast, and the forecast errors are
+public: 0.2 percent for Delphi's 1e23 model at a 300x extrapolation, 0.3 percent for the MoE law
+at 1e21, within 1 percent for the 1e23 MoE hero run, and a live forecast for the 535B. Anyone
+tracking Marin can therefore read the efficiency of the 535B recipe from its ladder months before
+the run finishes, which is exactly the property the template wants.
+
+### Inputs to efficiency gains
+
+**Labour.** Headcount is stated in outline: one core FTE through 2025, about ten under Open
+Athena by 2026, plus Stanford students and community contributors who are not counted. No
+compensation, function or seniority breakdown exists. At a fully loaded $300k to $500k per
+research FTE, Marin's labour bill went from under half a million dollars in 2025 to $3M to $5M a
+year in 2026, a roughly tenfold rise that coincides with the 7x efficiency gain. That
+coincidence is the template's central warning: on Marin's record the gain cannot be separated
+from the labour increase, so it is not evidence of AI-driven acceleration.
+
+**Experimental compute.** The logged non-final compute is about 1.4e24 FLOPs in 2025 (the
+13B/24B/70B trials and the discarded 32B cooldown, roughly a million H100-hours equivalent or
+$2M at list price, about half of that year's total) and about 1.1e23 in 2026 (Delphi and the
+ladders, plus under 1e22 for the 80 agent-run MoE cells and the SFT sweep), about 4 percent of
+2026's total. The 2025 figure is a different kind of spend: failed scale-ups rather than
+experiments designed to inform. Marin paid nothing in cash for any of it. The 446-issue long tail
+of small ablations has no compute attached and is a floor on both years.
+
+**Inference compute.** Nothing is stated. The only inference-heavy activity in the record is
+evaluation: the SFT sweep's 6,153 evalchemy runs at up to 32k tokens per answer are of order
+1e10 tokens in total, negligible against training. If Snowball's RL ships, rollout compute will
+be the first inference line item that matters, and it is not yet public.
+
+**How AI contributes.** Marin is one of the few labs with a public number here. Between March
+and August 2026 it ran 80 "Agent MoE" experiments, small-scale A/B tests of attention, routing,
+expert, optimizer and normalisation changes proposed and executed by AI agents and gated by an
+effective-speedup metric against the fitted scaling law. The digest scores them 16 worked, 9
+promising, 13 mixed, 32 did not work, 6 not evaluated and 4 in progress: about a 20 percent hit
+rate on autonomous small-scale research, feeding the May 2026 recipe. What is not measured is
+researcher uplift on the human side, and there is no statement of how much of the 2.1x
+April-to-May gain came from the agent-run cells rather than from the ten people. The survey
+question the template leaves blank would, for Marin, be: *of the changes that made it into the
+May recipe, how many were first proposed by an agent, and what fraction of the team's experiment
+throughput in 2026 was agent-executed?*
+
+**Bottom line.** Marin's 2026 record shows a fast efficiency gain (order 10x a year at fixed
+loss), a working leading-indicator practice (pre-registered forecasts on every big run), and a
+documented AI contribution (80 agent-run experiments at a 20 percent hit rate). It also shows a
+tenfold labour increase over the same period, no capability index that would register the
+gain, and no post-training series. On the template's own logic, Marin is a lab where the inputs
+grew as fast as the outputs, which is the case the template says should not be read as RSI.
+
 ## What is unusual here
 
 Marin's flagship 2025 runs were **not** preceded by a scaling ladder. The 8B was chosen "mostly

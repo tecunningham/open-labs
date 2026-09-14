@@ -30,6 +30,11 @@ level with `main`):
   posttrain / planned, and confidence). Post-training-only releases are converted from GPU-hours
   at 1.44e18 FLOPs per H100-hour (40% MFU); dollars in the key assume $2 per H100-hour. Add a
   row there when a lab ships something.
+- **Marin AI R&D assessment.** Section "AI R&D assessment" applies the RSI-tracking one-pager
+  (capabilities / efficiency gains / inputs) to Marin with a what-exists / best-guess / confidence
+  table and an efficiency-multiplier figure. Items to firm up when reachable: Marin's peers' ECI
+  values (epoch.ai blocked here), and the Agent MoE digest for how many May-recipe changes were
+  agent-proposed (https://github.com/marin-community/marin/blob/main/docs/reports/agent-moe-experiments.md).
 - **Marin post-training, cost, efficiency, experiment timeline.** The chapter now has: a
   returns-to-SFT figure from Marin issue 3956 (`data/posttraining/marin_sft_scaling.csv`, 1,014
   averaged evalchemy results; rebuild with `python -m src.fetch_evalchemy`; SFT compute is
