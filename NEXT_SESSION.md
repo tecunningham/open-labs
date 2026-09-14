@@ -24,6 +24,10 @@ level with `main`):
   `data/notes/*.md` on 2026-09-13. ECI (Epoch Capabilities Index) membership was checked only for
   Llama 3.1 405B and DeepSeek V2/V3/R1 via Epoch's own write-ups; epoch.ai itself was blocked.
   `styles.css` (wired in `_quarto.yml`) holds the `.availability` table style.
+- **AI R&D benchmarks** (closed-lab model-card scores) moved to their own repository on 2026-09-14:
+  https://github.com/tecunningham/ai-rnd-benchmarks (site: https://tecunningham.github.io/ai-rnd-benchmarks/).
+  The data, series metadata, figure code and verification notes are all there; nothing in this book
+  depends on them.
 - **Release timeline.** The preface also has a lab-by-row timeline of every released model with
   circle area proportional to training compute (`plots.release_timeline`, data in
   `data/releases.csv`: one row per release with `flops`, `flops_basis`, `kind` = pretrain /
