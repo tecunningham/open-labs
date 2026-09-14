@@ -34,9 +34,10 @@ level with `main`):
   posttrain / planned, and confidence). Post-training-only releases are converted from GPU-hours
   at 1.44e18 FLOPs per H100-hour (40% MFU); dollars in the key assume $2 per H100-hour. Add a
   row there when a lab ships something.
-- **Marin AI R&D assessment.** Section "AI R&D assessment" applies the RSI-tracking one-pager
-  (capabilities / efficiency gains / inputs) to Marin with a what-exists / best-guess / confidence
-  table and an efficiency-multiplier figure. Items to firm up when reachable: Marin's peers' ECI
+- **Part III: AI R&D assessments.** `chapters/30-ai-rnd-marin.qmd` applies the RSI-tracking
+  one-pager (capabilities / efficiency gains / inputs) to Marin with a what-exists / best-guess /
+  confidence table and an efficiency-multiplier figure; one chapter per lab is the intended
+  pattern, so add `chapters/3x-ai-rnd-<lab>.qmd` files to that part. Items to firm up when reachable: Marin's peers' ECI
   values (epoch.ai blocked here), and the Agent MoE digest for how many May-recipe changes were
   agent-proposed (https://github.com/marin-community/marin/blob/main/docs/reports/agent-moe-experiments.md).
 - **Marin post-training, cost, efficiency, experiment timeline.** The chapter now has: a

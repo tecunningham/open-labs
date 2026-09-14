@@ -20,6 +20,9 @@ book:
     - part: "Part II: Post-training and RL scaling"
       chapters:
         - chapters/20-prime-intellect.qmd
+    - part: "Part III: AI R&D assessments"
+      chapters:
+        - chapters/30-ai-rnd-marin.qmd
     - part: "Synthesis"
       chapters:
         - chapters/90-cross-lab.qmd
