@@ -24,19 +24,10 @@ level with `main`):
   `data/notes/*.md` on 2026-09-13. ECI (Epoch Capabilities Index) membership was checked only for
   Llama 3.1 405B and DeepSeek V2/V3/R1 via Epoch's own write-ups; epoch.ai itself was blocked.
   `styles.css` (wired in `_quarto.yml`) holds the `.availability` table style.
-- **AI R&D benchmarks appendix** (`chapters/95-ai-rd-benchmarks.qmd`, `src/benchmarks.py`,
-  `data/ai_rd_benchmarks.csv`, notes in `data/notes/ai-rd-benchmarks.md`). One benchmark-by-model
-  table, one saturation overview (all bounded evals on a 0 to 100 percent axis) and one
-  small-multiples time-series figure per closed lab (GDM, OpenAI, Anthropic); ceilings and human
-  reference lines come from `data/ai_rd_benchmark_series.csv`; columns are the frontier
-  cards through Sep 2026 (Gemini 2.5 Pro to 3.8 Flash, o1-preview to GPT-6 Astra, Claude 3.5 Sonnet
-  to Fable 5.1). 396 rows; 371 read from the cards themselves after the network was opened
-  mid-session, the rest are launch-post or blog figures no card contains. The notes file records
-  every correction made against the cards and the cross-card inconsistencies (later cards re-run
-  earlier models with different results). Open items: per-task RE-Bench scores for Gemini 2.5 Pro,
-  2.5 Deep Think and 3 Pro are figure-only; GPT-5.6 and GPT-6 Astra report most self-improvement
-  evals as curves without printed values; Anthropic's Sonnet 4 and Opus 4.1 launch-time
-  Terminal-bench numbers are memory-only.
+- **AI R&D benchmarks** (closed-lab model-card scores) moved to their own repository on 2026-09-14:
+  https://github.com/tecunningham/ai-rnd-benchmarks (site: https://tecunningham.github.io/ai-rnd-benchmarks/).
+  The data, series metadata, figure code and verification notes are all there; nothing in this book
+  depends on them.
 - **Release timeline.** The preface also has a lab-by-row timeline of every released model with
   circle area proportional to training compute (`plots.release_timeline`, data in
   `data/releases.csv`: one row per release with `flops`, `flops_basis`, `kind` = pretrain /
